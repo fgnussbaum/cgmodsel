@@ -311,7 +311,7 @@ class Model_PWSL(Model_PW_Base):
         from cgmodsel.model_pw import Model_PW
         return Model_PW(pw, meta)
     
-    def plotSL(self, diagonal=True, usegraph=False, norm=True,
+    def plotSL(self, diagonal=False, usegraph=False, norm=True,
                samecolorbar=False, caption='', normalize=True,
                diagcutoff=None, addu=True, normalizeL=False,
                Labs=False, aggr=True, notitle=False,
@@ -328,7 +328,6 @@ class Model_PWSL(Model_PW_Base):
             aggr = True
             Labs = 1; normalizeL = False
             samescale = False; symscale = False
-            
             cmap = cm.Greys
         elif plottype == 'pn':
             aggr = True
@@ -336,10 +335,8 @@ class Model_PWSL(Model_PW_Base):
             Labs = False
             symscale = True; samescale = False
             usegraph = False
-            
             cmap = cm.seismic
         
-
         if usegraph:
             S = self.get_graph(threshold=1e-1, disp=0)
             S = np.array(S, dtype=np.float)
@@ -388,7 +385,6 @@ class Model_PWSL(Model_PW_Base):
             Lvmin = Svmin = vmin
             Lvmax = Svmax = vmax
         
-
         ## plot
         fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(15, 7))
 

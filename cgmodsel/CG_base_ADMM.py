@@ -7,12 +7,7 @@
 """
 import numpy as np
 import scipy
-import time
-
-try:
-    import geno
-except:
-    pass
+#import time
 
 from cgmodsel.utils import _logsumexp_condprobs_red
 from cgmodsel.utils import logsumexp
@@ -38,7 +33,7 @@ def grp_soft_shrink(S, tau, groupdelimiters=None, Lcum=None, off=False):
     """
     if groupdelimiters is None:
         # soft shrink
-        tmp = np.abs(S)-tau
+        tmp = np.abs(S) - tau
         tmp[tmp < 1e-25] = 0
         
         tmp2 = np.multiply(np.sign(S), tmp)
@@ -196,7 +191,7 @@ class LHProx_base(CG_base_solver):
             print('Warning(CG_base_ADMM.callback_plh): Potential scipy bug, function value got worse in last iteration')
         self.fold = fnew
         
-    def solve_plh_prox(self, Z, mu, oldThetaalpha, verb=False, do_geno = 0,
+    def solve_plh_prox(self, Z, mu, oldThetaalpha, verb=False, 
                        do_scipy=1, debug=0):
         """ solve proximal mapping of negative pseudo loglikelihood
         min_{Theta, alpha} l_p(Theta, alpha) + 1 / (2mu) * ||Theta-Z||_F^2
@@ -228,8 +223,6 @@ class LHProx_base(CG_base_solver):
             
             f_init = handle_fg(x0)[0]
             self.fold = f_init
-            if debug:
-                print('f_init =', f_init)
     
             ## bounds that respect identifiability constraints
             bnds = self.Ltot ** 2 * [(-np.inf, np.inf)] # Q, only upper triangle is used
@@ -249,22 +242,18 @@ class LHProx_base(CG_base_solver):
             maxiter = 500
             correctionpairs = min(len(bnds) - 1, 10)
             ftol = self.opts['lhproxtol']
-            t1 = time.time()
+
             res = optimize.minimize(handle_fg, x0, 
                                     method = 'L-BFGS-B', 
                                     jac = True, bounds = bnds, 
                                     options = {'maxcor':correctionpairs,
                                                'maxiter':maxiter, 'ftol':ftol},
                                     callback = callback)
-            t2 = time.time()
+
             
             if not res.message.startswith(b'CONV'): # solver did not converge
                 print('PLH_prox scipy-solver message:', res.message)
-            if debug:
-#                print('f_scipy=',res.fun, 'time', t2-t1)
-                improvement = res.fun-f_init
-                print('improvement:', improvement)
-                assert improvement < 0
+
 #            f, g = handle_fg(res.x)
             _, _, _, FLa, _ = self.unpack(res.x)
             
@@ -273,38 +262,6 @@ class LHProx_base(CG_base_solver):
                 
             Theta, alpha = self._x2Thetaalpha(res.x)
 
-#            print('scipy\n',Theta, alpha)
-
-        if do_geno: # solve using GENO
-            ## bounds that respect identifiability constraints
-            bnds_geno = np.empty((self.totalnumberofparams, 2))
-            bnds_geno[:, 0] = -np.inf
-            bnds_geno[:, 1] = np.inf
-            if not self.opts['use_u']:
-                bnds_geno[self.Ltot **2:self.Ltot**2 + self.Ltot, 0] = 0
-                bnds_geno[self.Ltot **2:self.Ltot**2 + self.Ltot, 1] = 0
-
-            if not self.opts['use_alpha']:
-                bnds_geno[-self.dg:, 0] = 0
-                bnds_geno[-self.dg:, 1] = 0
-
-            ## GENO options
-            options = {'maxiter': 500,
-               'constraintsTol': 1E-5,
-               'disp': 1,
-               'debug_fg': False,
-               'debug_c': False,
-               'debug_cjprod': False}
-            t3 = time.time()
-            result = geno.minimize(handle_fg, x0, bounds=bnds_geno,
-                                   tol =1e-8, options=options)
-            t4 = time.time()
-            
-            if debug:
-                print('f_geno =',handle_fg(result.x)[0], 'time', t4-t3)
-
-            Theta, alpha = self._x2Thetaalpha(result.x)
-#            print('geno\n',Theta, alpha)
 
         return Theta, alpha
     
@@ -591,16 +548,6 @@ class LHProx_base(CG_base_solver):
             return cvalerror
         
         raise NotImplementedError
-        # TODO: lh
-#        S, L = self.get_SL(x)
-#   
-#        # smooth part
-#        Theta = S - L
-#        logdet_tiLambda = np.linalg.slogdet(Theta)[1] # logdet of PSD matrix (hopefully also PD)
-#
-#        lval_testdata = np.trace(np.dot(Theta, self.Sigma0)) - logdet_tiLambda
-#
-#        return None, None, lval_testdata # note: this does not compute individual errors on the nodes (in contrast to PLH cross validation)
 
 
 ###############################################################################
