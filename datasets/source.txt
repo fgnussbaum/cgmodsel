@@ -1,0 +1,43 @@
+Sources of datasets:
+
+**************************************************
+*** ABILITY ***
+16 ability items scored as correct or incorrect.
+
+obtained from
+https://vincentarelbundock.github.io/Rdatasets/csv/psych/ability.csv
+https://vincentarelbundock.github.io/Rdatasets/doc/psych/ability.html
+
+The example data set is taken from the Synthetic Aperture Personality Assessment personality and ability test at https://sapa-project.org.
+The data were collected with David Condon from 8/08/12 to 8/31/12. 
+
+
+**************************************************
+*** ALLBUS ***
+subset of data collected from https://www.gesis.org/en/allbus/allbus-home
+
+
+**************************************************
+*** CFMT ***
+
+answers to the 72 questions of the Cambridge Face Memory Test (CFMT)
+data collected by Jürgen Kaufmann @FSU_Jena.
+
+
+**************************************************
+*** HELPmiss ***
+Health Evaluation and Linkage to Primary Care 
+obtained from
+https://vincentarelbundock.github.io/Rdatasets/csv/mosaicData/HELPmiss.csv
+https://vincentarelbundock.github.io/Rdatasets/doc/mosaicData/HELPmiss.html
+
+original source: https://nhorton.people.amherst.edu/help/
+Samet JH, Larson MJ, Horton NJ, Doyle K, Winter M, and Saitz R. Linking alcohol and drug-dependent adults to primary medical care: A randomized controlled trial of a multi-disciplinary health intervention in a detoxification unit. Addiction, 2003; 98(4):509-516. 
+
+dataset was preprocessed to remove rows with NANs, cocaine and heroine were summarized into a single category
+
+
+**************************************************
+*** LSVT ***
+
+from https://archive.ics.uci.edu/ml/datasets/LSVT+Voice+Rehabilitation (UCI Machine Learning Repository)
