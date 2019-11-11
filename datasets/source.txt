@@ -1,5 +1,7 @@
 Sources of datasets:
 
+Usage of the datasets is excluded from the license, please look up their sources if you want to use the datasets in subsequent work.
+
 **************************************************
 *** ABILITY ***
 16 ability items scored as correct or incorrect.

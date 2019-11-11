@@ -1,6 +1,6 @@
 # README #
 
-cgmodsel - a package to estimate CG distributions from data
+cgmodsel - a Python3 package to estimate CG distributions from data
 
 Version 1.0(b), 07.11.2019
 
@@ -17,7 +17,7 @@ For normal usage:
 2. Open a terminal and navigate to the chosen directory using cd.
 3. Install the `cgmodsel` package locally by typing `pip install .`
 
-You can also use the code without doing the third step. For a quick start please execute the file `quick_cgmod.py` from the main folder.
+You can also use the code without doing the third step from inside the folder. For a quick start please execute the file `quick_cgmod.py` from the main folder.
 
 ### Contact ###
 
@@ -25,4 +25,4 @@ If you have questions, comments, bug reports, feature requests, etc. please cont
 
 ### Copyright ###
 
-© 2017-2019 Frank Nussbaum (frank.nussbaum@uni-jena.de). All Rights Reserved.
+© 2019 Frank Nussbaum (frank.nussbaum@uni-jena.de). All Rights Reserved.
