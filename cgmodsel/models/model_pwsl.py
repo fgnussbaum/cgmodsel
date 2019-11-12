@@ -315,7 +315,7 @@ class Model_PWSL(Model_PW_Base):
                samecolorbar=False, caption='', normalize=True,
                diagcutoff=None, addu=True, normalizeL=False,
                Labs=False, aggr=True, notitle=False,
-               samescale = True, symscale = True,
+               samescale = True, symscale = True, save = False,
                cbarscale = 1.0, plottype = 'bw'):
         """
         plot S+L decomposition
@@ -427,12 +427,12 @@ class Model_PWSL(Model_PW_Base):
             
             fig.text(0.485, 0.47, '+', transform=trans, color='black', fontsize=75)
 
-
-        plt.savefig('plots/SLdecomp.pdf', bbox_inches='tight')
+        if save:
+            plt.savefig('SLdecomp.pdf', bbox_inches='tight')
         plt.show()
         
     def repr_graphical(self, diagonal=False, caption='', jointboundaries=True,
-                       samecolorbar=True, save=True, norm=False,
+                       samecolorbar=True, save=False, norm=False,
                        symboundaries=True, printspec=False):
         """
         another plotting function for the model
@@ -506,7 +506,7 @@ class Model_PWSL(Model_PW_Base):
             fig.colorbar(im2, ax=axes[0:3], shrink = .5)
         
         if save:
-            fig.savefig('plots/pwsl_model.pdf', bbox_inches='tight')
+            fig.savefig('pwsl_model.pdf', bbox_inches='tight')
         plt.show()
         
         if printspec:

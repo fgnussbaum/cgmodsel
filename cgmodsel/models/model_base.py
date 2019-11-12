@@ -313,7 +313,7 @@ class Model_Base:
 
     def repr_graphical(self, diagonal=True, graph=False,
                        threshold=None, caption='', norm=False,
-                       samecolorbar=True, save=True, vmax=None):
+                       samecolorbar=True, save=False, vmax=None):
         """ a graphical representation of the groupnorm for PW and CLZ models
         (this method is overwritten by the Model_PWSL model class)
         
@@ -353,7 +353,7 @@ class Model_Base:
 
             fig.colorbar(im0, ax=axes, shrink=.7)
         if save:
-            fig.savefig('plots/savedmodel.pdf', bbox_inches='tight')
+            fig.savefig('savedmodel.pdf', bbox_inches='tight')
         
         plt.show()
 
