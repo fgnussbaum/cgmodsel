@@ -12,6 +12,29 @@ import numpy as np
 ###############################################################################
 
 class Model_CLZ(Model_Base):
+    """
+    class for parameters of distribution
+    p(x,y) ~ exp(1/2 C_x Q C_x +  y^T R C_x -1/2 y^T[La0 + Las C_x]y 
+                  + u^T C_x + alpha^T y)
+    
+    this class uses padded parameters (that is, parameters for 0-th levels are
+    included, however, one might want them to be constrained to 0 for 
+    identifiability reasons)
+    
+    here:
+    [C_x .. dummy representation of x]
+    u .. univariate discrete parameters
+    alpha .. univariate cont. parameters
+    with 
+    Q .. discrete-discrete interactions
+    R .. discrete-cont. interactions
+    La0 .. cont-cont interaction parameters
+    Las .. cont-cont-discrete interaction parameters (dg x dg x Ltot)
+    
+    initialize with tuple pw = (u, Q, R, alpha, La0, Las)
+    
+    """
+    
     def __init__(self, clz, meta):
         # meta must provided with dg, dc
         Model_Base.__init__(self)
@@ -31,16 +54,17 @@ class Model_CLZ(Model_Base):
         s ='u:' + str(self.u) + '\nQ:\n' + str(self.Q) + '\nR:\n' + str(self.R) +\
          '\nalpha:' + str(self.alpha) + '\nLambda0:\n' + str(self.Lambda0)
         for r in range(self.dc):
-            for k in range(1, self.sizes[r]): # for k=0 self.Lambdas[:, :, rk] is zero (identifiability constraint)
+            for k in range(1, self.sizes[r]):
+                # for k=0 self.Lambdas[:, :, rk] is zero (identifiability constraint)
                 rk = self.Lcum[r] + k
                 s += '\nLambda_%d:%d'%(r, k) + str(self.Lambdas[:, :, rk])
         return s 
 
-    def get_group_mat(self, diagonal=False, norm=True, aggr=True): # calibration? optional class param?
-        # ~ functionValandGrad(smooth = False, sparse = True), includes calibration, gradient, accumulates..
-        
-        assert aggr==True, "only implemented for doing aggregation"
-        assert norm==True, "l2-norm is the only implemented aggregation function"
+    def get_group_mat(self, diagonal=False, norm=True, aggr=True):
+        # calibration? optional class param?
+
+        assert aggr == True, "only implemented for doing aggregation"
+        assert norm == True, "l2-norm is the only implemented aggregation function"
         
         d = self.dc + self.dg
         grpnormmat = np.zeros((d, d))
@@ -48,25 +72,25 @@ class Model_CLZ(Model_Base):
         for r in range(self.dc): # dis-dis
             for j in range(r):
                 grpnormmat[r,j] = np.linalg.norm(self.Q[self.Lcum[r]:self.Lcum[r+1], self.Lcum[j]:self.Lcum[j+1]])
-        self.Lambdas = self.Lambdas.reshape((self.dg*self.dg, self.Ltot))
+        self.Lambdas = self.Lambdas.reshape((self.dg * self.dg, self.Ltot))
         
         for r in range(self.dc):
             tmp_group = np.empty(self.sizes[r] *self.dg)
             for s in range(self.dg):
-                offset = s*self.dg
-#                print(s, self.sizes[r])
+                offset = s * self.dg
+
                 tmp_group[:self.sizes[r]] = self.R[s, self.Lcum[r]:self.Lcum[r+1]]
-                tmp_group[self.sizes[r] : (s+1)*self.sizes[r]] = self.Lambdas[offset:offset+s , self.Lcum[r]:self.Lcum[r+1]].flatten() 
-                tmp_group[(s+1)*self.sizes[r] :] = self.Lambdas[offset+s+1:offset+self.dg, self.Lcum[r]:self.Lcum[r+1]].flatten() 
-#                print(tmp_group, np.linalg.norm(tmp_group))
-                grpnormmat[self.dc+s, r] = np.linalg.norm(tmp_group)
+                tmp_group[self.sizes[r] : (s+1) * self.sizes[r]] = self.Lambdas[offset: offset+s , self.Lcum[r]:self.Lcum[r+1]].flatten() 
+                tmp_group[(s+1) * self.sizes[r] :] = self.Lambdas[offset+s+1: offset+self.dg, self.Lcum[r]:self.Lcum[r+1]].flatten() 
+
+                grpnormmat[self.dc + s, r] = np.linalg.norm(tmp_group)
 
         tmp_group = np.empty(self.Ltot + 1)
         for t in range(self.dg): # upper triangle s<t
             for s in range(t):
-                tmp_group[:self.Ltot] = self.Lambdas[s*self.dg+t, :]
+                tmp_group[:self.Ltot] = self.Lambdas[s * self.dg + t, :]
                 tmp_group[self.Ltot] = self.Lambda0[s, t]
-                grpnormmat[self.dc+s, self.dc+t] = np.linalg.norm(tmp_group)
+                grpnormmat[self.dc + s, self.dc + t] = np.linalg.norm(tmp_group)
 
         grpnormmat += grpnormmat.T
         
@@ -74,16 +98,12 @@ class Model_CLZ(Model_Base):
             grpnormmat -= np.diag(np.diag(grpnormmat))
         else:
             for s in range(self.dg): # add diagonal of cts-cts interactions
-                tmp_group[:self.Ltot] = self.Lambdas[s*self.dg+s, :]
+                tmp_group[:self.Ltot] = self.Lambdas[s * self.dg + s, :]
                 tmp_group[self.Ltot] = self.Lambda0[s, s]
-                grpnormmat[self.dc+s, self.dc+s] = np.linalg.norm(tmp_group)
+                grpnormmat[self.dc + s, self.dc + s] = np.linalg.norm(tmp_group)
         
         self.Lambdas = self.Lambdas.reshape((self.dg, self.dg, self.Ltot))
 
-#        print('CLZ.get_group_norm >>')
-#        print(self.Lambda0)
-#        print(self.Lambdas)
-            
         return grpnormmat
 
     def get_params(self):
@@ -121,7 +141,7 @@ class Model_CLZ(Model_Base):
                 # TODO: perhaps iter more systematically over dummy representations Dx
                 Dx = np.zeros((self.Ltot,1))
                 for r in range(self.dc): # construct dummy repr Dx of x
-                    Dx[self.Lcum[r]+unrvld_ind[r][0], 0] = 1 
+                    Dx[self.Lcum[r] + unrvld_ind[r][0], 0] = 1 
                 q[x] = np.dot(self.u.T, Dx) + 0.5 * np.dot(Dx.T, np.dot(self.Q, Dx))
                 canparams = q.reshape(self.sizes), np.empty(0), np.empty(0)
         else:
@@ -134,7 +154,7 @@ class Model_CLZ(Model_Base):
     
                 Dx = np.zeros((self.Ltot,1))
                 for r in range(self.dc): # construct full dummy repr Dx of x
-                    Dx[self.Lcum[r]+unrvld_ind[r][0], 0] = 1
+                    Dx[self.Lcum[r] + unrvld_ind[r][0], 0] = 1
                 q[x] = np.dot(self.u.T, Dx) + 0.5 * np.dot(Dx.T, np.dot(self.Q, Dx))
                 nus[x, :] = (self.alpha + np.dot(self.R, Dx)).reshape(-1)
                 Lambdas[x, :, :] = self.Lambda0 + np.dot(self.Lambdas, Dx).reshape(precmatshape)  
