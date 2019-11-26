@@ -159,7 +159,7 @@ def load_prepare_data(datasource, drop=[], verb=False, standardize=False,
 
     if verb and type(datasource) is type(""):
         print('Filename:', datasource)
-        print('Loaded a dataset with %d samples,%d discrete and %d continuous variables.' % (meta['n'], meta['dc'], meta['dg']))
+        print('Loaded a dataset with %d samples, %d discrete and %d continuous variables.' % (meta['n'], meta['dc'], meta['dg']))
         print('Discrete Variables (at most 20): %s'%(meta['catnames'][:20]))
         print('Continuous Variables (at most 20): %s\n'%(meta['contnames'][:20]))
     

@@ -60,6 +60,19 @@ class Model_CLZ(Model_Base):
                 s += '\nLambda_%d:%d'%(r, k) + str(self.Lambdas[:, :, rk])
         return s 
 
+    def get_graph(self, threshold=1e-1):
+        """ calculate group norms of the parameters associated with each edge and threshold
+        
+        plot graph if disp is True"""
+        # perhaps do variable threshold for different group types
+        grpnormmat = self.get_group_mat(diagonal=False, norm=True)
+        graph = grpnormmat > threshold
+        
+        for i in range(graph.shape[0]):
+            graph[i, i] = False # no edges on diagonal
+            
+        return graph
+
     def get_group_mat(self, diagonal=False, norm=True, aggr=True):
         # calibration? optional class param?
 

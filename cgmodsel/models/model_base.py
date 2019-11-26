@@ -312,7 +312,7 @@ class Model_Base:
         raise NotImplementedError # Implement in derived class
 
     def repr_graphical(self, diagonal=True, graph=False,
-                       threshold=None, caption='', norm=False,
+                       threshold=None, caption='', norm=True,
                        samecolorbar=True, save=False, vmax=None):
         """ a graphical representation of the groupnorm for PW and CLZ models
         (this method is overwritten by the Model_PWSL model class)
@@ -331,16 +331,19 @@ class Model_Base:
             vmax = m
         else:
             cmap = cm.viridis
+            cmap = cm.Greys
         if graph:
             fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(14, 7))
             if not threshold is None:
-                modelgraph = self.get_graph(threshold = threshold)
+                modelgraph = self.get_graph(threshold=threshold)
             else:
                 modelgraph = self.get_graph()
-            axes.flat[0].matshow(modelgraph * np.max(grpnormat),interpolation='nearest')
+            axes.flat[0].matshow(modelgraph * np.max(grpnormat), cmap=cmap,
+                                 interpolation='nearest')
             axes.flat[0].set_title('%s graph'%(self.name), y=1.10)
 
-            im0 = axes.flat[1].matshow(grpnormat, interpolation='nearest', vmin=vmin, vmax=vmax)
+            im0 = axes.flat[1].matshow(grpnormat, interpolation='nearest',
+                           cmap=cmap, vmin=vmin, vmax=vmax)
             axes.flat[1].set_title('%s (%s) edge weights'%(self.name, caption), y=1.10)
             fig.colorbar(im0, ax=axes.ravel().tolist(), shrink=.7)
         else:
@@ -349,7 +352,7 @@ class Model_Base:
     
             im0 = axes.matshow(grpnormat, interpolation='nearest',
                                vmin=vmin, vmax=vmax, cmap=cmap)
-            axes.set_title('%s pairwise parameters %s'%(self.name, caption), y=1.10)
+            axes.set_title('%s pairwise parameters %s' % (self.name, caption), y=1.10)
 
             fig.colorbar(im0, ax=axes, shrink=.7)
         if save:
@@ -449,7 +452,7 @@ class Model_PW_Base(Model_Base):
         """ returns matrix of group norms of the direct interactions"""
         return self._get_group_mat(self.Q, self.R, self.Lambda, **kwargs)
 
-    def get_graph(self, threshold=1e-1, disp=False):
+    def get_graph(self, threshold=1e-1):
         """ calculate group norms of the parameters associated with each edge and threshold
         
         plot graph if disp is True"""
@@ -461,11 +464,6 @@ class Model_PW_Base(Model_Base):
         for i in range(graph.shape[0]):
             graph[i, i] = False # no edges on diagonal
 
-        if disp:
-            plt.matshow(graph, interpolation='nearest')
-            plt.title('%s graph'%(self.name), y=1.12)
-            plt.show()
-            
         return graph
 
     def _get_meanparams(self, pwparams):

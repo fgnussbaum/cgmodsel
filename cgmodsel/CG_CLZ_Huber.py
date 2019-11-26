@@ -77,30 +77,40 @@ class CG_CLZ_Huber(CG_base_Huber):
             lLtot_diag += [(0,0)]
             lLtot_diag+=  (self.sizes[r] - 1) * [(10E-6, inf)]
 
-        # Q
-        for r in range(self.dc):
+        if self.dc > 0:
+            # Q
+            for r in range(self.dc):
+                bnds += self.Ltot * [(0,0)]
+                bnds += (self.sizes[r]-1) * lLtot_ident
+            
+            # u
+            if self.opts['use_u']:
+                bnds += lLtot_ident
+            else:
+                bnds += self.Ltot * [(0,0)]
+        
+        if self.dg > 0:
+            bnds += self.dg * lLtot_ident # R
+            
+            for s in range(self.dg - 1): # B0 with zero bounds on diagonal
+                bnds +=[(0,0)]
+                bnds += self.dg * [(-inf, inf)]
+            bnds += [(0,0)]
+            
+            bnds += self.dg * [(10E-6, inf)] # beta0 diagonal
+    
+            
+            for s in range(self.dg - 1): # B with zero bounds on diagonal
+                bnds +=self.Ltot * [(0,0)]
+                bnds += self.dg * lLtot_ident
             bnds += self.Ltot * [(0,0)]
-            bnds += (self.sizes[r]-1) * lLtot_ident
-        
-        bnds+= lLtot_ident # u
-        bnds+= self.dg * lLtot_ident # R
-        
-        for s in range(self.dg - 1): # B0 with zero bounds on diagonal
-            bnds+=[(0,0)]
-            bnds+= self.dg * [(-inf, inf)]
-        bnds += [(0,0)]      
-        
-        bnds += self.dg * [(10E-6, inf)] # beta0 diagonal
-
-        
-        for s in range(self.dg - 1): # B with zero bounds on diagonal
-            bnds+=self.Ltot * [(0,0)]
-            bnds+= self.dg * lLtot_ident
-        bnds += self.Ltot * [(0,0)]
-       
-        bnds+= self.dg * lLtot_diag # B diagonal
-        
-        bnds+= self.dg * [(-inf, inf)] # alpha
+           
+            bnds += self.dg * lLtot_diag # B diagonal
+            
+            if self.opts['use_alpha']:
+                bnds += self.dg * [(-inf, inf)] # alpha
+            else:
+                bnds += self.dg * [(0,0)]
 
         return bnds
 
@@ -236,7 +246,8 @@ class CG_CLZ_Huber(CG_base_Huber):
 
         return (Q, u, R, B0, beta0, B, beta, alpha)
         
-    def get_fval_and_grad(self, x, delta=None, sparse=False, smooth=True, verb='-'): 
+    def get_fval_and_grad(self, x, delta=None, sparse=False, smooth=True,
+                          verb='-', debugflag=None): 
         """calculate function value f and gradient g of CLZ model
         x    vector of parameters
         increases self.fcalls by 1, no other class variables are modified"""
