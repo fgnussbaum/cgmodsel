@@ -4,181 +4,176 @@
 @author: Frank Nussbaum (translation to Python)
 
 This file implements Proximal Gradient ADM algorithms similar to the
-one described in 
-"Alternating Direction Methods for Latent Variable Gaussian Graphical 
+one described in
+"Alternating Direction Methods for Latent Variable Gaussian Graphical
 Model Selection", 2013, by Ma, Xue and Zou,
-for solving Latent Variable Gaussian Graphical Model Selection  
-min l(Theta) + alpha * ||S||_{2,1} + beta * tr(L) 
+for solving Latent Variable Gaussian Graphical Model Selection
+min l(Theta) + alpha * ||S||_{2,1} + beta * tr(L)
 s.t. Theta = S + L, continuous-continuous interactions parameters in Theta PSD,
      and L>=0
 
 """
 import numpy as np
-import scipy # use scipy.linalg.eigh (for real symmetric matrix), does not check for symmetry
+import scipy  # use scipy.linalg.eigh (for real symmetric matrix), does not check for symmetry
 
 #from cgmodsel.models.model_pwsl import ModelPairwiseSL
-from cgmodsel.base_admm  import grp_soft_shrink as soft_shrink
-from cgmodsel.base_admm import l21norm
 
 from cgmodsel.base_admm import BaseAdmm
 from cgmodsel.base_solver import BaseSolverSL
-from cgmodsel.lhprox_solver import LikelihoodProx
+from cgmodsel.prox import LikelihoodProx
+from cgmodsel.prox import grp_soft_shrink, l21norm
+
+# pylint: disable=R0914
 
 class AdmmGaussianSL(BaseSolverSL, BaseAdmm):
     """
-    solve the problem 
+    solve the problem
        min l(S-L) + lambda * ||S||_1 + rho * tr(L)
        s.t. S-L>0, L>=0
     where l is the Gaussian likelihood with pairwise parameters Theta=S-L,
     here Theta is the precision matrix (inverse of the covariance matrix)
     of the z(unnormalized) zero-mean Gaussian model
         p(y) ~ exp(-1/2 y^T Theta y)
-        
-    Solver is an ADMM algorithm with proximal gradient step    
-    
+
+    Solver is an ADMM algorithm with proximal gradient step
+
     """
-    
+
     def __init__(self, *args, **kwargs):
         """"must provide with dictionary meta"""
 
-        super().__init__(*args, **kwargs) # Python 3 syntax
-#        BaseAdmm.__init__(self)
-#        BaseSolverSL.__init__(self, meta=meta)        
+        super().__init__(*args, **kwargs)  # Python 3 syntax
+        #        BaseAdmm.__init__(self)
+        #        BaseSolverSL.__init__(self, meta=meta)
 
-        self.sigma0 = None         
-        self.n_params = 2 * self.n_cgvars ** 2
-        
+        self.sigma0 = None
+
         self.proxstep_param = 0.5
-        
-    def drop_data(self, continuous_data):
-        """drop data"""
-#        super().drop_data()
-        self.ndata, self.n_cgvars = continuous_data.shape
 
-        assert not np.any(np.isnan(continuous_data))
-        
-        self.cont_data = continuous_data
-        
-        # empirical second-moment matrix
-        self.sigma0 = np.dot(continuous_data.T, continuous_data) / self.ndata 
-        
-        self.unscaledlbda = np.sqrt(np.log(self.n_cgvars) / self.ndata)
-        self.scales = self.unscaledlbda, self.unscaledlbda
-
+    def _postsetup_data(self):
+        """called after drop_data"""
+        # precompute empirical second-moment matrix
+        self.sigma0 = np.dot(self.cont_data.T, self.cont_data)
+        self.sigma0 /= self.meta['n_data']
 
     def _initialize_admm(self):
         """initialize ADMM variables"""
-        dim = self.sigma0.shape[1] 
+        dim = self.sigma0.shape[1]
         mat_theta = np.eye(dim)
         mat_s = mat_theta
-        mat_l = np.zeros((dim,dim))
-        mat_z = np.zeros((dim,dim))
-        
+        mat_l = np.zeros((dim, dim))
+        mat_z = np.zeros((dim, dim))
+
         return mat_theta, mat_s, mat_l, mat_z
 
     def _do_iter_admm(self, current_vars: tuple):
         """perform computations of one ADMM iteration"""
         mat_theta, mat_s, mat_l, mat_z = current_vars
 
-        B = self.admm_param * self.sigma0 - self.admm_param * mat_z - mat_s + mat_l
+        tmp = self.admm_param * self.sigma0 - self.admm_param * mat_z - mat_s + mat_l
 
-        eig, U = scipy.linalg.eigh(B)
+        eig, mat_u = scipy.linalg.eigh(tmp)
 
         eig_theta = (-eig + np.sqrt(np.square(eig) + 4 * self.admm_param)) / 2
         # always positive (though might round to 0 due to bad precision)
 
-        mat_theta = np.dot(np.dot(U, np.diag(eig_theta)), U.T)
-        mat_theta = (mat_theta + mat_theta.T) / 2;
+        mat_theta = np.dot(np.dot(mat_u, np.diag(eig_theta)), mat_u.T)
+        mat_theta = (mat_theta + mat_theta.T) / 2
 
         mat_s_old = mat_s
         mat_l_old = mat_l
-        
-        ## update S and L 
+
+        ## update S and L
         grad_partial = mat_theta - mat_s + mat_l - self.admm_param * mat_z
         grad_partial_s = mat_s + self.proxstep_param * grad_partial
         grad_partial_l = mat_l - self.proxstep_param * grad_partial
-        mat_s = soft_shrink(grad_partial_s, self.proxstep_param * self.admm_param * self.lbda, off=self.opts['off'])
-        mat_s = (mat_s + mat_s.T) / 2 
-        
-        eig, U = scipy.linalg.eigh(grad_partial_l)
+        mat_s = grp_soft_shrink(grad_partial_s,
+                                self.proxstep_param * self.admm_param *
+                                self.lbda,
+                                off=self.opts['off'])
+        mat_s = (mat_s + mat_s.T) / 2
+
+        eig, mat_u = scipy.linalg.eigh(grad_partial_l)
         eig_l = eig - self.proxstep_param * self.admm_param * self.rho
         eig_l[eig_l < 1e-25] = 0
-        mat_l = np.dot(np.dot(U, np.diag(eig_l)), U.T)
+        mat_l = np.dot(np.dot(mat_u, np.diag(eig_l)), mat_u.T)
         mat_l = (mat_l + mat_l.T) / 2
-        
-        ## update dual variables Z 
+
+        ## update dual variables Z
         resid = mat_theta - mat_s + mat_l
         mat_z = mat_z - resid / self.admm_param
-        mat_z = (mat_z + mat_z.T) / 2 
+        mat_z = (mat_z + mat_z.T) / 2
 
         fronorm_s = np.linalg.norm(mat_s, 'fro')
         fronorm_l = np.linalg.norm(mat_l, 'fro')
         fronorm_theta = np.linalg.norm(mat_theta, 'fro')
-        
-        rnorm = np.linalg.norm(resid,'fro')
-        snorm = np.sqrt(np.linalg.norm(mat_s - mat_s_old, 'fro') ** 2 +
-               np.linalg.norm(mat_l - mat_l_old, 'fro') ** 2) / self.admm_param
 
-        n = mat_theta.shape[0]
-        eps_pri = np.sqrt(3 * n ** 2) * self.opts['abstol'] + self.opts['reltol'] * max((
-                fronorm_theta ** 2, fronorm_s ** 2 + fronorm_l ** 2))
-        eps_dual = np.sqrt(3 * n ** 2) * self.opts['abstol'] + self.opts['reltol'] * np.linalg.norm(mat_z,'fro')
+        rnorm = np.linalg.norm(resid, 'fro')
+        snorm = np.sqrt(
+            np.linalg.norm(mat_s - mat_s_old, 'fro')**2 +
+            np.linalg.norm(mat_l - mat_l_old, 'fro')**2) / self.admm_param
+
+        dim = mat_theta.shape[0]
+        eps_pri = np.sqrt(
+            3 * dim**2) * self.opts['abstol'] + self.opts['reltol'] * max(
+                (fronorm_theta**2, fronorm_s**2 + fronorm_l**2))
+        eps_dual = np.sqrt(3 * dim**2) * self.opts['abstol'] + self.opts[
+            'reltol'] * np.linalg.norm(mat_z, 'fro')
 
         ## store stuff
         residuals = rnorm, snorm, eps_pri, eps_dual
         new_vars = mat_theta, mat_s, mat_l, mat_z
-        
-        stats = {} 
+
+        stats = {}
         stats['admm_obj'] = np.sum(np.sum(np.multiply(mat_theta, self.sigma0)))
         stats['admm_obj'] -= np.sum(np.log(eig_theta))
         stats['admm_obj'] += self.lbda * l21norm(mat_s, off=self.opts['off']) \
                             + self.rho * np.sum(eig_l)
-        
+
         stats['theta'] = mat_theta
-        stats['solution'] = mat_s, mat_l, np.zeros((self.n_cgvars, 1))
+        alpha = np.zeros((self.meta['n_cg'], 1))
+        stats['solution'] = mat_s, mat_l, alpha
         # set problem_vars (mat_s with negative sign to be consistent with
         # general CG pairwise parameter representation)
-        self.problem_vars = -mat_s, mat_l, np.zeros((self.n_cgvars, 1))
+        self.problem_vars = -mat_s, mat_l, alpha
         stats['eig_theta'] = eig_theta
         stats['eig_l'] = eig_l
         stats['resid'] = resid
-        
-#        obj2 = self.get_objective(S, L)
-#        out['objdiff'] = np.abs(obj - obj2) # difference of ADMM and real objective
-#        out['obj'] = obj # always Wfeasible
-        
+
         return new_vars, residuals, stats
 
-    def get_objective(self, problem_vars, lhonly=False):
-        """return objective value of original problem"""
-        mat_s, mat_l, alpha = problem_vars
-        mat_theta = mat_s - mat_l
-        obj = np.sum(np.sum(np.multiply(mat_theta, self.sigma0)))
-        obj -= np.linalg.slogdet(mat_theta)[1]
-        if not lhonly:
-            obj += self.lbda * l21norm(mat_s, off=self.opts['off'])
-            obj += self.rho * np.trace(mat_l)
-        
-        return obj
 
-    def crossvalidate(self, problem_vars):
-        """calculate a cross validation score (use after dropping test data)"""
-        return self.get_objective(problem_vars, lhonly=True)
+#    def get_objective(self, problem_vars, lhonly=False):
+#        """return objective value of original problem"""
+#        mat_s, mat_l, alpha = problem_vars
+#        mat_theta = mat_s - mat_l
+#        obj = np.sum(np.sum(np.multiply(mat_theta, self.sigma0)))
+#        obj -= np.linalg.slogdet(mat_theta)[1]
+#        if not lhonly:
+#            obj += self.lbda * l21norm(mat_s, off=self.opts['off'])
+#            obj += self.rho * np.trace(mat_l)
+#
+#        return obj
+#
+#    def crossvalidate(self, problem_vars):
+#        """calculate a cross validation score (use after dropping test data)"""
+#        return self.get_objective(problem_vars, lhonly=True)
 
 ###############################################################################
 # general case, CG distributions with pseudo likelihood
 ###############################################################################
 
+
 class AdmmCGaussianSL(LikelihoodProx, BaseSolverSL, BaseAdmm):
     """
-    solve the problem 
+    solve the problem
        min l(S+L) + lambda * ||S||_{2,1} + rho * tr(L)
        s.t. Lambda[S+L]>0, L>=0
     where l is the pseudo likelihood with pairwise parameters Theta=S+L,
     here Lambda[S+L] extracts the quantitative-quantitative interactions
     from the pairwise parameter matrix Theta=(Q & R^T \\ R & -Lbda),
     that is, Lambda[Theta] = Lbda
-    
+
     The estimated probability model has (unnormalized) density
         p(y) ~ exp(1/2 (D_x, y)^T Theta (D_x, y) + alpha^T y + u^T D_x)
     where D_x is the indicator representation of the discrete variables x
@@ -186,43 +181,39 @@ class AdmmCGaussianSL(LikelihoodProx, BaseSolverSL, BaseAdmm):
     and y are the quantitative variables.
     Note that alpha and u are optional univariate parameters that can be included
     in the optimization problem above.
-        
-    The solver is an ADMM algorithm with a proximal gradient step.    
-    
+
+    The solver is an ADMM algorithm with a proximal gradient step.
     """
-#    def __init__(self, meta, useweights=False, use_plh=True):
-#        LikelihoodProx.__init__(self, meta, useweights, use_plh)
+
     def __init__(self, *args, **kwargs):
         """"must provide with dictionary meta"""
 
-        super().__init__(*args, **kwargs) # Python 3 syntax
-        
+        super().__init__(*args, **kwargs)  # Python 3 syntax
+
         self.name = 'SL_PADMM'
-        
+
         self.lbda, self.rho = None, None
 
-    def __str__(self):
-        """string representation of the solver parameters """
-        s = '<PADMMsolver> la=%s'%(self.lbda) + ', rho=%s'%(self.rho)
-        s += ', use_alpha:%d'%(self.opts['use_alpha']) + ', use_u:%d'%(self.opts['use_u']) + ', off:%d'%(self.opts['off'])
-        s += ', usclbda=%s'%(self.unscaledlbda)
-        
-        return s
-    
+        self.proxstep_param = 0.5
+
     def _initialize_admm(self):
         """initialize ADMM variables"""
-        dim = self.sigma0.shape[1] 
+        dim = self.meta['dim']
+        ltot = self.meta['ltot']
         mat_theta = np.eye(dim)
-        mat_theta[self.Ltot:, self.Ltot:] *= -1 # lower right block needs to be negative definite
-        mat_theta = self._cleanTheta(mat_theta) # make Theta feasible/cleaned for lh/plh
+        mat_theta[ltot:, ltot:] *= -1
+        # since lower right block needs to be negative definite
+        # make Theta feasible/cleaned for plh
+        mat_theta = self._clean_theta(mat_theta)
 
-        alpha = np.zeros((self.dg, 1))
+        alpha = np.zeros((self.meta['n_dg'], 1))
         mat_s = mat_theta.copy()
-        if not self.opts['use_u']: # no univariate parameters
-            mat_s[:self.Ltot,:self.Ltot] -= np.diag(np.diag(mat_s[:self.Ltot, :self.Ltot]))
-        mat_l = np.zeros((self.d, self.d))
-        mat_z = np.zeros((self.d, self.d))
-        
+        if not self.opts['use_u']:  # no univariate parameters
+            mat_s[:ltot, :ltot] -= np.diag(
+                np.diag(mat_s[:ltot, :ltot]))
+        mat_l = np.zeros((dim, dim))
+        mat_z = np.zeros((dim, dim))
+
         return mat_theta, mat_s, mat_l, mat_z, alpha
 
     def _do_iter_admm(self, current_vars: tuple):
@@ -230,63 +221,68 @@ class AdmmCGaussianSL(LikelihoodProx, BaseSolverSL, BaseAdmm):
 
         mat_theta, mat_s, mat_l, mat_z, alpha = current_vars
 
-
         tmp = mat_s + mat_l + self.admm_param * mat_z
-        
-        mat_theta, alpha = self.solve_genlh_prox(mu=self.admm_param, Z=tmp,
-                                             oldThetaalpha=(mat_theta, alpha))
+
+        mat_theta, alpha = self.solve_plh_prox(tmp, self.admm_param,
+                                               (mat_theta, alpha))
 
         mat_theta = (mat_theta + mat_theta.T) / 2
-    
+
         mat_s_old = mat_s
         mat_l_old = mat_l
-        
-        ## update S and L 
+
+        ## update S and L
         gradient_partial = mat_theta - mat_s - mat_l - self.admm_param * mat_z
         # neg part grad
-        
-        mat_s = self.func_shrink(mat_s + self.proxstep_param * gradient_partial,
-                                 self.proxstep_param * self.admm_param * self.lbda)
+
+        mat_s = grp_soft_shrink(mat_s + self.proxstep_param * gradient_partial,
+                                self.proxstep_param * self.admm_param *
+                                self.lbda,
+                                off=self.opts['off'])
+
         mat_s = (mat_s + mat_s.T) / 2
-        if not self.opts['use_u']: # no univariate parameters
-            mat_s[:self.Ltot, :self.Ltot] -= \
-                np.diag(np.diag(mat_s[:self.Ltot, :self.Ltot]))
-        
+        if not self.opts['use_u']:  # no univariate parameters
+            ltot = self.meta['ltot']
+            mat_s[:ltot, :ltot] -= \
+                np.diag(np.diag(mat_s[:ltot, :ltot]))
+
         tmp = mat_l + self.proxstep_param * gradient_partial
-        eig, U = scipy.linalg.eigh(tmp) # TODO: partial decomp
+        eig, mat_u = scipy.linalg.eigh(tmp)
 
         # spectral soft shrink to form eigenvalues of L
-        eig_l = eig - self.proxstep_param * self.admm_param * self.rho 
-        eig_l[eig_l<1e-25] = 0
-        mat_l = np.dot(np.dot(U, np.diag(eig_l)), U.T)
-        mat_l = (mat_l + mat_l.T) / 2 
+        eig_l = eig - self.proxstep_param * self.admm_param * self.rho
+        eig_l[eig_l < 1e-25] = 0
+        mat_l = np.dot(np.dot(mat_u, np.diag(eig_l)), mat_u.T)
+        mat_l = (mat_l + mat_l.T) / 2
 
-        ## update dual variables Z 
+        ## update dual variables Z
         resid_theta = mat_theta - mat_s - mat_l
         mat_z = mat_z - resid_theta / self.admm_param
         mat_z = (mat_z + mat_z.T) / 2
-        
+
         ## diagnostics, reporting, termination checks
 
         fronorm_s = np.linalg.norm(mat_s, 'fro')
         fronorm_l = np.linalg.norm(mat_l, 'fro')
         fronorm_theta = np.linalg.norm(mat_theta, 'fro')
-        
-        rnorm = np.linalg.norm(resid_theta,'fro')
-        snorm = np.sqrt(np.linalg.norm(mat_s - mat_s_old, 'fro') ** 2 +
-               np.linalg.norm(mat_l - mat_l_old, 'fro') ** 2) / self.admm_param
 
+        rnorm = np.linalg.norm(resid_theta, 'fro')
+        snorm = np.sqrt(
+            np.linalg.norm(mat_s - mat_s_old, 'fro')**2 +
+            np.linalg.norm(mat_l - mat_l_old, 'fro')**2) / self.admm_param
 
-        n = mat_theta.shape[0]
-        eps_pri = np.sqrt(3 * n ** 2) * self.opts['abstol'] + self.opts['reltol'] * max((
-                fronorm_theta ** 2, fronorm_s ** 2 + fronorm_l ** 2))
-        eps_dual = np.sqrt(3 * n ** 2) * self.opts['abstol'] + self.opts['reltol'] * np.linalg.norm(mat_z,'fro')
+        dim = mat_theta.shape[0]
+        eps_pri = np.sqrt(
+            3 * dim**2) * self.opts['abstol'] + self.opts['reltol'] * max(
+                (fronorm_theta**2, fronorm_s**2 + fronorm_l**2))
+        eps_dual = np.sqrt(3 * dim**2) * self.opts['abstol'] + self.opts[
+            'reltol'] * np.linalg.norm(mat_z, 'fro')
 
         ## store stuff
         residuals = rnorm, snorm, eps_pri, eps_dual
         new_vars = mat_theta, mat_s, mat_l, mat_z, alpha
-        
-        stats = {} 
+
+        stats = {}
         stats['theta'] = mat_theta
         stats['solution'] = mat_s, mat_l, alpha
         self.problem_vars = stats['solution']
@@ -296,17 +292,19 @@ class AdmmCGaussianSL(LikelihoodProx, BaseSolverSL, BaseAdmm):
 
         stats['admm_obj'] = self.lbda * l21norm(mat_s, off=self.opts['off']) \
                         + self.rho * np.sum(eig_l)
-#        stats['true_obj'] = stats['admm_obj'] + self.plh(mat_s + mat_l, alpha) # true objective
+        # stats['true_obj'] = stats['admm_obj'] + self.plh(mat_s + mat_l, alpha) # true objective
         stats['admm_obj'] += self.plh(mat_theta, alpha)
 
         return new_vars, residuals, stats
-    
-    def get_objective(self, S, L, u=None, alpha=None):
-        if self.n_catvars > 0 and not u is None:
-            S = S.copy() 
-            S[:self.Ltot, :self.Ltot] += 2 * np.diag(u)
-        if alpha is None:
-            alpha = np.zeros(self.dg)
-        obj = self.lbda * self.sparsenorm(S) + self.rho * np.trace(L)
-        obj += self.genlh(S + L, alpha)
-        return obj
+
+
+#    def get_objective(self, S, L, u=None, alpha=None):
+#        """ """
+#        if self.n_cat > 0 and not u is None:
+#            S = S.copy()
+#            S[:ltot, :ltot] += 2 * np.diag(u)
+#        if alpha is None:
+#            alpha = np.zeros(self.meta['n_dg'])
+#        obj = self.lbda * self.sparsenorm(S) + self.rho * np.trace(L)
+#        obj += self.genlh(S + L, alpha)
+#        return obj

@@ -121,15 +121,15 @@ def get_meta_data(data, verb=False, catuniques=None,
 
     ##### ** store everything in a dictionary **
     meta = {}
-    meta['dc'] = dc
-    meta['dg'] = dg
+    meta['n_cat'] = dc
+    meta['n_cg'] = dg
     meta['n'] = data.shape[0]
     
     meta['catnames'] = categoricals
     meta['contnames'] = numericals
     
     meta['dcatval2ind'] = dcatval2ind
-    meta['Lcum'] = Lcum
+    meta['cat_glims'] = Lcum
     
     meta['sizes'] = sizes
 #    meta['sizes_red'] = [size - 1 for size in sizes]
@@ -159,20 +159,20 @@ def load_prepare_data(datasource, drop=[], verb=False, standardize=False,
 
     if verb and type(datasource) is type(""):
         print('Filename:', datasource)
-        print('Loaded a dataset with %d samples, %d discrete and %d continuous variables.' % (meta['n'], meta['dc'], meta['dg']))
+        print('Loaded a dataset with %d samples, %d discrete and %d continuous variables.' % (meta['n'], meta['n_cat'], meta['n_cg']))
         print('Discrete Variables (at most 20): %s'%(meta['catnames'][:20]))
         print('Continuous Variables (at most 20): %s\n'%(meta['contnames'][:20]))
     
     if shuffle:
         data = data.sample(frac=1, random_state=shuffleseed)
 
-    if meta['dg'] > 0:
+    if meta['n_cg'] > 0:
         Y = data[meta['contnames']].values
     else:
         Y = np.empty((meta['n'],0))
 
     # transform discrete variables to indicator data/ flat index etc.
-    if meta['dc'] > 0:
+    if meta['n_cat'] > 0:
         D = prepare_cat_data(data[meta['catnames']], meta, cattype=cattype)
     else:
         D = np.empty((meta['n'],0))
@@ -269,7 +269,7 @@ def load_traintest_datasets(filename_trunk, verb=True, **kwargs):
     meta['n'] += meta_test['n']
     if verb:
         print('Name:', name)
-        print('Loaded a datasets, %d discrete and %d continuous variables.' % (meta['dc'], meta['dg']))
+        print('Loaded a datasets, %d discrete and %d continuous variables.' % (meta['n_cat'], meta['n_cg']))
         print('Training data has %d samples, test data has %d samples'%(meta['n'], meta_test['n']))
         print('Discrete Variables (at most 20): %s'%(meta['catnames'][:20]))
         print('Continuous Variables (at most 20): %s\n'%(meta['contnames'][:20]))
@@ -324,12 +324,12 @@ def prepare_cat_data(data, meta, verb=False, cattype='dummy'):
     t = time.time()
     n, d = data.shape
     
-    dc = meta['dc']
+    dc = meta['n_cat']
     assert d  == dc
     
     catcols = meta['catnames']
     dcatval2ind = meta['dcatval2ind']
-    catcumlevels = meta['Lcum']
+    catcumlevels = meta['cat_glims']
     nr = catcumlevels[-1]
 
     if dc == 0:
@@ -424,14 +424,14 @@ def writeCSV(filename, X, Y, meta, method='rpl_numericalcats', prefix='val'):
       catnames:   column names for Gaussian variables
     """
     ## column names
-    dc = meta['dc']
+    dc = meta['n_cat']
     if 'catnames' in meta:
         catcols = meta['catnames'][:]
         assert(len(catcols) == dc)
     else:
         catcols = ['X%d'%(i) for i in range(dc)]
 
-    dg = meta['dg'] 
+    dg = meta['n_cg'] 
     if 'gaussnames' in meta:
         gausscols = meta['gaussnames'][:]
         assert(len(gausscols) == dg)

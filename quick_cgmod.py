@@ -7,15 +7,17 @@ Demo for "Pairwise Sparse + Low-Rank Models for Variables of Mixed Type"
 as submitted to the Journal of Multivariate Analysis (JMVA)
 """
 
-from cgmodsel.admm_pwsl import AdmmCGaussianSL # ADMM pseudo likelihood
-from cgmodsel.admm_pwsl import AdmmGaussianSL # ADMM Gaussian likelihood
+# pylint: disable=C0103
 
-from cgmodsel.dataops import load_prepare_data # function to read data
+from cgmodsel.admm_pwsl import AdmmCGaussianSL, AdmmGaussianSL
+
+from cgmodsel.dataops import load_prepare_data  # function to read data
+
 
 def load(dataset):
     """
     load csv with file path dataset['filename']
-    
+
     return tuple (D, Y, meta),
     where D binary data, Y quantitative data,
     and meta is meta information about the dataset
@@ -27,76 +29,81 @@ def load(dataset):
     # recommended to provide this if binary variables are not strings such as 'yes'/'no'
     if 'sparams' in dataset:
         loaddict.update(dataset['sparams'])
-        
-    return load_prepare_data(dataset['filename'], cattype='dummy_red', **loaddict)
-    
+
+    return load_prepare_data(dataset['filename'],
+                             cattype='dummy_red',
+                             **loaddict)
+
 
 if __name__ == '__main__':
-   
-###### data sets
-    
+
+    ###### data sets
+
     ## binary ##
     ABILITY = {
-            'filename': "datasets/ability_proc.csv",
-            'regparams': (.2,.5),
-            'sparams': {'catuniques': [0,1]} # values that binary variables take
-            }
+        'filename': "datasets/ability_proc.csv",
+        'regparams': (.2, .5),
+        'sparams': {
+            'catuniques': [0, 1]
+        }  # values that binary variables take
+    }
     CFMT = {
-            'filename': "datasets/CFMTkurzBIN.csv",
-            'regparams': (.15,1.5),
-            'sparams': {'catuniques': [0,1]} # values that binary variables take
-            }
+        'filename': "datasets/CFMTkurzBIN.csv",
+        'regparams': (.15, 1.5),
+        'sparams': {
+            'catuniques': [0, 1]
+        }  # values that binary variables take
+    }
 
     ## quantitative ##
     LSVT = {
-            'filename': "datasets/LSVT.csv",
-            'regparams': (.1,1),
-            }
+        'filename': "datasets/LSVT.csv",
+        'regparams': (.1, 1),
+    }
 
     ## mixed binary-quantitative##
     ALLBUS = { # pw model
-            'filename': "datasets/allbus2016_proc.csv",
-            'regparams': (1,2),
-            }
+        'filename': "datasets/allbus2016_proc.csv",
+        'regparams': (1, 2),
+    }
     HELP = {
-            'filename': "datasets/HELPmiss_proc.csv",
-            'regparams': (.5,2),
-            }
+        'filename': "datasets/HELPmiss_proc.csv",
+        'regparams': (.5, 2),
+    }
 
-###### select and load data set
+    ###### select and load data set
 
     # ********************************* #
     # comment out all but one line here #
-    dataset = CFMT
-#    dataset = LSVT
-#    dataset = HELP
+    data = CFMT
+    # data = LSVT
+    # data = HELP
     # ********************************* #
 
     print('Loading data...')
-    D, Y, meta = load(dataset) # load the data
-    
-###### fit models    
-    
+    cat_data, cont_data, meta = load(data)  # load the data
+
+    ###### fit models
+
     ## initialize solver and drop data ##
-    if meta['dc'] > 0: # binary variables are present
-        solver = AdmmCGaussianSL(meta)
-        solver.drop_data(D, Y)
-    else: # purely Gaussian model
-        solver = AdmmGaussianSL(meta)
-        solver.drop_data(Y)
-    
+    if meta['n_cat'] > 0:  # binary variables are present
+        solver = AdmmCGaussianSL()
+        solver.drop_data((cat_data, cont_data), meta)
+    else:  # purely Gaussian model
+        solver = AdmmGaussianSL()
+        solver.drop_data(cont_data, meta)
+
     ## set regularization parameters ##
     # you may try different values, any pair of positive reals will do
     # e.g., regparams = (.1, 1)
-    regparams = dataset['regparams'] # regularization parameters
+    regparams = data['regparams']  # regularization parameters
     solver.set_regularization_params(regparams)
-    
+
     ## solve the problem, that is, estimate a sparse + low-rank model ##
     print('Solving the problem...')
     solver.solve(verb=0)
-    
-###### model visualization
-    
-    model = solver.get_canonicalparams() # S + L model instance
-    model.repr_graphical(caption='learned')
 
+    ###### model visualization
+
+    model = solver.get_canonicalparams()  # S + L model instance
+    model.repr_graphical(caption='learned')
