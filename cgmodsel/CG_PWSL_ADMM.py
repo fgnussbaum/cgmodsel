@@ -7,14 +7,14 @@
 import numpy as np
 import scipy # use scipy.linalg.eigh (for real symmetric matrix), does not check for symmetry
 
-from cgmodsel.models.model_pwsl import Model_PWSL
-from cgmodsel.CG_base_ADMM import LHProx_base
-from cgmodsel.CG_base_ADMM import cont_update_S2a
+from cgmodsel.models.model_pwsl import ModelPairwiseSL
+from cgmodsel.base_admm import LikelihoodProx
+from cgmodsel.base_admm import cont_update_S2a
 
 
 ###############################################################################
 
-class CG_PWSL_ADMM(LHProx_base):
+class AdmmCGaussianSL(LikelihoodProx):
     """
     solve the problem 
        min l(S+L) + lambda * ||S||_{2,1} + rho * tr(L)
@@ -126,7 +126,7 @@ class CG_PWSL_ADMM(LHProx_base):
             fullsizes = self.sizes
 
         meta = {'dc': self.dc, 'dg': self.dg,'sizes': fullsizes}
-        return Model_PWSL(can_pwsl, meta,
+        return ModelPairwiseSL(can_pwsl, meta,
                           annotations=annotations, in_padded=False)
 
 
@@ -171,8 +171,8 @@ class CG_PWSL_ADMM(LHProx_base):
         using current solver configuration
         """
         ## initialization 
-        ABSTOL = self.opts['ABSTOL']
-        RELTOL = self.opts['RELTOL']
+        abstol = self.opts['abstol']
+        reltol = self.opts['reltol']
         
         ## initialization optimization vaThetaiables
         Theta = np.eye(self.d)
@@ -243,10 +243,10 @@ class CG_PWSL_ADMM(LHProx_base):
             snorm = np.sqrt(np.linalg.norm(S - S_old, 'fro') ** 2 +
                    np.linalg.norm(L - L_old, 'fro') ** 2) / mu
 
-            eps_pri = np.sqrt(3 * self.d ** 2) * ABSTOL + RELTOL * max((
+            eps_pri = np.sqrt(3 * self.d ** 2) * abstol + reltol * max((
                     np.linalg.norm(Theta,'fro'), np.sqrt(np.linalg.norm(S, 'fro') ** 2 +
                    np.linalg.norm(L, 'fro') ** 2)))
-            eps_dual = np.sqrt(self.d ** 2) * ABSTOL + RELTOL * np.linalg.norm(Phi,'fro')
+            eps_dual = np.sqrt(self.d ** 2) * abstol + reltol * np.linalg.norm(Phi,'fro')
 
             history['r_norm'][k]  = rnorm
             history['s_norm'][k]  = snorm

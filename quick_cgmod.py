@@ -7,8 +7,8 @@ Demo for "Pairwise Sparse + Low-Rank Models for Variables of Mixed Type"
 as submitted to the Journal of Multivariate Analysis (JMVA)
 """
 
-from cgmodsel.CG_PWSL_ADMM import CG_PWSL_ADMM # ADMM pseudo likelihood
-from cgmodsel.GLH_PWSL_ADMM import GLH_PWSL_ADMM # ADMM Gaussian likelihood
+from cgmodsel.admm_pwsl import AdmmCGaussianSL # ADMM pseudo likelihood
+from cgmodsel.admm_pwsl import AdmmGaussianSL # ADMM Gaussian likelihood
 
 from cgmodsel.dataops import load_prepare_data # function to read data
 
@@ -79,10 +79,10 @@ if __name__ == '__main__':
     
     ## initialize solver and drop data ##
     if meta['dc'] > 0: # binary variables are present
-        solver = CG_PWSL_ADMM(meta)
+        solver = AdmmCGaussianSL(meta)
         solver.drop_data(D, Y)
     else: # purely Gaussian model
-        solver = GLH_PWSL_ADMM(meta)
+        solver = AdmmGaussianSL(meta)
         solver.drop_data(Y)
     
     ## set regularization parameters ##

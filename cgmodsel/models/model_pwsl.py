@@ -15,7 +15,7 @@ import pickle, os
 from matplotlib import cm
 
 ##################################
-class Model_PWSL(Model_PW_Base):
+class ModelPairwiseSL(Model_PW_Base):
     """
     class for parameters of distribution
     p(x,y) ~ exp(1/2 (C_x, y)^T (S+L) (C_x y) + u^T C_x + alpha^T y)
