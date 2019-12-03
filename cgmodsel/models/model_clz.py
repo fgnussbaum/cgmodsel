@@ -3,15 +3,16 @@
 Copyright: Frank Nussbaum (frank.nussbaum@uni-jena.de), 2019
 
 """
-
-from cgmodsel.models.model_base import Model_Base, canon_to_meanparams
-
 import numpy as np
 
+from cgmodsel.models.base import BaseModel, canon_to_meanparams
+
+# pylint: disable=R0914 # too many local variable
+# pylint: disable=R0913 # too many arguments
 
 ###############################################################################
 
-class Model_CLZ(Model_Base):
+class Model_CLZ(BaseModel):
     """
     class for parameters of distribution
     p(x,y) ~ exp(1/2 C_x Q C_x +  y^T R C_x -1/2 y^T[La0 + Las C_x]y 
@@ -29,36 +30,39 @@ class Model_CLZ(Model_Base):
     Q .. discrete-discrete interactions
     R .. discrete-cont. interactions
     La0 .. cont-cont interaction parameters
-    Las .. cont-cont-discrete interaction parameters (dg x dg x Ltot)
+    Las .. cont-cont-discrete interaction parameters (n_cg x n_cg x ltot)
     
     initialize with tuple pw = (u, Q, R, alpha, La0, Las)
     
     """
     
-    def __init__(self, clz, meta):
-        # meta must provided with dg, dc
-        Model_Base.__init__(self)
-        self.dg = meta['dg']
-        self.dc = meta['dc']
+    def __init__(self, clz_params, meta):
+        # meta must provided with n_cg, n_cat
+        BaseModel.__init__(self)
+        self.n_cg = meta['n_cg']
+        self.meta['n_cat'] = meta['n_cat']
 
-        self.sizes = meta['sizes']
-        self.Lcum = np.cumsum([0] + self.sizes)
-        self.Ltot = np.sum(self.sizes)
+        self.meta['sizes'] = meta['sizes']
+        self.meta['cat_glims'] = np.cumsum([0] + self.meta['sizes'])
+        self.meta['ltot'] = np.sum(self.meta['sizes'])
         
         self.name = 'CLZ'
 
-        self.u, self.Q, self.R, self.alpha, self.Lambda0, self.Lambdas = clz
+        self.vec_u, self.mat_q, self.mat_r, self.alpha, \
+            self.mat_lbda0, self.mat_lbdas = clz_params
     
     def __str__(self): 
         """string representation of the model"""
-        s ='u:' + str(self.u) + '\nQ:\n' + str(self.Q) + '\nR:\n' + str(self.R) +\
-         '\nalpha:' + str(self.alpha) + '\nLambda0:\n' + str(self.Lambda0)
-        for r in range(self.dc):
-            for k in range(1, self.sizes[r]):
-                # for k=0 self.Lambdas[:, :, rk] is zero (identifiability constraint)
-                rk = self.Lcum[r] + k
-                s += '\nLambda_%d:%d'%(r, k) + str(self.Lambdas[:, :, rk])
-        return s 
+        string ='u:' + str(self.vec_u) + '\nQ:\n' + str(self.mat_q) + \
+            '\nR:\n' + str(self.mat_r) +\
+         '\nalpha:' + str(self.alpha) + '\nLambda0:\n' + str(self.mat_lbda0)
+        for r in range(self.meta['n_cat']):
+            for k in range(1, self.meta['sizes'][r]):
+                # for k=0 self.mat_lbdas[:, :, rk] is zero (identifiability constraint)
+                rk = self.meta['cat_glims'][r] + k
+                string += '\nLambda_%d:%d'%(r, k) 
+                string += str(self.mat_lbdas[:, :, rk])
+        return string 
 
     def get_graph(self, threshold=1e-1):
         """ calculate group norms of the parameters associated with each edge and threshold
@@ -79,48 +83,55 @@ class Model_CLZ(Model_Base):
         assert aggr == True, "only implemented for doing aggregation"
         assert norm == True, "l2-norm is the only implemented aggregation function"
         
-        d = self.dc + self.dg
-        grpnormmat = np.zeros((d, d))
+        dim= self.meta['n_cat'] + self.n_cg
+        glims = self.meta['cat_glims']
+        ltot = self.meta['ltot']
+        grpnormmat = np.zeros((dim, dim))
 
-        for r in range(self.dc): # dis-dis
+        for r in range(self.meta['n_cat']): # dis-dis
             for j in range(r):
-                grpnormmat[r,j] = np.linalg.norm(self.Q[self.Lcum[r]:self.Lcum[r+1], self.Lcum[j]:self.Lcum[j+1]])
-        self.Lambdas = self.Lambdas.reshape((self.dg * self.dg, self.Ltot))
+                grpnormmat[r,j] = \
+                np.linalg.norm(self.mat_q[glims[r]:glims[r+1], glims[j]:glims[j+1]])
+        self.mat_lbdas = self.mat_lbdas.reshape((self.n_cg * self.n_cg, ltot))
         
-        for r in range(self.dc):
-            tmp_group = np.empty(self.sizes[r] *self.dg)
-            for s in range(self.dg):
-                offset = s * self.dg
+        for r in range(self.meta['n_cat']):
+            tmp_group = np.empty(self.meta['sizes'][r] *self.n_cg)
+            for s in range(self.n_cg):
+                offset = s * self.n_cg
 
-                tmp_group[:self.sizes[r]] = self.R[s, self.Lcum[r]:self.Lcum[r+1]]
-                tmp_group[self.sizes[r] : (s+1) * self.sizes[r]] = self.Lambdas[offset: offset+s , self.Lcum[r]:self.Lcum[r+1]].flatten() 
-                tmp_group[(s+1) * self.sizes[r] :] = self.Lambdas[offset+s+1: offset+self.dg, self.Lcum[r]:self.Lcum[r+1]].flatten() 
+                tmp_group[:self.meta['sizes'][r]] = self.mat_r[s, glims[r]:glims[r+1]]
+                tmp_group[self.meta['sizes'][r] : (s+1) * self.meta['sizes'][r]] = \
+                    self.mat_lbdas[offset: offset+s , glims[r]:glims[r+1]].flatten() 
+                tmp_group[(s+1) * self.meta['sizes'][r] :] = \
+                    self.mat_lbdas[offset+s+1: offset+self.n_cg, glims[r]:glims[r+1]].flatten() 
 
-                grpnormmat[self.dc + s, r] = np.linalg.norm(tmp_group)
+                grpnormmat[self.meta['n_cat'] + s, r] = np.linalg.norm(tmp_group)
 
-        tmp_group = np.empty(self.Ltot + 1)
-        for t in range(self.dg): # upper triangle s<t
+        tmp_group = np.empty(ltot + 1)
+        for t in range(self.n_cg): # upper triangle s<t
             for s in range(t):
-                tmp_group[:self.Ltot] = self.Lambdas[s * self.dg + t, :]
-                tmp_group[self.Ltot] = self.Lambda0[s, t]
-                grpnormmat[self.dc + s, self.dc + t] = np.linalg.norm(tmp_group)
+                tmp_group[:ltot] = self.mat_lbdas[s * self.n_cg + t, :]
+                tmp_group[ltot] = self.mat_lbda0[s, t]
+                grpnormmat[self.meta['n_cat'] + s, self.meta['n_cat'] + t] = \
+                    np.linalg.norm(tmp_group)
 
         grpnormmat += grpnormmat.T
         
         if not diagonal:
             grpnormmat -= np.diag(np.diag(grpnormmat))
         else:
-            for s in range(self.dg): # add diagonal of cts-cts interactions
-                tmp_group[:self.Ltot] = self.Lambdas[s * self.dg + s, :]
-                tmp_group[self.Ltot] = self.Lambda0[s, s]
-                grpnormmat[self.dc + s, self.dc + s] = np.linalg.norm(tmp_group)
+            for s in range(self.n_cg): # add diagonal of cts-cts interactions
+                tmp_group[:ltot] = self.mat_lbdas[s * self.n_cg + s, :]
+                tmp_group[ltot] = self.mat_lbda0[s, s]
+                grpnormmat[self.meta['n_cat'] + s, self.meta['n_cat'] + s] = \
+                    np.linalg.norm(tmp_group)
         
-        self.Lambdas = self.Lambdas.reshape((self.dg, self.dg, self.Ltot))
+        self.mat_lbdas = self.mat_lbdas.reshape((self.n_cg, self.n_cg, ltot))
 
         return grpnormmat
 
     def get_params(self):
-        return self.u, self.Q, self.R, self.alpha, self.Lambda0, self.Lambdas
+        return self.vec_u, self.mat_q, self.mat_r, self.alpha, self.mat_lbda0, self.mat_lbdas
 
     def get_meanparams(self):
         """convert CLZ parameters into mean parameter representation
@@ -137,40 +148,40 @@ class Model_CLZ(Model_Base):
         and La(x) = Lambda0 + sum_r Lambda_r D_{x_r} = Lambda0 + Lambdas*D_x.
         Here D_x is the dummy representation of the categorical values in x.
         """
-        assert self.dc + self.dg > 0
+        assert self.meta['n_cat'] + self.n_cg > 0
         
-        if self.dc == 0:
-            Sigma = np.linalg.inv(self.Lambda0)
+        if self.meta['n_cat'] == 0:
+            Sigma = np.linalg.inv(self.mat_lbda0)
             return np.empty(0), np.dot(Sigma, self.alpha), Sigma
 
         ## initialize mean params (reshape later)
-        n_discrete_states = np.prod(self.sizes)
+        n_discrete_states = np.prod(self.meta['sizes'])
         q = np.zeros(n_discrete_states)
         
         ## discrete variables only
-        if self.dg == 0:
+        if self.n_cg == 0:
             for x in range(n_discrete_states):
-                unrvld_ind = np.unravel_index([x], self.sizes)
+                unrvld_ind = np.unravel_index([x], self.meta['sizes'])
                 # TODO: perhaps iter more systematically over dummy representations Dx
-                Dx = np.zeros((self.Ltot,1))
-                for r in range(self.dc): # construct dummy repr Dx of x
-                    Dx[self.Lcum[r] + unrvld_ind[r][0], 0] = 1 
-                q[x] = np.dot(self.u.T, Dx) + 0.5 * np.dot(Dx.T, np.dot(self.Q, Dx))
-                canparams = q.reshape(self.sizes), np.empty(0), np.empty(0)
+                Dx = np.zeros((self.meta['ltot'],1))
+                for r in range(self.meta['n_cat']): # construct dummy repr Dx of x
+                    Dx[self.meta['cat_glims'][r] + unrvld_ind[r][0], 0] = 1 
+                q[x] = np.dot(self.vec_u.T, Dx) + 0.5 * np.dot(Dx.T, np.dot(self.mat_q, Dx))
+                canparams = q.reshape(self.meta['sizes']), np.empty(0), np.empty(0)
         else:
-            precmatshape = (self.dg, self.dg)
-            nus = np.empty((n_discrete_states, self.dg))
-            Lambdas = np.empty((n_discrete_states, self.dg, self.dg))
+            precmatshape = (self.n_cg, self.n_cg)
+            nus = np.empty((n_discrete_states, self.n_cg))
+            Lambdas = np.empty((n_discrete_states, self.n_cg, self.n_cg))
     
             for x in range(n_discrete_states):
-                unrvld_ind = np.unravel_index([x], self.sizes)
+                unrvld_ind = np.unravel_index([x], self.meta['sizes'])
     
-                Dx = np.zeros((self.Ltot,1))
-                for r in range(self.dc): # construct full dummy repr Dx of x
-                    Dx[self.Lcum[r] + unrvld_ind[r][0], 0] = 1
-                q[x] = np.dot(self.u.T, Dx) + 0.5 * np.dot(Dx.T, np.dot(self.Q, Dx))
-                nus[x, :] = (self.alpha + np.dot(self.R, Dx)).reshape(-1)
-                Lambdas[x, :, :] = self.Lambda0 + np.dot(self.Lambdas, Dx).reshape(precmatshape)  
+                Dx = np.zeros((self.meta['ltot'],1))
+                for r in range(self.meta['n_cat']): # construct full dummy repr Dx of x
+                    Dx[self.meta['cat_glims'][r] + unrvld_ind[r][0], 0] = 1
+                q[x] = np.dot(self.vec_u.T, Dx) + 0.5 * np.dot(Dx.T, np.dot(self.mat_q, Dx))
+                nus[x, :] = (self.alpha + np.dot(self.mat_r, Dx)).reshape(-1)
+                Lambdas[x, :, :] = self.mat_lbda0 + np.dot(self.mat_lbdas, Dx).reshape(precmatshape)  
     
                 # the precmat components are "cols" in <Lambdas>
                 # (3rd component of the tensor),
@@ -186,9 +197,9 @@ class Model_CLZ(Model_Base):
                     continue
             
             ## reshape to original forms
-            q = q.reshape(self.sizes)
-            nus = nus.reshape(self.sizes + [self.dg])
-            Lambdas = Lambdas.reshape(self.sizes + [self.dg, self.dg])
+            q = q.reshape(self.meta['sizes'])
+            nus = nus.reshape(self.meta['sizes'] + [self.n_cg])
+            Lambdas = Lambdas.reshape(self.meta['sizes'] + [self.n_cg, self.n_cg])
             canparams = q, nus, Lambdas
 
         return canon_to_meanparams(canparams)

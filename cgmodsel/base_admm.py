@@ -18,7 +18,7 @@ class BaseAdmm(abc.ABC):
     """
 
     def __init__(self):
-        print('Init BaseAdmm')
+#        print('Init BaseAdmm')
         super().__init__()
         self.admm_param = 1
 
@@ -125,7 +125,7 @@ class BaseAdmm(abc.ABC):
                     else:
                         self.cont_update_s2a(admm_state)
 
-                    if self.admm_param != admm_param_old:
+                    if self.opts['verb'] and self.admm_param != admm_param_old:
                         print('>> New ADMM parameter', self.admm_param,
                               '(old was %f)' % (admm_param_old))
 

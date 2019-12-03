@@ -109,28 +109,22 @@ class LikelihoodProx(BaseSolver):
         super().__init__(*args, **kwargs)  # Python 3 syntax
         #        BaseSolver.__init__(self, meta, useweights, reduced_levels = True)
 
+        if not hasattr(self, 'opts'):
+            self.opts = {}
+            # otherwise opts already defined (see BaseAdmm class)
         self._set_defaults_lhprox()  # set default opts
-
-        ltot = self.meta['ltot']
-        n_cg = self.meta['n_cg']
 
         #        self.solve_genlh_prox = self.solve_plh_prox
         #        self.genlh = self.plh
 
-        self.shapes = [
-            ('Q', (ltot, ltot)),
-            ('u', (ltot, 1)),
-            ('R', (n_cg, ltot)),
-            ('F2tiL', (n_cg, n_cg)),  # construct Lambda = A * A.T
-            ('alpha', (n_cg, 1))
-        ]
-        self.n_params = sum([np.prod(shape[1]) for shape in self.shapes])
-
         self._fold = np.inf
+
+        # class attributes that must be set after data has been dropped
+        self.shapes = None
+        self.n_params = None
 
     def _set_defaults_lhprox(self):
         """default solver options"""
-        self.opts = {}
         self.opts.setdefault('verb_lhprox', 1)  # write output
 
         ## objective variants
@@ -141,8 +135,7 @@ class LikelihoodProx(BaseSolver):
         ## stopping criteria and tolerancies
         #        self.opts.setdefault('abstol', 1e-5)
         #        self.opts.setdefault('reltol', 1e-5)
-        self.opts.setdefault('stoptol', 1e-5)  # stoptol for lh prox step
-        self.opts.setdefault('lhproxtol', 1e-12)
+        self.opts.setdefault('tol_lhprox', 1e-12)
         self.opts.setdefault('maxiter_lhprox', 500)
 
     def _clean_theta(self, theta):
@@ -204,7 +197,6 @@ class LikelihoodProx(BaseSolver):
         #        x0 = self.get_rand_startingpoint()
         x_init = self._theta_to_x(*old_thetaalpha)
         # starting point as vector, save for input parameters
-
         f_init = handle_fg(x_init)[0]
         self._fold = f_init
 
@@ -226,7 +218,7 @@ class LikelihoodProx(BaseSolver):
 
         maxiter = 500
         correctionpairs = min(len(bnds) - 1, 10)
-        ftol = self.opts['lhproxtol']
+        ftol = self.opts['tol_lhprox']
 
         res = optimize.minimize(handle_fg,
                                 x_init,
@@ -303,7 +295,6 @@ class LikelihoodProx(BaseSolver):
         mat_w = np.dot(self.cont_data, mat_r) + np.dot(self.cat_data, mat_q) \
             + np.dot(vec_ones, vec_u.T) # n_data by ltot
         cond_probs = np.empty((n_data, ltot))  # conditional probs given data
-
         for r in range(self.meta['n_cat']):
             mat_wr = mat_w[:, glims[r]:glims[r + 1]]  # view of W
             mat_dr = self.cat_data[:, glims[r]:glims[r + 1]] # view

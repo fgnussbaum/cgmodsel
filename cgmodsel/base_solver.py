@@ -8,28 +8,27 @@ import abc
 import numpy as np
 
 #from cgmodsel.models.model_base import get_modeltype
-from cgmodsel.models.model_pwsl import ModelPairwiseSL
+from cgmodsel.models.model_pwsl import ModelPWSL
 
 ######### base class for all model solvers ########################
+DUMMY = 'dummy'
+DUMMY_RED =  'dummy_red'
+INDEX = 'index'
 
-class BaseSolver(abc.ABC):
+class BaseCGSolver(abc.ABC):
     def __init__(self, useweights=False):
         """must call method drop_data after initialization"""
-
-#        print('Init BaseSolver')
+#        print('Init BaseCGSolver')
         super().__init__()
-        self.useweights = useweights # determines usage of sparse norm calibration scheme
         
         self.cat_data = None # discrete data, dropped later
+        self.cat_format_required = None
         self.cont_data = None # continuous data, dropped later
         
         self.problem_vars = None
         self.meta = {'n_data': 0}
 
         # variables that need to be overwritten by derived classes
-#        self.shapes = [] # TODO: Huber only
-#        self.n_params = -1
-
         self.name = 'base'
 
     def _postsetup_data(self):
@@ -40,71 +39,88 @@ class BaseSolver(abc.ABC):
     def drop_data(self,
                   data, 
                   meta: dict) -> None:
-        """drop data, derived classes may perform additional computations"""
+        """drop data, derived classes may perform additional computations
+        
+        uses and augments information contained in meta about the data
+        
+        categorical data must be provided in dummy encoded form 
+        (potentially leaving out 0-th levels)"""
 
         # process argument data
-        counter = 0
-        if 'n_cat' in meta and meta['n_cat'] > 0:
-            counter += 1
-            cat_data = data
-            assert 'sizes' in meta
-            assert len(meta['sizes']) == meta['n_cat']
-        if 'n_cg' in meta and meta['n_cg'] > 0:
-            counter += 1
-            cont_data = data
-        if counter == 0:
-            raise Exception('Meta information states no variables')
-        elif counter == 2:
+        if isinstance(data, tuple):
             assert len(data) == 2
             cat_data, cont_data = data
+        else:
+            counter = 0
+            if 'n_cat' in meta and meta['n_cat'] > 0:
+                counter += 1
+                cat_data = data
+                cont_data = np.empty((data.shape[0],0))
+                assert 'sizes' in meta
+                assert len(meta['sizes']) == meta['n_cat']
+            if 'n_cg' in meta and meta['n_cg'] > 0:
+                counter += 1
+                cont_data = data
+                cat_data = np.empty((data.shape[0],0))
+            assert counter == 1, 'dictionary meta incompatible with provided data'
+
+        self.cont_data = cont_data
+        self.cat_data = cat_data
         
         self.meta = meta.copy()
         # check validity of dictionary meta
-
-        if 'n_cg' in meta:
-            if meta['n_cg'] > 0:
-                assert not np.any(np.isnan(cont_data))
-                assert meta['n_cg'] == cont_data.shape[1]
-                self.cont_data = cont_data
-                self.meta['n_data'] = cont_data.shape[0]
-        else:
+        if not 'n_cg' in meta:
             self.meta['n_cg'] = 0
-        if 'n_cat' in meta:
-            if meta['n_cat'] > 0:
-
-                self.cat_data = cat_data
-                if 'n_data' in self.meta:
-                    assert self.meta['n_data'] == cat_data.shape[0]
-                
-                ltot = np.sum(meta['sizes'])
-                if ltot == cat_data.shape[1]:
-                    # 0-th levels of the discrete data are contained
-                    # for identifiability, assume that corresponding 
-                    # parameters are constrained to zero
-                    self.meta['red_levels'] = False
-                elif ltot - meta['n_cat'] == cat_data.shape[1]:
-                    # assume that 0-th levels are left out in discrete data
-                    # assures identifiability of the model
-                    self.meta['red_levels'] = True
-                    self.meta['sizes'] = [size - 1 for size in meta['sizes']]
-                else:
-                    raise Exception('Dimension of discrete_data do not fit')
-                self.meta['ltot'] = cat_data.shape[1]
-                
-                # calculate cumulative # of levels/ group delimiters
-                self.cat_glims = np.cumsum([0] + self.sizes)
-            else:
-                self.meta['ltot'] = 0
-        else:
+        if not 'n_cat' in meta:
             self.meta['n_cat'] = 0
+
+        if self.meta['n_cg'] > 0:
+            assert not np.any(np.isnan(cont_data))
+            assert meta['n_cg'] == cont_data.shape[1]
+            
+            self.meta['n_data'] = cont_data.shape[0]
+
+        if self.meta['n_cat'] > 0:
+            
+            if 'n_data' in self.meta:
+                assert self.meta['n_data'] == cat_data.shape[0]
+            else:
+                self.meta['n_data'] = cat_data.shape[0]
+            
+            ltot = np.sum(meta['sizes'])
+            if self.cat_format_required == DUMMY:
+                assert ltot == cat_data.shape[1]
+                # 0-th levels of the discrete data are contained
+                # for identifiability, assume that corresponding 
+                # parameters are constrained to zero
+                self.meta['red_levels'] = False
+            elif self.cat_format_required == DUMMY_RED:
+                assert ltot - meta['n_cat'] == cat_data.shape[1]
+                # assume that 0-th levels are left out in discrete data
+                # assures identifiability of the model
+                self.meta['red_levels'] = True
+                self.meta['sizes'] = [size - 1 for size in meta['sizes']]
+            elif self.cat_format_required == INDEX:
+                assert  meta['n_cat'] == cat_data.shape[1]
+                # TODO:
+            else:
+                raise Exception('invalid self.cat_format_required')
+            self.meta['ltot'] = cat_data.shape[1]
+            
+            # calculate cumulative # of levels/ group delimiters
+            self.meta['cat_glims'] = np.cumsum([0] + self.meta['sizes'])
+        else:
             self.meta['ltot'] = 0
+            self.meta['red_levels'] = False # value irrelevant, no cat vars
+            self.meta['sizes'] = []
+            self.meta['cat_glims'] = []
 
         self.meta['dim'] = self.meta['ltot'] + self.meta['n_cg']
         
 #        self.meta['type'] = get_modeltype(self.n_cat, self.n_cg, self.sizes)        
 
         fac = np.log(self.meta['n_cg']+self.meta['n_cat'])
-        fac = np.sqrt(fac /self.meta['n_data'])
+        fac = np.sqrt(fac / self.meta['n_data'])
         self.meta['reg_fac'] = fac # potentially used as prescaling factor 
         # for regularization parameters
 
@@ -112,6 +128,19 @@ class BaseSolver(abc.ABC):
 
     def get_name(self):
         return self.name
+
+
+    
+class BaseSolver(BaseCGSolver):
+    def __init__(self, useweights=False):
+        """must call method drop_data after initialization"""
+
+#        print('Init BaseSolver')
+        super().__init__()
+        self.useweights = useweights # determines usage of sparse norm calibration scheme
+          
+        self.problem_vars = None
+
 
     def set_sparsity_weights(self):
         """  use adjusted weights for all groups as suggested by LST2015
@@ -195,7 +224,7 @@ class BaseSolverSL(BaseSolver):
     """
     
     def __init__(self, *args, **kwargs):
-        print('Init BaseSolverSL')
+#        print('Init BaseSolverSL')
         super().__init__(*args, **kwargs)
 
         self.alpha, self.beta = None, None
@@ -225,7 +254,7 @@ class BaseSolverSL(BaseSolver):
         mat_lambda = -mat_s[ltot:, ltot:] # cts-cts parameters 
         # have negative sign in CG pairwise interaction parameter matrix
 
-        if self.n_cat > 0:
+        if self.meta['n_cat'] > 0:
 
             glims = self.meta['cat_glims']
             sizes = self.meta['sizes']
@@ -233,14 +262,20 @@ class BaseSolverSL(BaseSolver):
             mat_q = mat_s[:ltot, :ltot]
             mat_r = mat_s[ltot:, :ltot]        
             vec_u =  0.5 * np.diag(mat_q).copy().reshape(ltot)
-            for r in range(self.n_cat): # set block-diagonal to zero
+            for r in range(self.meta['n_cat']): # set block-diagonal to zero
                 mat_q[glims[r]:glims[r+1], 
                       glims[r]:glims[r+1]] = \
                       np.zeros((sizes[r], sizes[r]))
+            
+            if self.meta['red_levels']:
+                fullsizes = [size + 1 for size in sizes]
+            else:
+                fullsizes = sizes
         else:
             mat_q = np.empty(0)
             mat_r = np.empty(0)
             vec_u = np.empty(0)
+            fullsizes = []
         
         can_pwsl = vec_u, mat_q, mat_r, alpha, mat_lambda, mat_l
         
@@ -248,15 +283,11 @@ class BaseSolverSL(BaseSolver):
                        'lambda': self.lbda,
                        'rho': self.rho}
 
-        if self.meta['red_levels']:
-            fullsizes = [size + 1 for size in sizes]
-        else:
-            fullsizes = sizes
-
         meta = {'n_cat': self.meta['n_cat'],
                 'n_cg': self.meta['n_cg'],
                 'sizes': fullsizes}
-        return ModelPairwiseSL(can_pwsl, meta,
+
+        return ModelPWSL(can_pwsl, meta,
                           annotations=annotations, in_padded=False)
 
 

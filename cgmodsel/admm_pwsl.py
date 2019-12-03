@@ -206,7 +206,7 @@ class AdmmCGaussianSL(LikelihoodProx, BaseSolverSL, BaseAdmm):
         # make Theta feasible/cleaned for plh
         mat_theta = self._clean_theta(mat_theta)
 
-        alpha = np.zeros((self.meta['n_dg'], 1))
+        alpha = np.zeros((self.meta['n_cg'], 1))
         mat_s = mat_theta.copy()
         if not self.opts['use_u']:  # no univariate parameters
             mat_s[:ltot, :ltot] -= np.diag(
@@ -297,6 +297,20 @@ class AdmmCGaussianSL(LikelihoodProx, BaseSolverSL, BaseAdmm):
 
         return new_vars, residuals, stats
 
+    def _postsetup_data(self):
+        """called after drop_data """
+        ltot = self.meta['ltot']
+        n_cg = self.meta['n_cg']
+        
+        self.shapes = [
+            ('Q', (ltot, ltot)),
+            ('u', (ltot, 1)),
+            ('R', (n_cg, ltot)),
+            ('F2tiL', (n_cg, n_cg)),  # construct Lambda = A * A.T
+            ('alpha', (n_cg, 1))
+        ]
+
+        self.n_params = sum([np.prod(shape[1]) for shape in self.shapes])
 
 #    def get_objective(self, S, L, u=None, alpha=None):
 #        """ """
@@ -304,7 +318,7 @@ class AdmmCGaussianSL(LikelihoodProx, BaseSolverSL, BaseAdmm):
 #            S = S.copy()
 #            S[:ltot, :ltot] += 2 * np.diag(u)
 #        if alpha is None:
-#            alpha = np.zeros(self.meta['n_dg'])
+#            alpha = np.zeros(self.meta['n_cg'])
 #        obj = self.lbda * self.sparsenorm(S) + self.rho * np.trace(L)
 #        obj += self.genlh(S + L, alpha)
 #        return obj

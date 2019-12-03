@@ -76,8 +76,8 @@ if __name__ == '__main__':
     # ********************************* #
     # comment out all but one line here #
     data = CFMT
-    # data = LSVT
-    # data = HELP
+#    data = LSVT
+#    data = HELP
     # ********************************* #
 
     print('Loading data...')
