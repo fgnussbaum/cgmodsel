@@ -25,6 +25,7 @@ from cgmodsel.prox import grp_soft_shrink, l21norm
 
 # pylint: disable=R0914
 
+
 class AdmmGaussianSL(BaseSolverSL, BaseAdmm):
     """
     solve the problem
@@ -191,7 +192,7 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         super().__init__(*args, **kwargs)  # Python 3 syntax
 
         self.name = 'SL_PADMM'
-		
+
         self.prox = None
         self.cat_format_required = 'dummy_red'
 
@@ -199,19 +200,24 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
 
     def _initialize_admm(self):
         """initialize ADMM variables"""
+
+        ## ensure coherent options for prox solver
+        self.prox.opts['use_u'] = self.opts['use_u']
+        self.prox.opts['use_alpha'] = self.opts['use_alpha']
+
+        ## initialize ADMM variables
         dim = self.meta['dim']
         ltot = self.meta['ltot']
         mat_theta = np.eye(dim)
         mat_theta[ltot:, ltot:] *= -1
         # since lower right block needs to be negative definite
         # make Theta feasible/cleaned for plh
-        mat_theta = self.prox._clean_theta(mat_theta)
+        mat_theta = self.prox.clean_theta(mat_theta)
 
         alpha = np.zeros((self.meta['n_cg'], 1))
         mat_s = mat_theta.copy()
         if not self.opts['use_u']:  # no univariate parameters
-            mat_s[:ltot, :ltot] -= np.diag(
-                np.diag(mat_s[:ltot, :ltot]))
+            mat_s[:ltot, :ltot] -= np.diag(np.diag(mat_s[:ltot, :ltot]))
         mat_l = np.zeros((dim, dim))
         mat_z = np.zeros((dim, dim))
 
@@ -224,7 +230,7 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
 
         tmp = mat_s + mat_l + self.admm_param * mat_z
 
-        mat_theta, alpha = self.prox.solve(tmp, self.admm_param, 
+        mat_theta, alpha = self.prox.solve(tmp, self.admm_param,
                                            (mat_theta, alpha))
 
         mat_theta = (mat_theta + mat_theta.T) / 2
@@ -299,10 +305,9 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         return new_vars, residuals, stats
 
     def _postsetup_data(self):
-        """called after drop_data """
-        
+        """called after drop_data"""
         self.prox = LikelihoodProx(self.cat_data, self.cont_data, self.meta)
-        # TODO: pass self.meta
+
 
 #    def get_objective(self, S, L, u=None, alpha=None):
 #        """ """

@@ -19,7 +19,7 @@ from cgmodsel.utils import _logsumexp_condprobs_red
 from cgmodsel.base_solver import BaseGradSolver
 
 # pylint: disable=unbalanced-tuple-unpacking
-# pylint: disable=W0511 # TODOs
+# pylint: disable=W0511 # todos
 # pylint: disable=R0914 # too many locals
 
 #################################################################################
@@ -110,10 +110,12 @@ class LikelihoodProx(BaseGradSolver):
         self.cat_data = cat_data
         self.cont_data = cont_data
         self.meta = meta
-
+        self._fold = np.inf
+        
+        # overridden attributes
         ltot = meta['ltot']
         n_cg = meta['n_cg']
-        
+
         self.shapes = [
             ('Q', (ltot, ltot)),
             ('u', (ltot, 1)),
@@ -123,30 +125,9 @@ class LikelihoodProx(BaseGradSolver):
         ]
 
         self.n_params = sum([np.prod(shape[1]) for shape in self.shapes])
-        
-        if not hasattr(self, 'opts'):
-            self.opts = {}
 
-        self._set_defaults_lhprox()  # set default opts
 
-        self._fold = np.inf
-
-    def _set_defaults_lhprox(self):
-        """default solver options"""
-        self.opts.setdefault('verb', 1)  # write output
-
-        ## objective variants
-        self.opts.setdefault('use_alpha', 1)  # use univariate cts parameters?
-        self.opts.setdefault('use_u', 1)  # use univariate discrete parameters?
-        self.opts.setdefault('off', 0)  # if 1 regularize only off-diagonal
-
-        ## stopping criteria and tolerancies
-        #        self.opts.setdefault('abstol', 1e-5)
-        #        self.opts.setdefault('reltol', 1e-5)
-        self.opts.setdefault('tol_lhprox', 1e-12)
-        self.opts.setdefault('maxiter_lhprox', 500)
-
-    def _clean_theta(self, theta):
+    def clean_theta(self, theta):
         """
         make pairwise parameter matrix feasible for likelihood prox solver
         -> modifies Theta
@@ -221,9 +202,7 @@ class LikelihoodProx(BaseGradSolver):
         ## further solver properties
         callback = lambda optvars: self.callback_plh(optvars, handle_fg)
 
-        maxiter = 500
         correctionpairs = min(len(bnds) - 1, 10)
-        ftol = self.opts['tol_lhprox']
 
         res = optimize.minimize(handle_fg,
                                 x_init,
@@ -232,8 +211,8 @@ class LikelihoodProx(BaseGradSolver):
                                 bounds=bnds,
                                 options={
                                     'maxcor': correctionpairs,
-                                    'maxiter': maxiter,
-                                    'ftol': ftol
+                                    'maxiter': self.opts['maxiter'],
+                                    'ftol': self.opts['tol']
                                 },
                                 callback=callback)
 
@@ -243,7 +222,7 @@ class LikelihoodProx(BaseGradSolver):
         _, _, _, fac_lambda, _ = self.unpack(res.x)
         if np.linalg.norm(fac_lambda) < 1e-5 and n_cg > 0:
             # TODO(franknu): certificate for optimality?
-            print('Warning(solve_plh_prox): Lambda = F F^T with F ~ zero')
+            print('Warning(solve): Lambda = F F^T with F ~ zero')
 
         theta, alpha = self._x_to_thetaalpha(res.x)
 
@@ -400,12 +379,12 @@ class LikelihoodProx(BaseGradSolver):
 
     def callback(self, optvars, component_z, prox_param, approxgrad=1):
         """a callback function that serves primarily for debugging"""
-        fval, grad = self.fg_plh_prox(optvars, component_z, prox_param)
+        fval, grad = self.get_fval_and_grad(optvars, component_z, prox_param)
 
         print('f=', fval)
         if approxgrad:  # gradient check
             func_handle_f = lambda optvars: \
-                self.fg_plh_prox(optvars, component_z, prox_param)[0]
+                self.get_fval_and_grad(optvars, component_z, prox_param)[0]
             eps = np.sqrt(np.finfo(float).eps)  # ~1.49E-08 at my machine
             gprox = approx_fprime(optvars, func_handle_f, eps)
 

@@ -12,7 +12,7 @@ from cgmodsel.models.base import BaseModel, canon_to_meanparams
 
 ###############################################################################
 
-class Model_CLZ(BaseModel):
+class ModelCLZ(BaseModel):
     """
     class for parameters of distribution
     p(x,y) ~ exp(1/2 C_x Q C_x +  y^T R C_x -1/2 y^T[La0 + Las C_x]y 
