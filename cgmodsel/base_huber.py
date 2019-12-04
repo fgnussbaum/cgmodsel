@@ -1,64 +1,68 @@
-# Copyright (c) 2017-2019 Frank Nussbaum (frank.nussbaum@uni-jena.de)
+# Copyright (c) 2019 Frank Nussbaum (frank.nussbaum@uni-jena.de)
 """
 @author: Frank Nussbaum
 
 base class for CG model selection using Huber approximation of sparse norm
-"""
 
+Experimental code
+"""
+import abc
+import time
 import numpy as np
+
 from scipy.optimize import approx_fprime
 from scipy import optimize
 
-from cgmodsel.CG_base_solver import CG_base_solver
-
-import time
+from cgmodsel.base_solver import BaseGradSolver, BaseCGSolver
 
 
-def _huberapprox(x, delta):
-    """returns Huber approximation and gradient of group of variables in x, see tex"""
-    norm = np.sqrt(np.sum(np.multiply(x,x)))
+def _huberapprox(array, delta):
+    """returns Huber approximation + gradient of group of variables in array"""
+    norm = np.sqrt(np.sum(np.multiply(array,array)))
         
     if norm <= delta:
-        return 0.5 / delta * norm * norm, x / delta
+        return 0.5 / delta * norm * norm, array / delta
     else:
-        return (norm - delta/2.0, x/ norm)
+        return (norm - delta/2.0, array/ norm)
 
-def _reldiff(a, b):
-    """relative error between a and b w.r.t. magnitude of a and b - for gradient check"""
-    diff = a - b
-    s = np.min([np.abs(a), np.abs(b)]) + 1
+def _reldiff(array1, array2):
+    """relative error between array1 and array2 w.r.t. magnitudes of them
+    - for gradient check"""
+    diff = array1 - array2
+    tmp = np.min([np.abs(array1), np.abs(array2)]) + 1
     # |min(a, b)| + 1 ??? or better use max(|a|, |b|) + 1 ???
-    return diff/s
+    return diff/tmp
 
 ######### base class for all Huber model solvers ########################
 
-class Solver_base:
+class HuberBase(BaseGradSolver, BaseCGSolver):
+    """
+    base class Huber solvers
+    """
     def __init__(self):
-        self.reset()
+        super().__init__()
+        self._reset()
         
-    def functionValue(self, x, verb=0):
-        """return a separate function value - for debugging only"""
-        f, g = self.get_fval_and_grad(x, verb =0)
-        if verb:
-            print('*fVal*')
-            print('x', x)
-            print ('f', f)
-        return f
+        self.currentsolution = None
 
-    def gradientValue(self, x, verb=0):
-        """return a separate gradient - for debugging only"""
-        f, g = self.get_fval_and_grad(x, verb =0)
-        self.fcalls-=1 #??
-        if verb:
-            print('*gVal*')
-            print('x', x)
-            print('g', g)
-        return g
-    
-    def get_fval_and_grad(self, x, verb=0, debugflag=None): # overwrite in derived classes
+    @abc.abstractmethod
+    def get_bounds(self):
+        """get bounds for solver"""
         raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_starting_point(self, random, seed):
+        raise NotImplementedError
+        
+    @abc.abstractmethod
+    def preprocess(x):
+        raise NotImplementedError # implemented in derived classes
+        
+
+#    def get_fval_and_grad(self, x, verb=0, debugflag=None):
+#        raise NotImplementedError
     
-    def reset(self):
+    def _reset(self):
         self.gnorm = np.inf
         self.niter = 0 # counter for # inner iters
         self.fcalls = 0 # calls to get_fval_and_grad
@@ -70,12 +74,8 @@ class Solver_base:
         self.fcalls = 0
         return fcalls        
     
-    
-    def minimalcallback(self, x, **kwargs):
-        self._getfunctioncalls()
-    
     def nocallback(self, x, **kwargs):
-        self.minimalcallback(x, **kwargs)
+        self._getfunctioncalls()
 
     def slimcallback(self, x, delta=None, sparse=False, iter0 = False):
         
@@ -103,49 +103,31 @@ class Solver_base:
         print('*******iter%d, fcalls=%d, delta=%f'%(self.niter, fcalls, delta))
         
         f, g = self.get_fval_and_grad(x, sparse = sparse, delta=delta, verb = 'cb') 
-#        self.gnorm = np.linalg.norm(g) # TODO: why use a class variable?
         
         if approxgrad:
             func_handle_f = lambda x: self.get_fval_and_grad(x, delta=delta, sparse=sparse, verb = 'prox')[0]
             eps = np.sqrt(np.finfo(float).eps) # ~1.49E-08 at my machine
             gprox = approx_fprime(x, func_handle_f, eps)
 
-#        print('x_%d'%(self.niter), self.unpack(x))
-#        print('x_%d'%(self.niter), x)
 
         if reshapedprinting:
             self.get_canonicalparams(g, verb = True, verbstring = '**g_exct_%d'%(self.niter))
         else:
-#            print ('g_exct_%d'%(self.niter), g)
             pass
-#        print(delta)
         if approxgrad:
-#            print ('g_exct_%d'%(self.niter), g)
-#            print ('g_prox_%d'%(self.niter), gprox)
             diff = g-gprox
-#            print('g-gprox',self.unpack(diff))
-#            print('quot',g/proxg)
             reldiff = np.empty(g.size)
             for i in range(g.size):
                 reldiff[i] =  _reldiff(g[i], gprox[i])
             if reshapedprinting:
-                self.get_canonicalparams(reldiff, verb = True, verbstring='**reldiff')
+                self.print_params(reldiff, verb = True, verbstring='**reldiff')
             print('graddev=', np.linalg.norm(diff), 'rel_graddev=', np.linalg.norm(reldiff))
         self.fcalls =0
         print ('f%d='%(self.niter), f)
         
         if approxgrad:
             return np.linalg.norm(diff)
-
-    
-class CG_base_Huber(CG_base_solver, Solver_base):
-    def __init__(self, meta, useweights):
-        """must call method drop_data after initialization"""
-        Solver_base.__init__(self)
-        CG_base_solver.__init__(self,meta, useweights)
-
-        self.currentsolution = None
-
+        
     def _set_defaults(self, **kwargs):
 
         self.opts = kwargs
@@ -158,12 +140,11 @@ class CG_base_Huber(CG_base_solver, Solver_base):
         self.opts.setdefault('use_alpha', False)
         self.opts.setdefault('off', 1) # if True, l1 regularization on diagonal of S
 
-
     def _solve(self, ftol=10E-10, callback=None, maxiter=1000, 
                explicitbounds=None, **kwargs):
         """solve the problem starting from recent configuration,
         updates self.currentsolution"""
-        self.reset() # set self.fcalls, self.total_fcalls to 0, etc.
+        self._reset() # set self.fcalls, self.total_fcalls to 0, etc.
         
         handle_fg = lambda x: self.get_fval_and_grad(x, **kwargs)
         if explicitbounds == None:
@@ -231,8 +212,6 @@ class CG_base_Huber(CG_base_solver, Solver_base):
         seed... seed (if random starting point is used) TODO: investigate model dependence 
         x0.. optional warm start to solution
         maxiter_inner... maximum number of iterations when solving one subproblem
-        
-        Experimental code
         """
 
         if self.name == 'PW' and self.lbda == 0: # unregularized problem
@@ -323,6 +302,7 @@ class CG_base_Huber(CG_base_solver, Solver_base):
         return res
 
     def _outer_callback(self, res, delta):
+        """outer callback"""
         x = res.x
 
         flh, glh = self.get_fval_and_grad(x, smooth=True, sparse=False, verb='-') # likelihood part of objective
@@ -333,10 +313,8 @@ class CG_base_Huber(CG_base_solver, Solver_base):
         if not res.message.startswith(b'CONV'):
             print(res.message)
     
-    def preprocess(x):
-        raise NotImplementedError # implemented in derived classes
-
     def print_params(self, x):
+        """print params"""
         tparams = self.preprocess(x)
         
         for i in range(len(self.shapes)):

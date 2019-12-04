@@ -16,15 +16,15 @@ from scipy import optimize
 
 from cgmodsel.utils import _logsumexp_condprobs_red
 #from cgmodsel.utils import logsumexp
-from cgmodsel.base_solver import BaseSolver
+from cgmodsel.base_solver import BaseGradSolver
 
 # pylint: disable=unbalanced-tuple-unpacking
 # pylint: disable=W0511 # TODOs
 # pylint: disable=R0914 # too many locals
-#################################################################################
-# ADMM sparse norms and shrinkage operators
-#################################################################################
 
+#################################################################################
+# norms and shrinkage operators
+#################################################################################
 
 def grp_soft_shrink(mat, tau, groupdelimiters=None, glims=None, off=False):
     """
@@ -100,32 +100,40 @@ def l21norm(mat, groupdelimiters=None, glims=None, off=False):
 ###############################################################################
 # prox for PLH objective
 ###############################################################################
-class LikelihoodProx(BaseSolver):
+class LikelihoodProx(BaseGradSolver):
     """
     solve pseudo-log-likelihood proximal operator
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, cat_data, cont_data, meta):
         """"must provide with dictionary meta"""
-        super().__init__(*args, **kwargs)  # Python 3 syntax
-        #        BaseSolver.__init__(self, meta, useweights, reduced_levels = True)
+        super().__init__()  # Python 3 syntax
+        self.cat_data = cat_data
+        self.cont_data = cont_data
+        self.meta = meta
 
+        ltot = meta['ltot']
+        n_cg = meta['n_cg']
+        
+        self.shapes = [
+            ('Q', (ltot, ltot)),
+            ('u', (ltot, 1)),
+            ('R', (n_cg, ltot)),
+            ('F2tiL', (n_cg, n_cg)),  # construct Lambda = A * A.T
+            ('alpha', (n_cg, 1))
+        ]
+
+        self.n_params = sum([np.prod(shape[1]) for shape in self.shapes])
+        
         if not hasattr(self, 'opts'):
             self.opts = {}
-            # otherwise opts already defined (see BaseAdmm class)
-        self._set_defaults_lhprox()  # set default opts
 
-        #        self.solve_genlh_prox = self.solve_plh_prox
-        #        self.genlh = self.plh
+        self._set_defaults_lhprox()  # set default opts
 
         self._fold = np.inf
 
-        # class attributes that must be set after data has been dropped
-        self.shapes = None
-        self.n_params = None
-
     def _set_defaults_lhprox(self):
         """default solver options"""
-        self.opts.setdefault('verb_lhprox', 1)  # write output
+        self.opts.setdefault('verb', 1)  # write output
 
         ## objective variants
         self.opts.setdefault('use_alpha', 1)  # use univariate cts parameters?
@@ -162,10 +170,7 @@ class LikelihoodProx(BaseSolver):
             print('Warning(CG_base_ADMM.callback_plh): %s' % (string))
         self._fold = fnew
 
-    def solve_plh_prox(self,
-                       mat_z,
-                       prox_param,
-                       old_thetaalpha):
+    def solve(self, mat_z, prox_param, old_thetaalpha):
         """ solve proximal mapping of negative pseudo loglikelihood
         min_{Theta, alpha} l_p(Theta, alpha) + 1 / (2mu) * ||Theta-Z||_F^2
 
@@ -189,8 +194,8 @@ class LikelihoodProx(BaseSolver):
         zmat_q -= np.diag(np.diag(zmat_q))
         components_z = zmat_q, zvec_u, zmat_r, zmat_b, zbeta
 
-        handle_fg = lambda optvars: self.fg_plh_prox(optvars, components_z,
-                                                     prox_param)
+        handle_fg = lambda optvars: \
+            self.get_fval_and_grad(optvars, components_z, prox_param)
 
         ## solve proximal mapping
 
@@ -244,7 +249,7 @@ class LikelihoodProx(BaseSolver):
 
         return theta, alpha
 
-    def preprocess_proxstep(self, optvars):
+    def preprocess(self, optvars):
         """ unpack parameters from vector x and preprocess
         this modifies x (x not save for reuse)"""
 
@@ -261,7 +266,7 @@ class LikelihoodProx(BaseSolver):
 
         return mat_q, vec_u, mat_r, fac_lambda, alpha
 
-    def fg_plh_prox(self, optvars, components_z, prox_param, eps=1e-15):
+    def get_fval_and_grad(self, optvars, components_z, prox_param, eps=1e-15):
         """calculate function value f and gradient g of
         plh(Theta, alpha) + 1 / (2prox_param) ||Theta - Z||_F^2,
         where Theta, alpha are contained in the vector x of parameters
@@ -275,7 +280,7 @@ class LikelihoodProx(BaseSolver):
 
         ## unpack parameters from vector optvars
         mat_q, vec_u, mat_r, fac_lambda, alpha = \
-            self.preprocess_proxstep(optvars)
+            self.preprocess(optvars)
 
         mat_b, beta = self._faclambda_to_bbeta(fac_lambda)
         beta += eps * np.ones(beta.shape)  # increase numerical instability

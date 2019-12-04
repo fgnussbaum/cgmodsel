@@ -10,31 +10,78 @@ import numpy as np
 #from cgmodsel.models.model_base import get_modeltype
 from cgmodsel.models.model_pwsl import ModelPWSL
 
-######### base class for all model solvers ########################
 DUMMY = 'dummy'
-DUMMY_RED =  'dummy_red'
+DUMMY_RED = 'dummy_red'
 INDEX = 'index'
 
-class BaseCGSolver(abc.ABC):
-    def __init__(self, useweights=False):
+def set_sparsity_weights(meta, cat_data, cont_data):
+    """  use adjusted weights for all groups as suggested by LST2015
+    (may be essential for "good", "consistent" results)"""
+    n_data = meta['n_data']
+    n_cg = meta['n_cg']
+    n_cat = meta['n_cat']
+
+    # CG variables
+    mus = cont_data.sum(axis=0) / n_data
+    sigmas_cg = np.sqrt( (cont_data ** 2).sum(axis=0) /
+                          n_data - mus **2 )
+    # categoricals
+    sigmas_cat = np.empty(n_cat)
+    freqs = cat_data.sum(axis=0) / n_data
+    for r in range(n_cat):
+        sigma_r = 0
+        for k in range(meta['sizes'][r]):
+            p_xr_k = freqs[meta['cat_glims'][r] + k] # relative probability that x_r has value k
+            sigma_r += p_xr_k * (1 - p_xr_k) 
+        sigmas_cat[r] = np.sqrt(sigma_r)
+#    else: 
+#        sigmas_cat = np.ones(n_cat)
+#        sigmas_cg = np.ones(n_cg)
+  
+    weights = {}
+    for j in range(n_cat):
+        for r in range(j):
+            weights[('Q', r, j)] = sigmas_cat[r] * sigmas_cat[j]
+        for s in range(n_cg):
+            weights[('R', s, j)] = sigmas_cat[j] * sigmas_cg[s]
+    for t in range(n_cg):
+        for s in range(t):
+            weights[('B', s, t)] = sigmas_cg[s] * sigmas_cg[t]
+
+    # print weights
+#        for key in sorted([a for a in weights]):
+#            print(key, weights[key])
+    
+    return weights
+
+###############################################################################
+# base class for all CG model solvers
+###############################################################################
+
+class BaseCGSolver(object):
+    """
+    base class for all CG model solver
+    provides external interface to drop data along with meta information
+    about this data
+    """
+    def __init__(self):
         """must call method drop_data after initialization"""
 #        print('Init BaseCGSolver')
         super().__init__()
         
         self.cat_data = None # discrete data, dropped later
-        self.cat_format_required = None
+        self.cat_format_required = None # override 
         self.cont_data = None # continuous data, dropped later
         
-        self.problem_vars = None
+#        self.problem_vars = None #TODO(franknu)
         self.meta = {'n_data': 0}
 
-        # variables that need to be overwritten by derived classes
+        # variables that need to be overridden by derived classes
         self.name = 'base'
 
     def _postsetup_data(self):
-        """called after drop_data """
-#        self.set_sparsity_weights() # weighting scheme in sparse regularization
-        pass # may be overwriten in derived classes
+        """called after drop_data"""
+        pass # may be overridden in derived classes
 
     def drop_data(self,
                   data, 
@@ -67,13 +114,14 @@ class BaseCGSolver(abc.ABC):
         self.cont_data = cont_data
         self.cat_data = cat_data
         
-        self.meta = meta.copy()
-        # check validity of dictionary meta
-        if not 'n_cg' in meta:
-            self.meta['n_cg'] = 0
-        if not 'n_cat' in meta:
-            self.meta['n_cat'] = 0
+        self.meta = {}
+        for key in ('n_cg', 'n_cat'):
+            if key in meta:
+                self.meta[key] = meta[key]
+            else:
+                meta[key] = 0
 
+        # continue checking validity of meta
         if self.meta['n_cg'] > 0:
             assert not np.any(np.isnan(cont_data))
             assert meta['n_cg'] == cont_data.shape[1]
@@ -127,59 +175,42 @@ class BaseCGSolver(abc.ABC):
         self._postsetup_data()
 
     def get_name(self):
+        """return model name"""
         return self.name
 
 
-    
-class BaseSolver(BaseCGSolver):
-    def __init__(self, useweights=False):
-        """must call method drop_data after initialization"""
-
-#        print('Init BaseSolver')
+class BaseGradSolver(abc.ABC):
+    def __init__(self):
+#        print('Init BaseCGSolver')
         super().__init__()
-        self.useweights = useweights # determines usage of sparse norm calibration scheme
-          
-        self.problem_vars = None
+        
+        self.shapes = None
+        self.n_params = None
 
-
-    def set_sparsity_weights(self):
-        """  use adjusted weights for all groups as suggested by LST2015
-        (may be essential for "good", "consistent" results)"""
-       
-        # precompute weights - we need the empiric standard deviations
-        if self.useweights:
-            # Gaussians
-            self.mus = self.cont_data.sum(axis=0) / self.n_data
-            self.sigmas = np.sqrt( (self.cont_data ** 2).sum(axis=0) / self.n_data - self.mus **2 )
-            # categoricals
-            sigma_r = np.empty(self.n_cat)
-            freqs = self.cat_data.sum(axis=0) / self.n_data
-            for r in range(self.n_cat):
-                sig_r = 0
-                for k in range(self.sizes[r]):
-                    p_xr_k = freqs[self.cat_glims[r] + k] # relative probability that x_r has value k
-                    sig_r += p_xr_k * (1 - p_xr_k) 
-                sigma_r[r] = np.sqrt(sig_r)
-                
-            sigma_s = self.sigmas
-        else: 
-            sigma_r = np.ones(self.n_cat)
-            sigma_s = np.ones(self.n_cg)
-  
-#        print(sigma_r)
-        self.weights = {}
-        for j in range(self.n_cat):
-            for r in range(j):
-                self.weights[('Q', r, j)] = sigma_r[r] * sigma_r[j]
-            for s in range(self.n_cg):
-                self.weights[('R', s, j)] = sigma_r[j] * sigma_s[s]
-        for t in range(self.n_cg):
-            for s in range(t):
-                self.weights[('B', s, t)] = sigma_s[s] * sigma_s[t]
-
-        # print weights
-#        for key in sorted([a for a in self.weights]):
-#            print(key, self.weights[key])
+#        self.problem_vars = None
+    
+    @abc.abstractmethod
+    def get_fval_and_grad(self, optvars, verb=0, **kwargs):
+        raise NotImplementedError
+        
+    def get_params(self, optvars): 
+        """a function to display the problem parameters"""
+        params = self.unpack(optvars)
+        for i, param in enumerate(params):
+            print('%s:\n'% self.shapes[i][0], param)
+        return params
+    
+    def pack(self, components): 
+        """pack (typically) gradients into vector x"""
+        grad = np.empty(self.n_params)
+        offset = 0
+        for i, component in enumerate(components):
+            size = np.prod(self.shapes[i][1]) 
+#            print(self.shapes[i][0], size, np.prod(component.shape))
+            assert size == np.prod(component.shape)
+            grad[offset: offset + size] = component.flatten() # row-wise, same as .ravel()
+            offset += size
+        return grad
 
     def unpack(self, x):
         """unpack model parameters from vector x, save: returns copy"""
@@ -192,33 +223,9 @@ class BaseSolver(BaseCGSolver):
             offset += h
         
         return params
-    
-    def pack(self, components): 
-        """pack (typically) gradients into vector x"""
-        g = np.empty(self.n_params)
-        offset = 0
-        for i, component in enumerate(components):
-            size = np.prod(self.shapes[i][1]) 
-#            print(self.shapes[i][0], size, np.prod(component.shape))
-            assert size == np.prod(component.shape)
-            g[offset: offset + size] = component.flatten() # row-wise, same as .ravel()
-            offset += size
-        return g
-
-    def get_canonicalparams(self, x): 
-        """a function to display the problem parameters
-        
-        overwritten in derived classes to return a specific model class
-        
-        """
-        params = self.unpack(x)
-        for i, p in enumerate(params):
-            print('%s:\n'% self.shapes[i][0], p)
-        
-        return params
 
 
-class BaseSolverSL(BaseSolver):
+class BaseSolverSL(BaseCGSolver):
     """
     base class for S+L model solvers
     """
@@ -237,10 +244,7 @@ class BaseSolverSL(BaseSolver):
     def __str__(self):
         string='<ADMMsolver> la=%s'%(self.lbda) + ', rho=%s'%(self.rho)
         string+=', alpha=%s'%(self.alpha) + ', beta=%s'%(self.beta)
-        # string+=', sc_a=%s'%(self.scale_l1) + ', sc_b=%s'%(self.scale_nuc)
-        
         return string
-    
 
     def get_canonicalparams(self):
         """Retrieves the PW S+L CG model parameters from flat parameter vector.

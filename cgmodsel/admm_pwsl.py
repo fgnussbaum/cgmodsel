@@ -47,7 +47,7 @@ class AdmmGaussianSL(BaseSolverSL, BaseAdmm):
         #        BaseSolverSL.__init__(self, meta=meta)
 
         self.sigma0 = None
-
+        self.cat_format_required = 'dummy_red'
         self.proxstep_param = 0.5
 
     def _postsetup_data(self):
@@ -164,7 +164,7 @@ class AdmmGaussianSL(BaseSolverSL, BaseAdmm):
 ###############################################################################
 
 
-class AdmmCGaussianSL(LikelihoodProx, BaseSolverSL, BaseAdmm):
+class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
     """
     solve the problem
        min l(S+L) + lambda * ||S||_{2,1} + rho * tr(L)
@@ -191,8 +191,9 @@ class AdmmCGaussianSL(LikelihoodProx, BaseSolverSL, BaseAdmm):
         super().__init__(*args, **kwargs)  # Python 3 syntax
 
         self.name = 'SL_PADMM'
-
-        self.lbda, self.rho = None, None
+		
+        self.prox = None
+        self.cat_format_required = 'dummy_red'
 
         self.proxstep_param = 0.5
 
@@ -204,7 +205,7 @@ class AdmmCGaussianSL(LikelihoodProx, BaseSolverSL, BaseAdmm):
         mat_theta[ltot:, ltot:] *= -1
         # since lower right block needs to be negative definite
         # make Theta feasible/cleaned for plh
-        mat_theta = self._clean_theta(mat_theta)
+        mat_theta = self.prox._clean_theta(mat_theta)
 
         alpha = np.zeros((self.meta['n_cg'], 1))
         mat_s = mat_theta.copy()
@@ -223,8 +224,8 @@ class AdmmCGaussianSL(LikelihoodProx, BaseSolverSL, BaseAdmm):
 
         tmp = mat_s + mat_l + self.admm_param * mat_z
 
-        mat_theta, alpha = self.solve_plh_prox(tmp, self.admm_param,
-                                               (mat_theta, alpha))
+        mat_theta, alpha = self.prox.solve(tmp, self.admm_param, 
+                                           (mat_theta, alpha))
 
         mat_theta = (mat_theta + mat_theta.T) / 2
 
@@ -293,24 +294,15 @@ class AdmmCGaussianSL(LikelihoodProx, BaseSolverSL, BaseAdmm):
         stats['admm_obj'] = self.lbda * l21norm(mat_s, off=self.opts['off']) \
                         + self.rho * np.sum(eig_l)
         # stats['true_obj'] = stats['admm_obj'] + self.plh(mat_s + mat_l, alpha) # true objective
-        stats['admm_obj'] += self.plh(mat_theta, alpha)
+        stats['admm_obj'] += self.prox.plh(mat_theta, alpha)
 
         return new_vars, residuals, stats
 
     def _postsetup_data(self):
         """called after drop_data """
-        ltot = self.meta['ltot']
-        n_cg = self.meta['n_cg']
         
-        self.shapes = [
-            ('Q', (ltot, ltot)),
-            ('u', (ltot, 1)),
-            ('R', (n_cg, ltot)),
-            ('F2tiL', (n_cg, n_cg)),  # construct Lambda = A * A.T
-            ('alpha', (n_cg, 1))
-        ]
-
-        self.n_params = sum([np.prod(shape[1]) for shape in self.shapes])
+        self.prox = LikelihoodProx(self.cat_data, self.cont_data, self.meta)
+        # TODO: pass self.meta
 
 #    def get_objective(self, S, L, u=None, alpha=None):
 #        """ """
