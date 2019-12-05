@@ -309,13 +309,14 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         self.prox = LikelihoodProx(self.cat_data, self.cont_data, self.meta)
 
 
-#    def get_objective(self, S, L, u=None, alpha=None):
-#        """ """
-#        if self.n_cat > 0 and not u is None:
-#            S = S.copy()
-#            S[:ltot, :ltot] += 2 * np.diag(u)
-#        if alpha is None:
-#            alpha = np.zeros(self.meta['n_cg'])
-#        obj = self.lbda * self.sparsenorm(S) + self.rho * np.trace(L)
-#        obj += self.genlh(S + L, alpha)
-#        return obj
+    def get_objective(self, mat_s, mat_l, u=None, alpha=None):
+        """ """
+        if self.meta['n_cat'] > 0 and not u is None:
+            mat_s = mat_s.copy()
+            mat_s[:self.meta['ltot'], :self.meta['ltot']] += 2 * np.diag(u)
+        if alpha is None:
+            alpha = np.zeros(self.meta['n_cg'])
+        obj = self.lbda * l21norm(mat_s, off=self.opts['off']) \
+            + self.rho * np.trace(mat_l)
+        obj += self.prox.plh(mat_s + mat_l, alpha)
+        return obj
