@@ -3,13 +3,100 @@
 Copyright: Frank Nussbaum (frank.nussbaum@uni-jena.de)
 
 This file contains various functions used in the module including
+- sparse norms and shrinkage operators
 - a stable logsumexp implementation
-
 - array printing-method that allows pasting the output into Python code
 
 """
 
 import numpy as np
+
+
+#################################################################################
+# norms and shrinkage operators
+#################################################################################
+
+def grp_soft_shrink(mat, tau, n_groups=None, glims=None, off=False):
+    """
+    calculate (group-)soft-shrinkage of mat with shrinkage parameter tau
+    soft shrink if no n_groups is given
+    else must provide with n_groups (# groups per row/column) and
+    cumulative sizes of groups (glims)
+
+    this code could be made much faster
+    (by parallizing loops, efficient storage access)
+    """
+    shrinkednorm = 0
+    if n_groups is None:
+        # soft shrink
+#        if tau == 0:
+#            return mat, np.sum(np.abs(mat.flatten()))
+        tmp = np.abs(mat) - tau
+        tmp[tmp < 1e-25] = 0
+
+        shrinked = np.multiply(np.sign(mat), tmp)
+        if off:
+            shrinked -= np.diag(np.diag(shrinked))
+            shrinked += np.diag(np.diag(mat))
+        
+        return shrinked, np.sum(np.abs(shrinked.flatten()))
+
+    # group soft shrink
+#    if tau == 0:
+#        for i in range(n_groups):
+#            for j in range(n_groups):
+#                group = mat[glims[i]:glims[i + 1], glims[j]:glims[j + 1]]
+#                if (i == j) and off:
+#                    continue
+#                shrinkednorm += np.linalg.norm(group, 'fro')
+#        return mat, shrinkednorm
+
+    tmp = np.empty(mat.shape)
+    for i in range(n_groups):
+        for j in range(n_groups):
+            group = mat[glims[i]:glims[i + 1], glims[j]:glims[j + 1]]
+            if (i == j) and off:
+                tmp[glims[i]:glims[i + 1], glims[i]:glims[i + 1]] = group
+                continue
+            
+            gnorm = np.linalg.norm(group, 'fro')
+            if gnorm <= tau:
+                tmp[glims[i]:glims[i + 1],
+                    glims[j]:glims[j + 1]] = np.zeros(group.shape)
+            else:
+                tmp[glims[i]:glims[i+1], glims[j]:glims[j+1]] = \
+                    group * (1 - tau / gnorm)
+                shrinkednorm += (1 - tau / gnorm) * gnorm
+
+    return tmp, shrinkednorm
+
+def l21norm(mat, n_groups=None, glims=None, off=False):
+    """
+    calculate l_{2,1}-norm or l_1-norm of mat
+    l_1-norm if no n_groups is given
+    else must provide with n_groups (# groups per row/column) and
+    cumulative sizes of groups (glims)
+    """
+    if n_groups is None:
+        tmp = np.sum(np.abs(mat.flatten()))
+        if off:
+            tmp -= np.sum(np.diag(np.abs(mat)))
+        return tmp
+        # calculate regular l1-norm
+    l21sum = 0
+    for i in range(n_groups):
+        for j in range(i):
+            group = mat[glims[i]:glims[i + 1], glims[j]:glims[j + 1]]
+            l21sum += np.linalg.norm(group, 'fro')
+
+    l21sum *= 2 # use symmetry
+    if not off:
+        for i in range(n_groups):
+            group = mat[glims[i]:glims[i + 1], glims[i]:glims[i + 1]]
+            l21sum += np.linalg.norm(group, 'fro')
+
+    return l21sum
+
 
 ###############################################################################
 # stable implementation of logsumexp etc.

@@ -9,7 +9,7 @@ import numpy as np
 
 #from cgmodsel.models.model_base import get_modeltype
 from cgmodsel.models.model_pwsl import ModelPWSL
-
+from cgmodsel.utils import grp_soft_shrink, l21norm
 # pylint: disable=W0511 # todos
 # pylint: disable=R0914 # too many locals
 
@@ -21,6 +21,7 @@ INDEX = 'index'
 def set_sparsity_weights(meta, cat_data, cont_data):
     """  use adjusted weights for all groups as suggested by LST2015
     (may be essential for "good", "consistent" results)"""
+    #TODO(franknu): matrix W
     n_data = meta['n_data']
     n_cg = meta['n_cg']
     n_cat = meta['n_cat']
@@ -167,11 +168,17 @@ class BaseCGSolver(abc.ABC):
             self.meta['ltot'] = 0
             self.meta['red_levels'] = False  # value irrelevant, no cat vars
             self.meta['sizes'] = []
-            self.meta['cat_glims'] = []
+            self.meta['cat_glims'] = [0]
 
         self.meta['dim'] = self.meta['ltot'] + self.meta['n_cg']
+        self.meta['n_catcg'] = self.meta['n_cat'] + self.meta['n_cat']
+        self.meta['glims'] = list(self.meta['cat_glims']) + \
+            [1 + self.meta['ltot'] + s for s in range(self.meta['n_cg'])]
+        # TODO(franknu): self.meta['glims'] for sparse reg only
 
         #        self.meta['type'] = get_modeltype(self.n_cat, self.n_cg, self.sizes)
+        self.meta['nonbinary'] = (self.meta['ltot'] > self.meta['n_cat']
+            * (2 - self.meta['red_levels']))
 
         fac = np.log(self.meta['n_cg'] + self.meta['n_cat'])
         fac = np.sqrt(fac / self.meta['n_data'])
@@ -288,6 +295,9 @@ class BaseSolverSL(BaseCGSolver):
     def __str__(self):
         string = '<ADMMsolver> la=%s' % (self.lbda) + ', rho=%s' % (self.rho)
         string += ', alpha=%s' % (self.alpha) + ', beta=%s' % (self.beta)
+        string += ', use_alpha=%d'%(self.opts.setdefault('use_alpha', 1))
+        string += ', use_u=%d'%(self.opts.setdefault('use_u', 1))
+        string += ', off=%d'%(self.opts.setdefault('off', 1))
         return string
 
     def get_canonicalparams(self):
@@ -348,6 +358,24 @@ class BaseSolverSL(BaseCGSolver):
         """get regularization parameters"""
         return self.lbda, self.rho
 
+    def shrink(self, mat_s, tau):
+        """return (group)- soft shrink of matrix mat_s with tau """
+        if self.meta['nonbinary']:
+            return grp_soft_shrink(mat_s, tau,
+                                   self.meta['n_cat'] + self.meta['n_cg'],
+                                   self.meta['glims'],
+                                   self.opts['off'])
+        return grp_soft_shrink(mat_s, tau, off=self.opts['off'])
+
+    def sparse_norm(self, mat_s):
+        """return l21/ l1-norm of mat_s"""
+        if self.meta['nonbinary']:
+            return l21norm(mat_s,
+                           self.meta['n_cat'] + self.meta['n_cg'],
+                           self.meta['glims'],
+                           self.opts['off'])
+        return l21norm(mat_s, off=self.opts['off'])
+                
     def set_regularization_params(self,
                                   hyperparams,
                                   scales=None,

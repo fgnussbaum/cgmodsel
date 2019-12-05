@@ -21,7 +21,6 @@ import scipy  # use scipy.linalg.eigh (for real symmetric matrix), does not chec
 from cgmodsel.base_admm import BaseAdmm
 from cgmodsel.base_solver import BaseSolverSL
 from cgmodsel.prox import LikelihoodProx
-from cgmodsel.prox import grp_soft_shrink, l21norm
 
 # pylint: disable=R0914
 
@@ -49,7 +48,7 @@ class AdmmGaussianSL(BaseSolverSL, BaseAdmm):
 
         self.sigma0 = None
         self.cat_format_required = 'dummy_red'
-        self.proxstep_param = 0.5
+        self.proxstep_param = 0.6
 
     def _postsetup_data(self):
         """called after drop_data"""
@@ -88,10 +87,9 @@ class AdmmGaussianSL(BaseSolverSL, BaseAdmm):
         grad_partial = mat_theta - mat_s + mat_l - self.admm_param * mat_z
         grad_partial_s = mat_s + self.proxstep_param * grad_partial
         grad_partial_l = mat_l - self.proxstep_param * grad_partial
-        mat_s = grp_soft_shrink(grad_partial_s,
-                                self.proxstep_param * self.admm_param *
-                                self.lbda,
-                                off=self.opts['off'])
+        mat_s, l1norm = self.shrink(grad_partial_s,
+                                    self.proxstep_param * self.admm_param *
+                                    self.lbda)
         mat_s = (mat_s + mat_s.T) / 2
 
         eig, mat_u = scipy.linalg.eigh(grad_partial_l)
@@ -128,8 +126,7 @@ class AdmmGaussianSL(BaseSolverSL, BaseAdmm):
         stats = {}
         stats['admm_obj'] = np.sum(np.sum(np.multiply(mat_theta, self.sigma0)))
         stats['admm_obj'] -= np.sum(np.log(eig_theta))
-        stats['admm_obj'] += self.lbda * l21norm(mat_s, off=self.opts['off']) \
-                            + self.rho * np.sum(eig_l)
+        stats['admm_obj'] += self.lbda * l1norm + self.rho * np.sum(eig_l)
 
         stats['theta'] = mat_theta
         alpha = np.zeros((self.meta['n_cg'], 1))
@@ -151,7 +148,7 @@ class AdmmGaussianSL(BaseSolverSL, BaseAdmm):
 #        obj = np.sum(np.sum(np.multiply(mat_theta, self.sigma0)))
 #        obj -= np.linalg.slogdet(mat_theta)[1]
 #        if not lhonly:
-#            obj += self.lbda * l21norm(mat_s, off=self.opts['off'])
+#            obj += self.lbda * self.sparse_norm(mat_s)
 #            obj += self.rho * np.trace(mat_l)
 #
 #        return obj
@@ -196,7 +193,7 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         self.prox = None
         self.cat_format_required = 'dummy_red'
 
-        self.proxstep_param = 0.5
+        self.proxstep_param = 0.6
 
     def _initialize_admm(self):
         """initialize ADMM variables"""
@@ -242,10 +239,12 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         gradient_partial = mat_theta - mat_s - mat_l - self.admm_param * mat_z
         # neg part grad
 
-        mat_s = grp_soft_shrink(mat_s + self.proxstep_param * gradient_partial,
-                                self.proxstep_param * self.admm_param *
-                                self.lbda,
-                                off=self.opts['off'])
+#        print(mat_s)
+        mat_s, l21norm = self.shrink(mat_s + self.proxstep_param *
+                                     gradient_partial,
+                                     self.proxstep_param * self.admm_param *
+                                     self.lbda)
+#        print(mat_s, self.proxstep_param * self.admm_param * self.lbda)
 
         mat_s = (mat_s + mat_s.T) / 2
         if not self.opts['use_u']:  # no univariate parameters
@@ -267,6 +266,8 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         mat_z = mat_z - resid_theta / self.admm_param
         mat_z = (mat_z + mat_z.T) / 2
 
+#        print(mat_s, mat_l)
+#        print(resid_theta)
         ## diagnostics, reporting, termination checks
 
         fronorm_s = np.linalg.norm(mat_s, 'fro')
@@ -297,8 +298,7 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         stats['eig_l'] = eig_l
         stats['resid'] = resid_theta
 
-        stats['admm_obj'] = self.lbda * l21norm(mat_s, off=self.opts['off']) \
-                        + self.rho * np.sum(eig_l)
+        stats['admm_obj'] = self.lbda * l21norm + self.rho * np.sum(eig_l)
         # stats['true_obj'] = stats['admm_obj'] + self.plh(mat_s + mat_l, alpha) # true objective
         stats['admm_obj'] += self.prox.plh(mat_theta, alpha)
 
@@ -316,7 +316,7 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
             mat_s[:self.meta['ltot'], :self.meta['ltot']] += 2 * np.diag(u)
         if alpha is None:
             alpha = np.zeros(self.meta['n_cg'])
-        obj = self.lbda * l21norm(mat_s, off=self.opts['off']) \
+        obj = self.lbda * self.sparse_norm(mat_s) \
             + self.rho * np.trace(mat_l)
         obj += self.prox.plh(mat_s + mat_l, alpha)
         return obj

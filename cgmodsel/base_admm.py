@@ -20,23 +20,23 @@ class BaseAdmm(abc.ABC):
     def __init__(self):
 #        print('Init BaseAdmm')
         super().__init__()
-        self.admm_param = 1
+        self.admm_param = 1 # TODO(franknu): external access
 
         self._set_defaults_admm()
 
     @abc.abstractmethod
     def _do_iter_admm(self, current_vars: tuple):
         """perform computations of one ADMM iteration"""
-        raise NotImplementedError  # overwrite in derived classes
+        raise NotImplementedError  # override in derived classes
 
     @abc.abstractmethod
     def _initialize_admm(self):
         """initialize ADMM variables"""
-        raise NotImplementedError  # overwrite in derived classes
+        raise NotImplementedError  # override in derived classes
 
 #    def _collect(self, current_vars: tuple):
 #        """store information of ADMM variables in dictionairy"""
-#        raise NotImplementedError  # overwrite in derived classes
+#        raise NotImplementedError  # override in derived classes
 
     def _report(self, out):
         """print stats after solving"""
@@ -60,6 +60,7 @@ class BaseAdmm(abc.ABC):
 
         self.opts.setdefault('continuation', 1)
         self.opts.setdefault('num_continuation', 10)
+        self.opts.setdefault('continuation_fac', 2)
         #        self.opts.setdefault('eta', .25)
         #        self.opts.setdefault('muf', 1e-6)
         self.opts.setdefault('maxiter', 500)
@@ -88,7 +89,7 @@ class BaseAdmm(abc.ABC):
             current_vars, residuals, stats = self._do_iter_admm(current_vars)
 
             ## diagnostics, reporting, termination checks
-            eps_pri, eps_dual, rnorm, snorm = residuals
+            rnorm, snorm, eps_pri, eps_dual = residuals
 
             history['objval'][i] = stats['admm_obj']
 
@@ -156,20 +157,22 @@ class BaseAdmm(abc.ABC):
 
 #        print(snorm_rel, rnorm_rel)
 
-# do scaling of admm_param if necessary
+        # do scaling of admm_param if necessary
         if rnorm_rel > snorm_rel * criticalratio:
             # decrease admm_param
-            self.admm_param = self.admm_param / self.opts['cont_tau_inc']
+            self.admm_param /= self.opts['continuation_fac']
         elif snorm_rel > rnorm_rel * criticalratio:
             # increase admm_param
-            self.admm_param = self.admm_param * self.opts['cont_tau_inc']
+            self.admm_param *= self.opts['continuation_fac']
 
     def cont_update_2019(self,
                          admm_state,
                          criticalratio: int = 5,
                          cutoff: tuple = (1e-2, 1e2)):
         """ update that respects current ratio of residuals with tolerancies"""
-
+        # TODO(franknu): consider speed of improvement instead of
+        # just current state? - hist as class variable??
+        # ML to learn update?
         eps_pri, eps_dual, rnorm, snorm = admm_state
         snorm_rel = snorm / eps_dual
         rnorm_rel = rnorm / eps_pri

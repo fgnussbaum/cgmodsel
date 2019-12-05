@@ -10,7 +10,6 @@ as submitted to the Journal of Multivariate Analysis (JMVA)
 # pylint: disable=C0103
 
 from cgmodsel.admm_pwsl import AdmmCGaussianSL, AdmmGaussianSL
-
 from cgmodsel.dataops import load_prepare_data  # function to read data
 
 
