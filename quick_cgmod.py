@@ -76,7 +76,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
     data = CFMT
 #    data = LSVT
-#    data = HELP
+    data = HELP
     # ********************************* #
 
     print('Loading data...')
@@ -105,4 +105,4 @@ if __name__ == '__main__':
     ###### model visualization
 
     model = solver.get_canonicalparams()  # S + L model instance
-    model.repr_graphical(caption='learned')
+    model.plot_sl(plottype='pn')

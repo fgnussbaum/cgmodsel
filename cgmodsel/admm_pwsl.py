@@ -239,7 +239,7 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         gradient_partial = mat_theta - mat_s - mat_l - self.admm_param * mat_z
         # neg part grad
 
-#        print(mat_s)
+
         mat_s, l21norm = self.shrink(mat_s + self.proxstep_param *
                                      gradient_partial,
                                      self.proxstep_param * self.admm_param *
@@ -253,6 +253,7 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
                 np.diag(np.diag(mat_s[:ltot, :ltot]))
 
         tmp = mat_l + self.proxstep_param * gradient_partial
+
         eig, mat_u = scipy.linalg.eigh(tmp)
 
         # spectral soft shrink to form eigenvalues of L
@@ -316,6 +317,7 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
             mat_s[:self.meta['ltot'], :self.meta['ltot']] += 2 * np.diag(u)
         if alpha is None:
             alpha = np.zeros(self.meta['n_cg'])
+
         obj = self.lbda * self.sparse_norm(mat_s) \
             + self.rho * np.trace(mat_l)
         obj += self.prox.plh(mat_s + mat_l, alpha)

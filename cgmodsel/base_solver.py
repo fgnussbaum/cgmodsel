@@ -16,7 +16,7 @@ from cgmodsel.utils import grp_soft_shrink, l21norm
 DUMMY = 'dummy'
 DUMMY_RED = 'dummy_red'
 INDEX = 'index'
-
+FLAT = 'flat'
 
 def set_sparsity_weights(meta, cat_data, cont_data):
     """  use adjusted weights for all groups as suggested by LST2015
@@ -110,8 +110,6 @@ class BaseCGSolver(abc.ABC):
                 counter += 1
                 cat_data = data
                 cont_data = np.empty((data.shape[0], 0))
-                assert 'sizes' in meta
-                assert len(meta['sizes']) == meta['n_cat']
             if 'n_cg' in meta and meta['n_cg'] > 0:
                 counter += 1
                 cont_data = data
@@ -128,6 +126,11 @@ class BaseCGSolver(abc.ABC):
             else:
                 meta[key] = 0
 
+        if self.meta['n_cat'] > 0:
+            assert 'sizes' in meta
+            assert len(meta['sizes']) == meta['n_cat']
+            self.meta['sizes'] = meta['sizes']
+
         # continue checking validity of meta
         if self.meta['n_cg'] > 0:
             assert not np.any(np.isnan(cont_data))
@@ -135,8 +138,12 @@ class BaseCGSolver(abc.ABC):
 
             self.meta['n_data'] = cont_data.shape[0]
 
-        if self.meta['n_cat'] > 0:
-
+        if self.meta['n_cat'] == 0:
+            self.meta['sizes'] = [] # no discrete variables
+            self.meta['ltot'] = 0
+            self.meta['red_levels'] = False  # value irrelevant, no cat vars
+            self.meta['cat_glims'] = [0]
+        else:
             if 'n_data' in self.meta:
                 assert self.meta['n_data'] == cat_data.shape[0]
             else:
@@ -155,33 +162,33 @@ class BaseCGSolver(abc.ABC):
                 # assures identifiability of the model
                 self.meta['red_levels'] = True
                 self.meta['sizes'] = [size - 1 for size in meta['sizes']]
-            elif self.cat_format_required == INDEX:
+            elif self.cat_format_required == INDEX: 
                 assert meta['n_cat'] == cat_data.shape[1]
-                # TODO:
+            elif self.cat_format_required == FLAT: # MAP solver
+                assert len(cat_data.shape) == 1
             else:
                 raise Exception('invalid self.cat_format_required')
+        
+        if self.cat_format_required in (DUMMY, DUMMY_RED):
             self.meta['ltot'] = cat_data.shape[1]
+            self.meta['dim'] = self.meta['ltot'] + self.meta['n_cg']
 
             # calculate cumulative # of levels/ group delimiters
             self.meta['cat_glims'] = np.cumsum([0] + self.meta['sizes'])
-        else:
-            self.meta['ltot'] = 0
-            self.meta['red_levels'] = False  # value irrelevant, no cat vars
-            self.meta['sizes'] = []
-            self.meta['cat_glims'] = [0]
+            
+            self.meta['glims'] = list(self.meta['cat_glims']) + \
+                [1 + self.meta['ltot'] + s for s in range(self.meta['n_cg'])]
+            # TODO(franknu): self.meta['glims'] for sparse reg only
 
-        self.meta['dim'] = self.meta['ltot'] + self.meta['n_cg']
-        self.meta['n_catcg'] = self.meta['n_cat'] + self.meta['n_cat']
-        self.meta['glims'] = list(self.meta['cat_glims']) + \
-            [1 + self.meta['ltot'] + s for s in range(self.meta['n_cg'])]
-        # TODO(franknu): self.meta['glims'] for sparse reg only
+            self.meta['nonbinary'] = (self.meta['ltot'] > self.meta['n_cat']
+                * (2 - self.meta['red_levels']))
 
-        #        self.meta['type'] = get_modeltype(self.n_cat, self.n_cg, self.sizes)
-        self.meta['nonbinary'] = (self.meta['ltot'] > self.meta['n_cat']
-            * (2 - self.meta['red_levels']))
+        self.meta['n_catcg'] = self.meta['n_cat'] + self.meta['n_cg']
 
-        fac = np.log(self.meta['n_cg'] + self.meta['n_cat'])
-        fac = np.sqrt(fac / self.meta['n_data'])
+        # self.meta['type'] = get_modeltype(self.n_cat, self.n_cg, self.sizes)
+#        fac = np.log(self.meta['n_cg'] + self.meta['n_cat'])
+        fac = np.sqrt(np.log(self.meta['n_catcg']) / self.meta['n_data'])
+
         self.meta['reg_fac'] = fac  # potentially used as prescaling factor
         # for regularization parameters
 
@@ -360,6 +367,7 @@ class BaseSolverSL(BaseCGSolver):
 
     def shrink(self, mat_s, tau):
         """return (group)- soft shrink of matrix mat_s with tau """
+        # print(self.meta['nonbinary'])
         if self.meta['nonbinary']:
             return grp_soft_shrink(mat_s, tau,
                                    self.meta['n_cat'] + self.meta['n_cg'],
@@ -369,6 +377,7 @@ class BaseSolverSL(BaseCGSolver):
 
     def sparse_norm(self, mat_s):
         """return l21/ l1-norm of mat_s"""
+#        print(self.meta['glims'])
         if self.meta['nonbinary']:
             return l21norm(mat_s,
                            self.meta['n_cat'] + self.meta['n_cg'],

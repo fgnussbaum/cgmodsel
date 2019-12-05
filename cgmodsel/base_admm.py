@@ -60,6 +60,7 @@ class BaseAdmm(abc.ABC):
 
         self.opts.setdefault('continuation', 1)
         self.opts.setdefault('num_continuation', 10)
+#        self.opts.setdefault('cont_adaptive', 10)
         self.opts.setdefault('continuation_fac', 2)
         #        self.opts.setdefault('eta', .25)
         #        self.opts.setdefault('muf', 1e-6)
@@ -120,15 +121,15 @@ class BaseAdmm(abc.ABC):
                 admm_param_old = self.admm_param
 
                 admm_state = eps_pri, eps_dual, rnorm, snorm
-                if self.opts['cont_adaptive']:
-                    if (i / self.opts['num_continuation']) % 5 == 1:
-                        self.cont_update_2019(admm_state)
-                    else:
-                        self.cont_update_s2a(admm_state)
 
-                    if self.opts['verb'] and self.admm_param != admm_param_old:
-                        print('>> New ADMM parameter', self.admm_param,
-                              '(old was %f)' % (admm_param_old))
+                if (i / self.opts['num_continuation']) % 5 == 1:
+                    self.cont_update_2019(admm_state)
+                else:
+                    self.cont_update_s2a(admm_state)
+
+                if self.opts['verb'] and self.admm_param != admm_param_old:
+                    print('>> New ADMM parameter', self.admm_param,
+                          '(old was %f)' % (admm_param_old))
 
         out = {}
         if pridualresids_below_tolerance:

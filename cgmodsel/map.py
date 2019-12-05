@@ -24,7 +24,7 @@ class MAP(BaseCGSolver):
         super().__init__()
 
         self.name = 'MAP'
-        self.cat_format_required = 'index'
+        self.cat_format_required = 'flat'
 
     def _fit_gaussian(self, mat_v_inv, deg_freedom: int, vec_mu0,
                       n_art_cg: int):

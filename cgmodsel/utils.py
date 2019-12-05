@@ -33,7 +33,6 @@ def grp_soft_shrink(mat, tau, n_groups=None, glims=None, off=False):
 #            return mat, np.sum(np.abs(mat.flatten()))
         tmp = np.abs(mat) - tau
         tmp[tmp < 1e-25] = 0
-
         shrinked = np.multiply(np.sign(mat), tmp)
         if off:
             shrinked -= np.diag(np.diag(shrinked))
