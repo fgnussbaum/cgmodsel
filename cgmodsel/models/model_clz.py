@@ -53,8 +53,8 @@ class ModelCLZ(BaseModel):
 
     def __str__(self):
         """string representation of the model"""
-        string ='u:' + str(self.vec_u) + '\nQ:\n' + str(self.mat_q) + \
-            '\nR:\n' + str(self.mat_r) +\
+        string = 'u:' + str(self.vec_u) + '\nQ:\n' + str(self.mat_q) + \
+            '\nR:\n' + str(self.mat_r) + \
          '\nalpha:' + str(self.alpha) + '\nLambda0:\n' + str(self.mat_lbda0)
         for r in range(self.meta['n_cat']):
             for k in range(1, self.meta['sizes'][r]):
@@ -66,7 +66,6 @@ class ModelCLZ(BaseModel):
 
     def get_graph(self, threshold=1e-1):
         """ calculate group norms of the parameters associated with each edge and threshold
-        
         plot graph if disp is True"""
         # perhaps do variable threshold for different group types
         grpnormmat = self.get_group_mat(diagonal=False, norm=True)
@@ -80,8 +79,8 @@ class ModelCLZ(BaseModel):
     def get_group_mat(self, diagonal=False, norm=True, aggr=True):
         # calibration? optional class param?
 
-        assert aggr == True, "only implemented for doing aggregation"
-        assert norm == True, "l2-norm is the only implemented aggregation function"
+        assert aggr, "only implemented for doing aggregation"
+        assert norm, "l2-norm is the only implemented aggregation function"
 
         n_cat = self.meta['n_cat']
         n_cg = self.meta['n_cg']
@@ -93,7 +92,7 @@ class ModelCLZ(BaseModel):
 
         for r in range(n_cat):  # dis-dis
             for j in range(r):
-                grpnormmat[r,j] = \
+                grpnormmat[r, j] = \
                 np.linalg.norm(self.mat_q[glims[r]:glims[r+1], glims[j]:glims[j+1]])
         self.mat_lbdas = self.mat_lbdas.reshape((n_cg * n_cg, ltot))
 
@@ -103,9 +102,9 @@ class ModelCLZ(BaseModel):
                 offset = s * n_cg
 
                 tmp_group[:sizes[r]] = self.mat_r[s, glims[r]:glims[r + 1]]
-                tmp_group[sizes[r] : (s+1) * sizes[r]] = \
-                    self.mat_lbdas[offset: offset+s , glims[r]:glims[r+1]].flatten()
-                tmp_group[(s+1) * sizes[r] :] = \
+                tmp_group[sizes[r]:(s+1) * sizes[r]] = \
+                    self.mat_lbdas[offset: offset+s, glims[r]:glims[r+1]].flatten()
+                tmp_group[(s+1) * sizes[r]:] = \
                     self.mat_lbdas[offset+s+1: offset+n_cg, glims[r]:glims[r+1]].flatten()
 
                 grpnormmat[n_cat + s, r] = np.linalg.norm(tmp_group)
@@ -134,6 +133,7 @@ class ModelCLZ(BaseModel):
         return grpnormmat
 
     def get_params(self):
+        """return parameters"""
         return self.vec_u, self.mat_q, self.mat_r, self.alpha, self.mat_lbda0, self.mat_lbdas
 
     def get_meanparams(self):
@@ -141,12 +141,12 @@ class ModelCLZ(BaseModel):
            (p(x)_x, mu(x)_x, Sigma(x)_x)
         Note: Some arrays might be empty
               (if not both discrete and continuous variables are present)
-              
-        ** conversion formulas to mean parameters ** 
-        p(x) ~ (2pi)^{n/2}|La(x)^{-1}|^{1/2}exp(q(x) + 1/2 nu(x)^T La(x)^{-1} nu(x) )
+
+        ** conversion formulas to mean parameters **
+        p(x) ~ (2pi)^{n/2}|La(x)^{-1}|^{1/2}exp(q(x) + 1/2 nu(x)^T La(x)^{-1} nu(x))
         mu(x) = La(x)^{-1}nu(x)
         Sigma(x) = La(x)^{-1}
-        
+
         with nu(x) = alpha + R D_x and q(x) = u^T D_x + 1/2 D_x^T Q D_x
         and La(x) = Lambda0 + sum_r Lambda_r D_{x_r} = Lambda0 + Lambdas*D_x.
         Here D_x is the dummy representation of the categorical values in x.
@@ -168,7 +168,7 @@ class ModelCLZ(BaseModel):
         if n_cg == 0:
             for x in range(n_discrete_states):
                 unrvld_ind = np.unravel_index([x], sizes)
-                # TODO: perhaps iter more systematically over dummy representations dummy
+                # TODO(franknu): perhaps iter more systematically over dummy
                 dummy = np.zeros((self.meta['ltot'], 1))
                 for r in range(n_cat):  # construct dummy repr dummy of x
                     dummy[self.meta['cat_glims'][r] + unrvld_ind[r][0], 0] = 1
@@ -200,7 +200,10 @@ class ModelCLZ(BaseModel):
 
                 tmp_eigvals = np.linalg.eigvals(lambdas[x, :, :])
                 tmp_min = np.min(tmp_eigvals)
-                #            assert tmp_min > 0, 'Non-PD covariance of (flat) discrete state %d with la_min=%f. Pseudolikelihood estimation makes this possible. Note that nodewise prediction using this model still works (however it does not represent a valid joint distribution).'%(x, tmp_min)
+                # assert tmp_min > 0, 'Non-PD covariance of (flat) state %d with la_min=%f.'
+                # Pseudolikelihood estimation makes this possible.
+                # Note that nodewise prediction using this model still works
+                # (however it does not represent a valid joint distribution).'%(x, tmp_min)
                 if tmp_min < 0:
                     print(x, lambdas[x, :, :], tmp_min)
                     continue

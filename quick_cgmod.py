@@ -13,7 +13,7 @@ from cgmodsel.admm_pwsl import AdmmCGaussianSL, AdmmGaussianSL
 from cgmodsel.dataops import load_prepare_data  # function to read data
 
 
-def load(dataset):
+def load(dataset: dict):
     """
     load csv with file path dataset['filename']
 
@@ -74,12 +74,12 @@ if __name__ == '__main__':
 
     # ********************************* #
     # comment out all but one line here #
-    data = CFMT
-#    data = LSVT
-    data = HELP
+#    data = CFMT
+    data = LSVT
+#    data = HELP
     # ********************************* #
 
-    print('Loading data...')
+    print('Loading data...(%s)'%(data['filename']))
     cat_data, cont_data, meta = load(data)  # load the data
 
     ###### fit models
