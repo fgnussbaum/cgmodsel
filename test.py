@@ -12,11 +12,10 @@ import unittest
 
 import numpy as np
 
+from cgmodsel.map import MAP
 from cgmodsel.admm_pwsl import AdmmCGaussianSL
 #, AdmmGaussianSL
 from cgmodsel.dataops import load_prepare_data  # function to read data
-
-from cgmodsel.map import MAP
 
 
 class TestMAP(unittest.TestCase):
@@ -191,7 +190,7 @@ class TestSLSolvers(unittest.TestCase):
     def test_cg2(self):
         """mixed dataset with 3 cat and 3 CG variables"""
         Scvx = np.array([[-3.5971,1.2036e-12,3.6304e-13,-0.5854,-5.4106e-15,-1.3942e-10],[1.2036e-12,-2.9271,-2.5679e-13,-4.5677e-13,-0.84596,1.5184e-13],[3.6304e-13,-2.5679e-13,-5.2814,-1.5548e-12,-0.13043,-0.90272],[-0.5854,-4.5677e-13,-1.5548e-12,-1.2995,-0.39755,-0.31256],[-5.4106e-15,-0.84596,-0.13043,-0.39755,-1.1135,-0.3467],[-1.3942e-10,1.5184e-13,-0.90272,-0.31256,-0.3467,-1.0855]])
-        Lcvx =np.array([[0.47022,0.20023,0.35059,-0.36113,-0.0020348,-0.19258],[0.20023,0.085257,0.14928,-0.15377,-0.00086643,-0.082002],[0.35059,0.14928,0.26139,-0.26925,-0.0015171,-0.14358],[-0.36113,-0.15377,-0.26925,0.27734,0.0015627,0.1479],[-0.0020348,-0.00086643,-0.0015171,0.0015627,8.8052e-06,0.00083335],[-0.19258,-0.082002,-0.14358,0.1479,0.00083335,0.078872]])
+        Lcvx = np.array([[0.47022,0.20023,0.35059,-0.36113,-0.0020348,-0.19258],[0.20023,0.085257,0.14928,-0.15377,-0.00086643,-0.082002],[0.35059,0.14928,0.26139,-0.26925,-0.0015171,-0.14358],[-0.36113,-0.15377,-0.26925,0.27734,0.0015627,0.1479],[-0.0020348,-0.00086643,-0.0015171,0.0015627,8.8052e-06,0.00083335],[-0.19258,-0.082002,-0.14358,0.1479,0.00083335,0.078872]])
         fcvx = 2.7949
         refsol = Scvx, Lcvx, fcvx
         refopts = {'off':1, 'use_u':1, 'use_alpha':0}
@@ -259,16 +258,19 @@ class TestSLSolvers(unittest.TestCase):
         self.solver.drop_data(data, meta)
         self.solver.set_regularization_params(hyperparams) 
 #        print(self.solver)
-        out = self.solver.solve(report = 0)
-#        out['']
+        self.solver.solve(report = 0)
 
         model = self.solver.get_canonicalparams()
 
         Scvx, Lcvx, fcvx = refsol
         f_cvx = self.solver.get_objective(Scvx, Lcvx)
-        self.assertAlmostEqual(f_cvx, fcvx, places = 3, msg="%f not equal %f"%(f_cvx, fcvx))
+        self.assertAlmostEqual(f_cvx,
+                               fcvx,
+                               places = 3,
+                               msg="%f not equal %f"%(f_cvx, fcvx))
         
-        f_admm = self.solver.get_objective(*model.get_params_sl(padded = False))
+        params_sl = model.get_params_sl(padded = False)
+        f_admm = self.solver.get_objective(*params_sl)
 
         fdiff = f_admm -  fcvx
 

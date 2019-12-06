@@ -18,6 +18,7 @@ DUMMY_RED = 'dummy_red'
 INDEX = 'index'
 FLAT = 'flat'
 
+
 def set_sparsity_weights(meta, cat_data, cont_data):
     """  use adjusted weights for all groups as suggested by LST2015
     (may be essential for "good", "consistent" results)"""
@@ -139,7 +140,7 @@ class BaseCGSolver(abc.ABC):
             self.meta['n_data'] = cont_data.shape[0]
 
         if self.meta['n_cat'] == 0:
-            self.meta['sizes'] = [] # no discrete variables
+            self.meta['sizes'] = []  # no discrete variables
             self.meta['ltot'] = 0
             self.meta['red_levels'] = False  # value irrelevant, no cat vars
             self.meta['cat_glims'] = [0]
@@ -162,31 +163,31 @@ class BaseCGSolver(abc.ABC):
                 # assures identifiability of the model
                 self.meta['red_levels'] = True
                 self.meta['sizes'] = [size - 1 for size in meta['sizes']]
-            elif self.cat_format_required == INDEX: 
+            elif self.cat_format_required == INDEX:
                 assert meta['n_cat'] == cat_data.shape[1]
-            elif self.cat_format_required == FLAT: # MAP solver
+            elif self.cat_format_required == FLAT:  # MAP solver
                 assert len(cat_data.shape) == 1
             else:
                 raise Exception('invalid self.cat_format_required')
-        
+
         if self.cat_format_required in (DUMMY, DUMMY_RED):
             self.meta['ltot'] = cat_data.shape[1]
             self.meta['dim'] = self.meta['ltot'] + self.meta['n_cg']
 
             # calculate cumulative # of levels/ group delimiters
             self.meta['cat_glims'] = np.cumsum([0] + self.meta['sizes'])
-            
+
             self.meta['glims'] = list(self.meta['cat_glims']) + \
                 [1 + self.meta['ltot'] + s for s in range(self.meta['n_cg'])]
             # TODO(franknu): self.meta['glims'] for sparse reg only
 
-            self.meta['nonbinary'] = (self.meta['ltot'] > self.meta['n_cat']
-                * (2 - self.meta['red_levels']))
+            self.meta['nonbinary'] = (self.meta['ltot'] > self.meta['n_cat'] *
+                                      (2 - self.meta['red_levels']))
 
         self.meta['n_catcg'] = self.meta['n_cat'] + self.meta['n_cg']
 
         # self.meta['type'] = get_modeltype(self.n_cat, self.n_cg, self.sizes)
-#        fac = np.log(self.meta['n_cg'] + self.meta['n_cat'])
+        #        fac = np.log(self.meta['n_cg'] + self.meta['n_cat'])
         fac = np.sqrt(np.log(self.meta['n_catcg']) / self.meta['n_data'])
 
         self.meta['reg_fac'] = fac  # potentially used as prescaling factor
@@ -204,6 +205,7 @@ class BaseGradSolver(abc.ABC):
     Base solver for iterative (scipy L-BFGS-B) solvers
     provides with methods to pack/unpack parameters into vector
     """
+
     def __init__(self):
         #        print('Init BaseCGSolver')
         super().__init__()
@@ -211,8 +213,8 @@ class BaseGradSolver(abc.ABC):
         self.shapes = None
         self.n_params = None
 
-#        self.problem_vars = None
-        
+        #        self.problem_vars = None
+
         self.opts = {}
         self._set_defaults()
 
@@ -231,7 +233,7 @@ class BaseGradSolver(abc.ABC):
         self.opts.setdefault('tol', 1e-12)
         self.opts.setdefault('maxiter', 500)
 
-        
+
 #        self.opts.setdefault('useweights', False)
 #        self.opts.setdefault('maxrank', -1)
 
@@ -302,9 +304,9 @@ class BaseSolverSL(BaseCGSolver):
     def __str__(self):
         string = '<ADMMsolver> la=%s' % (self.lbda) + ', rho=%s' % (self.rho)
         string += ', alpha=%s' % (self.alpha) + ', beta=%s' % (self.beta)
-        string += ', use_alpha=%d'%(self.opts.setdefault('use_alpha', 1))
-        string += ', use_u=%d'%(self.opts.setdefault('use_u', 1))
-        string += ', off=%d'%(self.opts.setdefault('off', 1))
+        string += ', use_alpha=%d' % (self.opts.setdefault('use_alpha', 1))
+        string += ', use_u=%d' % (self.opts.setdefault('use_u', 1))
+        string += ', off=%d' % (self.opts.setdefault('off', 1))
         return string
 
     def get_canonicalparams(self):
@@ -371,20 +373,17 @@ class BaseSolverSL(BaseCGSolver):
         if self.meta['nonbinary']:
             return grp_soft_shrink(mat_s, tau,
                                    self.meta['n_cat'] + self.meta['n_cg'],
-                                   self.meta['glims'],
-                                   self.opts['off'])
+                                   self.meta['glims'], self.opts['off'])
         return grp_soft_shrink(mat_s, tau, off=self.opts['off'])
 
     def sparse_norm(self, mat_s):
         """return l21/ l1-norm of mat_s"""
-#        print(self.meta['glims'])
+        #        print(self.meta['glims'])
         if self.meta['nonbinary']:
-            return l21norm(mat_s,
-                           self.meta['n_cat'] + self.meta['n_cg'],
-                           self.meta['glims'],
-                           self.opts['off'])
+            return l21norm(mat_s, self.meta['n_cat'] + self.meta['n_cg'],
+                           self.meta['glims'], self.opts['off'])
         return l21norm(mat_s, off=self.opts['off'])
-                
+
     def set_regularization_params(self,
                                   hyperparams,
                                   scales=None,
@@ -453,6 +452,7 @@ class BaseSolverSL(BaseCGSolver):
             if denom != 0:
                 self.lbda = scale_lbda * alpha / denom
                 self.rho = scale_rho * beta / denom
+
 
 #            else:
 #                # no likelihood part

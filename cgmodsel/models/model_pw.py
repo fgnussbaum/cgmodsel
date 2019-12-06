@@ -111,14 +111,14 @@ class ModelPW(BaseModelPW):
 
         ## add edges with specified probability
         glims = self.meta['cat_glims']
-        for l in range(n_latent):
+        for i in range(n_latent):
             for r in range(self.meta['n_cat']):
-                mat_r_h[l, glims[r]+1:glims[r+1]] = \
+                mat_r_h[i, glims[r]+1:glims[r+1]] = \
                    get_entry(self.meta['sizes'][r]-1, prob=connectionprob,
                              offset=strength, scale=disscale)
 
             for s in range(self.meta['n_cg']):  # n_cg
-                lbda_ho[l, s] = get_entry(1,
+                lbda_ho[i, s] = get_entry(1,
                                           prob=connectionprob,
                                           offset=strength + .3,
                                           scale=ctsscale)

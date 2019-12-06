@@ -36,7 +36,7 @@ class LikelihoodProx(BaseGradSolver):
         self.cont_data = cont_data
         self.meta = meta
         self._fold = np.inf
-        
+
         # overridden attributes
         ltot = meta['ltot']
         n_cg = meta['n_cg']

@@ -13,6 +13,7 @@ from cgmodsel.base_solver import BaseCGSolver
 # pylint: disable=W0511 # todos
 # pylint: disable=R0914 # too many locals
 
+
 class MAP(BaseCGSolver):
     """
     this class can be used to estimate maximum a-posteriori models

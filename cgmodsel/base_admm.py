@@ -12,15 +12,16 @@ import numpy as np
 
 # pylint: disable=R0914
 
+
 class BaseAdmm(abc.ABC):
     """
     base class for ADMM solvers
     """
 
     def __init__(self):
-#        print('Init BaseAdmm')
+        #        print('Init BaseAdmm')
         super().__init__()
-        self.admm_param = 1 # TODO(franknu): external access
+        self.admm_param = 1  # TODO(franknu): external access
 
         self._set_defaults_admm()
 
@@ -60,7 +61,7 @@ class BaseAdmm(abc.ABC):
 
         self.opts.setdefault('continuation', 1)
         self.opts.setdefault('num_continuation', 10)
-#        self.opts.setdefault('cont_adaptive', 10)
+        #        self.opts.setdefault('cont_adaptive', 10)
         self.opts.setdefault('continuation_fac', 2)
         #        self.opts.setdefault('eta', .25)
         #        self.opts.setdefault('muf', 1e-6)
@@ -158,7 +159,7 @@ class BaseAdmm(abc.ABC):
 
 #        print(snorm_rel, rnorm_rel)
 
-        # do scaling of admm_param if necessary
+# do scaling of admm_param if necessary
         if rnorm_rel > snorm_rel * criticalratio:
             # decrease admm_param
             self.admm_param /= self.opts['continuation_fac']

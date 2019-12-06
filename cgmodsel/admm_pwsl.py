@@ -87,9 +87,8 @@ class AdmmGaussianSL(BaseSolverSL, BaseAdmm):
         grad_partial = mat_theta - mat_s + mat_l - self.admm_param * mat_z
         grad_partial_s = mat_s + self.proxstep_param * grad_partial
         grad_partial_l = mat_l - self.proxstep_param * grad_partial
-        mat_s, l1norm = self.shrink(grad_partial_s,
-                                    self.proxstep_param * self.admm_param *
-                                    self.lbda)
+        mat_s, l1norm = self.shrink(
+            grad_partial_s, self.proxstep_param * self.admm_param * self.lbda)
         mat_s = (mat_s + mat_s.T) / 2
 
         eig, mat_u = scipy.linalg.eigh(grad_partial_l)
@@ -239,12 +238,10 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         gradient_partial = mat_theta - mat_s - mat_l - self.admm_param * mat_z
         # neg part grad
 
-
-        mat_s, l21norm = self.shrink(mat_s + self.proxstep_param *
-                                     gradient_partial,
-                                     self.proxstep_param * self.admm_param *
-                                     self.lbda)
-#        print(mat_s, self.proxstep_param * self.admm_param * self.lbda)
+        mat_s, l21norm = self.shrink(
+            mat_s + self.proxstep_param * gradient_partial,
+            self.proxstep_param * self.admm_param * self.lbda)
+        #        print(mat_s, self.proxstep_param * self.admm_param * self.lbda)
 
         mat_s = (mat_s + mat_s.T) / 2
         if not self.opts['use_u']:  # no univariate parameters
@@ -267,8 +264,8 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         mat_z = mat_z - resid_theta / self.admm_param
         mat_z = (mat_z + mat_z.T) / 2
 
-#        print(mat_s, mat_l)
-#        print(resid_theta)
+        #        print(mat_s, mat_l)
+        #        print(resid_theta)
         ## diagnostics, reporting, termination checks
 
         fronorm_s = np.linalg.norm(mat_s, 'fro')
@@ -309,12 +306,11 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         """called after drop_data"""
         self.prox = LikelihoodProx(self.cat_data, self.cont_data, self.meta)
 
-
-    def get_objective(self, mat_s, mat_l, u=None, alpha=None):
-        """ """
-        if self.meta['n_cat'] > 0 and not u is None:
+    def get_objective(self, mat_s, mat_l, vec_u=None, alpha=None):
+        """return 'real' objective """
+        if self.meta['n_cat'] > 0 and not vec_u is None:
             mat_s = mat_s.copy()
-            mat_s[:self.meta['ltot'], :self.meta['ltot']] += 2 * np.diag(u)
+            mat_s[:self.meta['ltot'], :self.meta['ltot']] += 2 * np.diag(vec_u)
         if alpha is None:
             alpha = np.zeros(self.meta['n_cg'])
 
