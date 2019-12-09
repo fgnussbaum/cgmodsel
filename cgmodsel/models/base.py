@@ -588,3 +588,6 @@ class BaseModelPW(BaseModel):
             return unpad(mat_pw, self.meta['sizes'])
 
         return mat_pw
+
+    def sample(self, n: int, gibbs_iter: int = 10):
+        """sample n data points from the model"""

@@ -11,6 +11,7 @@ from cgmodsel.models.base import BaseModelPW
 # pylint: disable=R0914 # too many local variable
 # pylint: disable=R0913 # too many arguments
 
+
 ##################################
 class ModelPW(BaseModelPW):
     """
@@ -126,7 +127,8 @@ class ModelPW(BaseModelPW):
         ## update model parameters
 
         scale = 1.0
-        if self.meta['n_cg'] > 0:  # ensure positive definiteness of precision matrix
+        if self.meta[
+                'n_cg'] > 0:  # ensure positive definiteness of precision matrix
             tmp = np.dot(lbda_ho.T, lbda_ho)  # n_cg by n_cg
             # calculate smallest eigenvalue of A=Lambda-c*tmp
             # choose c s.t. smallest eigenvalue is positive for a valid distribution
@@ -139,14 +141,13 @@ class ModelPW(BaseModelPW):
                     break
 
         if scale != 1.0:
-            print(
-                """Warning(model_pw.add_latent_gaussians):
-                    made precision matrix of full model PD, c=%f"""
-                % (scale))
+            print("""Warning(model_pw.add_latent_gaussians):
+                    made precision matrix of full model PD, c=%f""" % (scale))
 
         fac = np.sqrt(scale)
         # construct new precision matrix of full model
-        mat_b = np.empty((self.meta['n_cg'] + n_latent, self.meta['n_cg'] + n_latent))
+        mat_b = np.empty(
+            (self.meta['n_cg'] + n_latent, self.meta['n_cg'] + n_latent))
         mat_b[:-n_latent, :-n_latent] = self.mat_lbda
         mat_b[:-n_latent, -n_latent:] = fac * lbda_ho.T  # n_cg by n_latent
         mat_b[-n_latent:, :-n_latent] = fac * lbda_ho
@@ -202,7 +203,8 @@ class ModelPW(BaseModelPW):
         n_do = self.meta['n_cg'] - n_latent  # number of remaining CG variables
 
         keep_idx = _invert_indices(
-            drop_idx, self.meta['n_cg'])  # indices of Gaussians to keep (visible)
+            drop_idx,
+            self.meta['n_cg'])  # indices of Gaussians to keep (visible)
 
         ## observed direct interactions (together they form S)
         mat_s_q = self.mat_q
@@ -221,7 +223,8 @@ class ModelPW(BaseModelPW):
         mat_l_q = np.dot(np.dot(mat_r_h.T, sigma_hh),
                          mat_r_h)  # has univariate effects on its diagonal
         mat_l_r = -np.dot(tmp_expr1, mat_r_h)
-        mat_l_lbda = np.dot(tmp_expr1, lbda_ho)  # see Diss(3.9), Schur complement
+        mat_l_lbda = np.dot(tmp_expr1,
+                            lbda_ho)  # see Diss(3.9), Schur complement
 
         ltot = self.meta['ltot']
         mat_l = np.empty((ltot + n_do, ltot + n_do))
@@ -239,9 +242,11 @@ class ModelPW(BaseModelPW):
         ## construct a PW-SL model and return it
         sl_params = self.vec_u, mat_s_q, mat_s_r, tialpha, mat_s_lbda, mat_l
 
-        meta = {'n_cat': self.meta['n_cat'],
-                'n_cg': n_do,
-                'sizes': self.meta['sizes']}
+        meta = {
+            'n_cat': self.meta['n_cat'],
+            'n_cg': n_do,
+            'sizes': self.meta['sizes']
+        }
 
         sl_params_class = ModelPWSL(sl_params, meta)
 
@@ -255,3 +260,103 @@ class ModelPW(BaseModelPW):
 #    def normalize(self):
 #        """ scale all pairwise parameters"""
 #        raise NotImplementedError
+
+    def sample(self, n: int, gibbs_iter: int = 10):
+        """implements a naive Gibbs sampler for pairwise models
+        each sample is sampled after reinitialization followed by gibbs_iter
+        steps of the Markov chain
+
+        n       ...  number of datapoints to be sampled      
+        gibbs_iter       ...  steps of the Markov Chain until outcome is taken
+        """
+        # TODO(franknu): speed up sampling if n is large
+        # by not reinitializing and recording states after, e.g., every 5 steps
+        # then, occasionally reinitialize (account for numerical errors)
+
+        n_cat = self.meta['n_cat']
+        assert n_cat > 0, 'Needs discrete variables'
+
+        #    print('PW', pwmodel)
+        #    pwmodel.repr_graphical()
+        n_cg = self.meta['n_cg']
+        glims = self.meta['cat_glims']
+
+        ## get discrete marginal model
+        if n_cg > 0:  # get marginal discrete model
+            pwslmodel = self.marginalize(drop_idx=list(range(n_cg)))
+            pwmodel = pwslmodel.to_pwmodel()
+            vec_u, mat_q, _, _, _ = pwmodel.get_params()
+        else:
+            vec_u = self.vec_u
+            mat_q = self.mat_q
+        # now, vec_u are univariate params of the (marginal) discrete model,
+        # and mat_q are pairwise params of the (marginal) discrete model
+
+        ## Gibbs sampling for the (marginal) discrete model
+        cat_data = np.empty((n, n_cat), dtype=np.int)
+        for i in range(n):
+            ## initialization of discrete states x
+            x = np.zeros(n_cat, dtype=np.int)  # simple initialization at zero
+            # Markov chain converges with any initialization
+            under_exp = vec_u.copy()
+            # under_exp is an array of length self.ltot
+            # it stores the terms 'under the exp' from the enumerator
+            # of the node conditionals given the current state x in the sense
+            # that under_exp[r:k] = p(x_r=k|x_{-r}), here r:k=glims[r]+k.
+            # We update under_exp whenever x changes.
+
+            for _ in range(gibbs_iter):
+
+                for r in range(n_cat):
+                    # for each discrete variable:
+                    # sample x[r] from node coditional distribution
+                    # given current other values x[j] for j\neq r
+                    xr_old = x[r]
+                    under_exp_r = under_exp[glims[r]:glims[r + 1]]  # a view
+                    # print('x[at]r', r, x)
+
+                    # TODO(franknu): reuse stable exp
+                    conditionalprobs = np.exp(under_exp_r -
+                                              np.amax(under_exp_r))
+                    conditionalprobs /= np.sum(conditionalprobs)
+                    cumulative_probs = np.cumsum(conditionalprobs)
+
+                    rand = np.random.rand()
+                    ind = 0
+                    while cumulative_probs[ind] < rand:
+                        ind += 1
+                    x[r] = ind  # set new value
+
+                    if xr_old != x[r]:
+                        # update values of under_exp
+                        #                    print('Wbef', W)
+                        under_exp -= mat_q[:, glims[r] + xr_old]
+                        under_exp += mat_q[:, glims[r] + x[r]]
+
+    #                    print('Waft', W)
+    #        print('x%d='%(i), x)
+            cat_data[i, :] = x
+
+        ## sample conditional Gaussians Y
+        mat_sigma = np.linalg.inv(self.mat_lbda)
+        mat_l = np.linalg.cholesky(mat_sigma)  # Sigma = LL^T with lower tri L
+
+        cont_data = np.random.standard_normal((n, n_cg))  # zero mean
+        cont_data = np.dot(cont_data,
+                           mat_l.T)  # adjust covariance matrix to Sigma
+
+        mu_offset = np.squeeze(np.dot(mat_sigma, self.alpha))
+        cont_data += np.outer(np.ones(n), mu_offset)
+
+        for i in range(n):
+            # add means, note that conditional Gaussian is given by
+            # p(y|x) ~ exp((alpha + R dummy(x))^T y -.5 y^T Lambda y)
+            # from the conversion formulas: mu(x) = Sigma(alpha + R dummy(x))
+            x = cat_data[i, :]
+            for r in range(n_cat):
+                cont_data[i, :] += np.dot(mat_sigma,
+                                          self.mat_r[:, glims[r] + x[r]])
+            # TODO(franknu): perhaps group calculations by discrete states
+            # (check bottlenecks before)
+
+        return cat_data, cont_data

@@ -61,7 +61,11 @@ class ModelPWSL(BaseModelPW):
             # load model from file
             params = pickle.load(open(infile, "rb"))
             sl_params = params[:-4]
-            meta = {'n_cat': params[-4], 'n_cg': params[-3], 'sizes': params[-2]}
+            meta = {
+                'n_cat': params[-4],
+                'n_cg': params[-3],
+                'sizes': params[-2]
+            }
             annotations.update(params[-1])
 
         assert (not sl_params is None) and (not meta is None), "Incomplete data"
@@ -625,6 +629,13 @@ class ModelPWSL(BaseModelPW):
             spec = np.linalg.eigvals(self.mat_l)
             self_spec = np.real(spec)  # issues complex warning
             print('spec(>.1):', np.around(self_spec[self_spec > .01], 2))
+
+    def sample(self, n: int, gibbs_iter: int = 10):
+        """ A Gibbs sampler for pairwise models
+        n       ...  number of datapoints to be produced   
+        k       ... steps the Markov Chain should do until accepting the outcome
+        """
+        return self.to_pwmodel().sample(n, gibbs_iter=gibbs_iter)
 
 
 ###############################################################################
