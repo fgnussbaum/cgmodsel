@@ -17,8 +17,8 @@ def load(dataset: dict):
     """
     load csv with file path dataset['filename']
 
-    return tuple (D, Y, meta),
-    where D binary data, Y quantitative data,
+    return tuple (cat_data, cont_data, meta),
+    where cat_data is the binary data, cont_data is the quantitative data,
     and meta is meta information about the dataset
     """
     ## parameters for loading function ##
@@ -60,8 +60,8 @@ if __name__ == '__main__':
         'regparams': (.1, 1),
     }
 
-    ## mixed binary-quantitative##
-    ALLBUS = { # pw model
+    ## mixed binary-quantitative ##
+    ALLBUS = {
         'filename': "datasets/allbus2016_proc.csv",
         'regparams': (1, 2),
     }
@@ -74,8 +74,8 @@ if __name__ == '__main__':
 
     # ********************************* #
     # comment out all but one line here #
-#    data = CFMT
-    data = LSVT
+    data = CFMT
+#    data = LSVT
 #    data = HELP
     # ********************************* #
 
