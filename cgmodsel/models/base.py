@@ -148,7 +148,7 @@ def unpad(theta, sizes):
 ###############################################################################
 # Parameter Conversion
 ###############################################################################
-def mean_to_canonparams(meanparams):
+def mean_to_canonparams(meanparams: (tuple, list)):
     """
     convert mean parameters to canonical parameters
 
@@ -216,7 +216,7 @@ def mean_to_canonparams(meanparams):
     return q, nus, lambdas
 
 
-def canon_to_meanparams(canparams):
+def canon_to_meanparams(canparams: (tuple, list)):
     """
     convert canonical parameters to mean parameters
 
@@ -405,17 +405,18 @@ class BaseModel(abc.ABC):
 class BaseModelPW(BaseModel):
     """
     this class specializes to standard PW model and S+L model,
-    see the classes Model_PW and Model_PWSL
+    see the classes ModelPW and ModelPWSL
     """
 
     def __init__(self,
-                 pw_params: tuple,
+                 pw_params: (dict, tuple, list),
                  meta: dict,
-                 annotations: dict = {},
+                 annotations: dict = None,
                  in_padded: bool = True):
         BaseModel.__init__(self)
 
-        self.annotations.update(annotations)
+        if not annotations is None:
+            self.annotations.update(annotations)
 
         assert 'n_cg' in meta
         assert 'n_cat' in meta
@@ -429,19 +430,51 @@ class BaseModelPW(BaseModel):
 
         self.modeltype = get_modeltype(self.meta)
 
-        if in_padded:
-            self.vec_u, self.mat_q, self.mat_r, \
-                self.alpha, self.mat_lbda = pw_params
-            self.vec_u = self.vec_u.flatten()
-        else:  # do padding
-            vec_u, mat_q, mat_r, self.alpha, mat_lbda = pw_params
+        assert isinstance(pw_params, (list, tuple, dict))
+        # TODO(franknu): more assertions for sizes of components
+        if isinstance(pw_params, (list, tuple)):
+            self.vec_u, mat_q, mat_r, self.alpha, mat_lbda = pw_params
 
-            self.vec_u = pad(vec_u.flatten(), meta['sizes'])
+            if not in_padded:  # pad components
+                theta = _theta_from_components(mat_q, mat_r, mat_lbda)
+                theta = pad(theta, self.meta['sizes'])
+                self.mat_q, self.mat_r, self.mat_lbda = _split_theta(
+                    theta, self.meta['ltot'])
+        else:
+            # retrieve parameters from dictionary
+            if self.meta['n_cat'] > 0:
+                if 'u' in pw_params:
+                    self.vec_u = pw_params['u']
+                else:
+                    assert 'pw_mat' in pw_params
+                    ind = pw_params['pw_mat'].shape[0] - self.meta['n_cg']
+                    self.vec_u = np.diag(pw_params['pw_mat'][:ind, :ind])
+            else:
+                self.vec_u = np.empty(0)
+            if self.meta['n_cg'] > 0:
+                assert 'alpha' in pw_params
+                self.alpha = pw_params['alpha']
+            else:
+                self.alpha = np.empty(0)
+            if 'pw_mat' in pw_params:
+                theta = pw_params['pw_mat']
+                if not in_padded:
+                    theta = pad(theta, self.meta['sizes'])
+                self.mat_q, self.mat_r, self.mat_lbda = _split_theta(
+                    theta, self.meta['ltot'])
 
-            theta = _theta_from_components(mat_q, mat_r, mat_lbda)
-            theta = pad(theta, self.meta['sizes'])
-            self.mat_q, self.mat_r, self.mat_lbda = _split_theta(
-                theta, self.meta['ltot'])
+        self.vec_u = self.vec_u.flatten()
+        self.alpha = self.alpha.flatten()
+        if not in_padded:
+            self.vec_u = pad(self.vec_u, meta['sizes'])
+
+        # zero out block diagonal of mat_q
+        # since we store univariate effects extra in vec_u
+        self.mat_q = self.mat_q.copy()  # safe: operate on copy
+        old_glim = 0
+        for glim_r in self.meta['cat_glims'][1:]:
+            self.mat_q[old_glim:glim_r, old_glim:glim_r] = 0
+            old_glim = glim_r
 
         self.alpha = self.alpha.flatten()
 
@@ -449,9 +482,9 @@ class BaseModelPW(BaseModel):
                        mat_q,
                        mat_r,
                        mat_lbda,
-                       diagonal=False,
-                       aggr=True,
-                       norm=True):
+                       diagonal: bool = False,
+                       aggr: bool = True,
+                       norm: bool = True):
         """
         calculate group aggregations, e.g., the l_2 norms of all groups
 
@@ -515,7 +548,7 @@ class BaseModelPW(BaseModel):
 
         return graph
 
-    def _get_meanparams(self, pwparams):
+    def _get_meanparams(self, pwparams: (tuple, list)):
         """
         convert pairwise parameters to mean parameters
         p(x) ~ (2pi)^{n/2}|La^{-1}|^{1/2}exp(q(x) + 1/2 nu(x)^T La^{-1} nu(x) )
@@ -562,7 +595,7 @@ class BaseModelPW(BaseModel):
         theta = self.get_pw_mat(**kwargs)
         return theta, self.alpha
 
-    def get_pw_mat(self, padded=True, addunivariate=False):
+    def get_pw_mat(self, padded: bool = True, addunivariate: bool = False):
         """
         returns the pairwise matrix of direct interaction parameters.
         in the case of the standard pairwise model this is the matrix of all
@@ -589,5 +622,7 @@ class BaseModelPW(BaseModel):
 
         return mat_pw
 
+    @abc.abstractmethod
     def sample(self, n: int, gibbs_iter: int = 10):
         """sample n data points from the model"""
+        raise NotImplementedError

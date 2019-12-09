@@ -11,7 +11,6 @@ from cgmodsel.models.base import BaseModelPW
 # pylint: disable=R0914 # too many local variable
 # pylint: disable=R0913 # too many arguments
 
-
 ##################################
 class ModelPW(BaseModelPW):
     """
@@ -31,43 +30,41 @@ class ModelPW(BaseModelPW):
     with
     Q .. discrete-discrete interactions
     R .. discrete-cont. interactions
-    Lambda .. cont-cont interactions
+    Lambda .. cont.-cont. interactions
 
     initialize with tuple pw = (u, Q, R, alpha, Lambda)
+    or dictionary that has (optional) keys pw_mat (alpha, u), for details see
+    base class constructor
 
     Attention to the special case of only Gaussians observed variables:
     uses as above
         p(y) ~ exp(1/2  y^T Theta y + alpha^T y),
-    i.e. S has inverted sign
-    instead of the representation in Chandrasekaran et al. (2011)
-        p(y) ~ exp( -1/2 y^T Theta y + alpha^T y)
+    i.e. Theta has inverted sign compared to the regular precision matrix.
+    The density parametrized by the precision matrix would read as
+        p(y) ~ exp(-1/2 y^T precisionmatrix y + alpha^T y)
     """
 
-    def __init__(self, pw_params, meta, **kwargs):
+    def __init__(self, pw_params: (dict, tuple, list), meta: dict, **kwargs):
         BaseModelPW.__init__(self, pw_params, meta, **kwargs)
-        # possible extension: pw params in dict, allow passing of pwmat
 
         self.name = 'PW'
 
     def __str__(self):
         """a string representation of the model"""
         string = ''
-        if np.prod(self.mat_q.shape) > 0:
+        if self.meta['n_cat'] > 0:
             string += '\nQ:\n' + str(self.mat_q)
-        if np.prod(self.vec_u.shape) > 0:
             string += '\nu:' + str(self.vec_u.T)
-        if np.prod(self.mat_r.shape) > 0:
-            string += '\nR:\n' + str(self.mat_r)
-        if np.prod(self.alpha.shape) > 0:
+            if self.meta['n_cg'] > 0:
+                string += '\nR:\n' + str(self.mat_r)
+        if self.meta['n_cg'] > 0:
             string += '\nalpha:' + str(self.alpha)
-        if np.prod(self.mat_lbda.shape) > 0:
             string += '\nLambda:\n' + str(self.mat_lbda)
-
         return string[1:]
 
     def add_latent_cg(self,
-                      n_latent=1,
-                      seed=-1,
+                      n_latent: int = 1,
+                      seed: int = -1,
                       connectionprob=.95,
                       strength=.5,
                       disscale=.3,
@@ -183,7 +180,7 @@ class ModelPW(BaseModelPW):
         """return model parameters """
         return self.vec_u, self.mat_q, self.mat_r, self.alpha, self.mat_lbda
 
-    def marginalize(self, drop_idx, verb=False):
+    def marginalize(self, drop_idx: (tuple, list), verb: bool = False):
         """ marginalize out CG variables
 
         drop_idx ... indices of (conditional) Gaussians to be marginalized out
@@ -266,7 +263,7 @@ class ModelPW(BaseModelPW):
         each sample is sampled after reinitialization followed by gibbs_iter
         steps of the Markov chain
 
-        n       ...  number of datapoints to be sampled      
+        n       ...  number of datapoints to be sampled
         gibbs_iter       ...  steps of the Markov Chain until outcome is taken
         """
         # TODO(franknu): speed up sampling if n is large
@@ -276,8 +273,6 @@ class ModelPW(BaseModelPW):
         n_cat = self.meta['n_cat']
         assert n_cat > 0, 'Needs discrete variables'
 
-        #    print('PW', pwmodel)
-        #    pwmodel.repr_graphical()
         n_cg = self.meta['n_cg']
         glims = self.meta['cat_glims']
 
@@ -329,11 +324,11 @@ class ModelPW(BaseModelPW):
 
                     if xr_old != x[r]:
                         # update values of under_exp
-                        #                    print('Wbef', W)
+                        # need only diff for 'newly activated'
+                        # pairwise interaction parameters
                         under_exp -= mat_q[:, glims[r] + xr_old]
                         under_exp += mat_q[:, glims[r] + x[r]]
 
-    #                    print('Waft', W)
     #        print('x%d='%(i), x)
             cat_data[i, :] = x
 
@@ -342,8 +337,7 @@ class ModelPW(BaseModelPW):
         mat_l = np.linalg.cholesky(mat_sigma)  # Sigma = LL^T with lower tri L
 
         cont_data = np.random.standard_normal((n, n_cg))  # zero mean
-        cont_data = np.dot(cont_data,
-                           mat_l.T)  # adjust covariance matrix to Sigma
+        cont_data = np.dot(cont_data, mat_l.T)  # adjust cov matrix to Sigma
 
         mu_offset = np.squeeze(np.dot(mat_sigma, self.alpha))
         cont_data += np.outer(np.ones(n), mu_offset)
