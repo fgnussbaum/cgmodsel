@@ -28,9 +28,6 @@ def grp_soft_shrink(mat, tau, n_groups=None, glims=None, off=False):
     """
     shrinkednorm = 0
     if n_groups is None:
-        # soft shrink
-        #        if tau == 0:
-        #            return mat, np.sum(np.abs(mat.flatten()))
         tmp = np.abs(mat) - tau
         tmp[tmp < 1e-25] = 0
         shrinked = np.multiply(np.sign(mat), tmp)
@@ -41,20 +38,10 @@ def grp_soft_shrink(mat, tau, n_groups=None, glims=None, off=False):
         return shrinked, np.sum(np.abs(shrinked.flatten()))
 
     # group soft shrink
-
-
-#    if tau == 0:
-#        for i in range(n_groups):
-#            for j in range(n_groups):
-#                group = mat[glims[i]:glims[i + 1], glims[j]:glims[j + 1]]
-#                if (i == j) and off:
-#                    continue
-#                shrinkednorm += np.linalg.norm(group, 'fro')
-#        return mat, shrinkednorm
-
     tmp = np.empty(mat.shape)
     for i in range(n_groups):
         for j in range(n_groups):
+            # TODO(franknu): use symmetry
             group = mat[glims[i]:glims[i + 1], glims[j]:glims[j + 1]]
             if (i == j) and off:
                 tmp[glims[i]:glims[i + 1], glims[i]:glims[i + 1]] = group

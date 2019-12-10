@@ -177,7 +177,7 @@ def load_prepare_data(datasource,
         print('Filename:', datasource)
         print(
             'Loaded a dataset with %d samples, %d discrete and %d continuous variables.'
-            % (meta['n'], meta['n_cat'], meta['n_cg']))
+            % (meta['n_data'], meta['n_cat'], meta['n_cg']))
         print('Discrete Variables (at most 20): %s' % (meta['catnames'][:20]))
         print('Continuous Variables (at most 20): %s\n' %
               (meta['contnames'][:20]))
@@ -240,7 +240,7 @@ def load_prepare_split_data(filename: str,
                                                   **kwargs)
 
     ## split data for training and validation
-    n_data = meta['n']
+    n_data = meta['n_data']
     ntrain = int(splittingfactor * n_data)
 
     cat_datatrain = cat_data[:ntrain, :]
@@ -283,7 +283,7 @@ def split_traintest(filename: str, splittingfactor, **kwargs):
       load_prepare_split_data(filename, splittingfactor=splittingfactor,
                               write_csv=True, cattype='index', **kwargs)
 
-    meta['ntrain'] = int(splittingfactor * meta['n'])
+    meta['ntrain'] = int(splittingfactor * meta['n_data'])
     return meta
 
 
@@ -297,14 +297,14 @@ def load_traintest_datasets(filename_trunk: str, verb: bool = True, **kwargs):
         filename_train, **kwargs)
     cat_datatest, cont_datatest, meta_test = load_prepare_data(
         filename_test, **kwargs)
-    meta['ntrain'] = meta['n']
-    meta['n'] += meta_test['n']
+    meta['ntrain'] = meta['n_data']
+    meta['n_data'] += meta_test['n_data']
     if verb:
         print('Name:', name)
         print('Loaded a datasets, %d discrete and %d continuous variables.' %
               (meta['n_cat'], meta['n_cg']))
         print('Training data has %d samples, test data has %d samples' %
-              (meta['n'], meta_test['n']))
+              (meta['n_data'], meta_test['n_data']))
         print('Discrete Variables (at most 20): %s' % (meta['catnames'][:20]))
         print('Continuous Variables (at most 20): %s\n' %
               (meta['contnames'][:20]))

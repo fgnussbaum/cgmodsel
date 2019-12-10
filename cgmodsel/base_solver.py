@@ -5,6 +5,7 @@
 base class for CG models and solvers
 """
 import abc
+from typing import Iterable
 import numpy as np
 
 #from cgmodsel.models.model_base import get_modeltype
@@ -266,7 +267,7 @@ class BaseGradSolver(abc.ABC):
             offset += size
         return grad
 
-    def unpack(self, x):
+    def unpack(self, x) -> Iterable[np.ndarray]:
         """unpack model parameters from vector x, save: returns copy"""
         offset = 0
         params = []

@@ -6,9 +6,9 @@ A class to fit CLZ CG models
 
 this code is experimental, no warranty
 """
-
-import numpy as np
+from typing import Iterable
 from math import inf  # used in derived classes
+import numpy as np
 
 from cgmodsel.base_huber import HuberBase, _huberapprox
 from cgmodsel.base_solver import BaseCGSolver
@@ -16,18 +16,27 @@ from cgmodsel.models.model_clz import ModelCLZ
 
 # not checked with pylint
 
+
 ############################################################## FUll Pseudo LH
 class HuberCLZ(HuberBase, BaseCGSolver):
     """
-    A class that provides with methods (model selection, crossvalidation) associated with CLZ CG models
-    code in this class is experimental    
+    A class that provides with methods (model selection, crossvalidation)
+    associated with CLZ CG models
+
+    code in this class is experimental
     """
 
     def __init__(self):
         """pass a dictionary that provides with keys dg, dc, and L"""
         super().__init__()
 
+        self.cat_format_required = 'dummy'
         self.name = 'CLZ'
+
+        self.lbda = None  # regularization parameter
+
+        self.cont_data_prod = None
+        self.cont_data_square = None
 
     def _postsetup_data(self):
         """called after drop_data"""
@@ -59,16 +68,14 @@ class HuberCLZ(HuberBase, BaseCGSolver):
     def set_regularization_params(self, regparam):
         """set regularization parameters
         kS is a scaling parameter for the lambda for the group-sparsity norm
-        
+
         min l(Theta) + kS*la* (sum_g ||Theta_g||_{2}),
         where the sum is over the groups
         """
         self.lbda = regparam * self.meta['reg_fac']
 
-#        self.set_sparsity_weights() 
-        # weighting scheme for sparse regularization
-
-############ ** model specific functions required for solving** ################################################
+#        self.set_sparsity_weights()
+# weighting scheme for sparse regularization
 
     def get_bounds(self):
         """return bounds for l-bfgs-b solver"""
@@ -103,16 +110,16 @@ class HuberCLZ(HuberBase, BaseCGSolver):
         if self.meta['n_cg'] > 0:
             bnds += self.meta['n_cg'] * ltot_ident  # R
 
-            for s in range(self.meta['n_cg'] -
-                           1):  # B0 with zero bounds on diagonal
+            for _ in range(self.meta['n_cg'] - 1):
+                # B0 with zero bounds on diagonal
                 bnds += [(0, 0)]
                 bnds += self.meta['n_cg'] * [(-inf, inf)]
             bnds += [(0, 0)]
 
             bnds += self.meta['n_cg'] * [(10E-6, inf)]  # beta0 diagonal
 
-            for s in range(self.meta['n_cg'] -
-                           1):  # B with zero bounds on diagonal
+            for _ in range(self.meta['n_cg'] - 1):
+                # B with zero bounds on diagonal
                 bnds += ltot * [(0, 0)]
                 bnds += self.meta['n_cg'] * ltot_ident
             bnds += ltot * [(0, 0)]
@@ -128,26 +135,27 @@ class HuberCLZ(HuberBase, BaseCGSolver):
 
     def get_starting_point(self, random=False, seed=10):
         """return a starting point containing zeros"""
-        x0 = np.zeros(self.n_params)
+        x_init = np.zeros(self.n_params)
         # TODO(franknu): zero precmat diagonal entries?
         # LBFGSB is able to handle infeasible starting point
         # (by first projecting to a point that satisfies the box constraints)
         if random:
             np.random.seed(seed)
-            x0 = np.random.random(self.n_params)
-            x0 = self.pack(self.preprocess(x0))  # preprocess ensures symmetry
+            x_init = np.random.random(self.n_params)
+            x_init = self.pack(
+                self.preprocess(x_init))  # preprocess ensures symmetry
         else:
-            self.currentsolution = x0
+            self.currentsolution = x_init
 
-        return x0
+        return x_init
 
 ##### ** graph and representation **############################
 
     def get_canonicalparams(self, x, verb=False):  # overwritten from base class
         """retrieves the CLZ-CG model parameters from flat parameter vector.
         output: CLZ params class"""
-        mat_q, u, mat_r, lambda0, beta0, lambdas, beta, alpha = self.preprocess(
-            x)
+        mat_q, vec_u, mat_r, lambda0, beta0, lambdas, beta, alpha = \
+            self.preprocess(x)
         # return copy (since unpack does)
 
         lambda0 += np.diag(beta0.reshape(-1))
@@ -156,11 +164,11 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                 rk = self.meta['cat_glims'][r] + k
                 lambdas[:, :, rk] += np.diag(beta[:, rk].reshape(-1))
 
-        canparams = u, mat_q, mat_r, alpha, lambda0, lambdas
+        canparams = vec_u, mat_q, mat_r, alpha, lambda0, lambdas
         can_clz_class = ModelCLZ(
             canparams, {
-                'dc': self.meta['n_cat'],
-                'dg': self.meta['n_cg'],
+                'n_cat': self.meta['n_cat'],
+                'n_cg': self.meta['n_cg'],
                 'sizes': self.meta['sizes']
             })
 
@@ -172,13 +180,14 @@ class HuberCLZ(HuberBase, BaseCGSolver):
 
 #################################################################################
 
-    def preprocess(self, x):
+    def preprocess(self, x) -> Iterable[np.ndarray]:
         """ unpack parameters from vector x and preprocess"""
-        mat_q, u, mat_r, mat_b0, beta0, mat_b, beta, alpha = self.unpack(x)
+        # pylint: disable=unbalanced-tuple-unpacking
+        mat_q, vec_u, mat_r, mat_b0, beta0, mat_b, beta, alpha = self.unpack(x)
 
         glims = self.meta['cat_glims']
         # preprocess - zero out diagonals (required e.g. for grad approximation)
-        for rk in range(ltot=self.meta['ltot']):
+        for rk in range(self.meta['ltot']):
             #            print(rk, mat_b[:, :, rk])
             mat_b[:, :, rk] -= np.diag(np.diag(mat_b[:, :, rk]))
             # TODO(franknu): remove & LBFGSB bounds instead ?
@@ -197,15 +206,14 @@ class HuberCLZ(HuberBase, BaseCGSolver):
         mat_q = np.triu(mat_q)
         mat_q = mat_q + mat_q.T
 
-        return mat_q, u, mat_r, mat_b0, beta0, mat_b, beta, alpha
+        return mat_q, vec_u, mat_r, mat_b0, beta0, mat_b, beta, alpha
 
     def get_fval_and_grad(self,
                           x,
                           delta=None,
                           sparse=False,
                           smooth=True,
-                          verb='-',
-                          debugflag=None):
+                          verb='-'):
         """calculate function value f and gradient g of CLZ model
         x    vector of parameters
         increases self.fcalls by 1, no other class variables are modified"""
@@ -217,14 +225,14 @@ class HuberCLZ(HuberBase, BaseCGSolver):
 
         self.fcalls += 1  # tracks number of function value and gradient evaluations
 
-        mat_q, vec_u, mat_r, mat_b0, beta0, mat_b, beta, alpha = self.preprocess(
-            x)
+        mat_q, vec_u, mat_r, mat_b0, beta0, mat_b, beta, alpha = \
+            self.preprocess(x)
 
         mat_b = mat_b.reshape((n_cg**2, ltot))
         # this is \tilde{B} (B tilde) from the doc # TODO(franknu): publish doc
 
         # intitialize f and gradients
-        f = 0
+        fval = 0
         grad = np.zeros(self.n_params)
         grad_q, grad_u, grad_r, grad_b0, grad_beta0, \
             grad_b, grad_beta, grad_alpha = self.unpack(grad)
@@ -251,7 +259,7 @@ class HuberCLZ(HuberBase, BaseCGSolver):
             plh_cg = - 0.5*np.sum(np.log(vec_b)) \
                 + 0.5*np.linalg.norm(np.multiply(mat_d, np.sqrt(vec_b)), 'fro')**2
             plh_cg /= n_data
-            f += plh_cg
+            fval += plh_cg
 
             # gradients as in pw model
             grad_alpha = np.sum(mat_d, 0).T  # n_cg by 1
@@ -276,7 +284,8 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                 - np.divide(np.multiply(mat_d[:, s], mat_m[:, s]), vec_b[:, s]))
                 # grad_beta[s, :] is ltot x 1 slice
                 #                print(grad_beta.shape)
-                #                grad_beta0[s] = np.sum(grad_beta[s, 0:sizes[0]]) # sum of the gradient of beta_{s,s, r:k} over k
+                #                grad_beta0[s] = np.sum(grad_beta[s, 0:sizes[0]])
+                # -> sum of the gradient of beta_{s,s, r:k} over k
                 grad_beta0[s] = np.dot(vec_e.T, \
                 - 0.5*np.divide(np.ones(n_data), vec_b[:, s]) \
                 + 0.5*np.multiply(mat_d[:, s], mat_d[:, s]) \
@@ -300,9 +309,6 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                     tmpexpmat_wr,
                     np.dot(tmpexpmat_wr, np.ones((sizes[r], sizes[r]))))
                 mat_a[:, glims[r]:glims[r + 1]] = mat_ar
-                #                ass=np.sum(np.multiply(mat_ar, self.cat_data[:, glims[r]:glims[r+1]]), 1)
-                #                print(mat_wr[:5, :])
-                #                print(np.log(ass)[:5])
                 plh_cat_r = -np.sum(
                     np.log(
                         np.sum(
@@ -311,7 +317,7 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                                 self.cat_data[:, glims[r]:glims[r + 1]]), 1)))
                 plh_cat += plh_cat_r
             plh_cat /= n_data
-            f += plh_cat
+            fval += plh_cat
 
             #            print('plh_cat:', plh_cat, 'plh_cg', plh_cg)
 
@@ -344,13 +350,12 @@ class HuberCLZ(HuberBase, BaseCGSolver):
             # discrete - discrete, as in pairwise model
             for r in range(self.meta['n_cat']):  # Phis
                 for j in range(r):
-                    #                    print(np.linalg.norm(mat_q[glims[r]:glims[r+1], glims[j]:glims[j+1]]))
                     wrj = self.lbda
                     # wrj *= self.weights[('dis_dis', r, j)]
-                    fval, tmp_grad = _huberapprox(
+                    tmp_fval, tmp_grad = _huberapprox(
                         mat_q[glims[r]:glims[r + 1], glims[j]:glims[j + 1]],
                         delta)
-                    dis_dis += wrj * fval
+                    dis_dis += wrj * tmp_fval
                     grad_q[glims[r]:glims[r + 1],
                            glims[j]:glims[j + 1]] += wrj * tmp_grad
 
@@ -364,8 +369,8 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                         )  # params la_{st}^{r:k} for t\in [d_g], k\in[L_r]
                     wrs = self.lbda
                     # wrs *= self.weights[('dis_cts', s, r)]
-                    fval, tmp_grad = _huberapprox(tmp_group, delta)
-                    dis_cts += wrs * fval
+                    tmp_fval, tmp_grad = _huberapprox(tmp_group, delta)
+                    dis_cts += wrs * tmp_fval
                     grad_r[s,
                            glims[r]:glims[r + 1]] += wrs * tmp_grad[:sizes[r]]
                     grad_b[s, :, glims[r]:glims[r+1]] += \
@@ -381,18 +386,19 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                     tmp_group[:ltot] = mat_b[s * n_cg + t, :]
                     tmp_group[ltot] = mat_b0[s, t]
                     wst = self.lbda
-                    wst *= self.weights[('cts_cts', s, t)]
-                    fval, tmp_grad = _huberapprox(tmp_group, delta)
-                    cts_cts += wst * fval
+                    # wst *= self.weights[('cts_cts', s, t)]
+                    tmp_fval, tmp_grad = _huberapprox(tmp_group, delta)
+                    cts_cts += wst * tmp_fval
                     grad_b[s * n_cg + t, :] += wst * tmp_grad[:ltot]
                     grad_b0[s, t] += wst * tmp_grad[ltot]
 
 
-#            print('dis_dis', dis_dis, 'dis_cts', dis_cts, 'cts_cts', cts_cts) # note different # of edges
+#            print('dis_dis', dis_dis, 'dis_cts', dis_cts, 'cts_cts', cts_cts)
+# note different # of edges
 
 #            if self.fcalls > 40:
 #                print('f=%f, reg=%f, logsum=%f'%(f, rsum, sum([np.log(self.sigmas[s]) for s in range(n_cg)])))
-            f += dis_dis + dis_cts + cts_cts
+            fval += dis_dis + dis_cts + cts_cts
 
         # zero out diagonals and add transposes
         grad_b = grad_b.reshape((n_cg, n_cg, ltot))
@@ -413,7 +419,7 @@ class HuberCLZ(HuberBase, BaseCGSolver):
         grad = self.pack((grad_q, grad_u, grad_r, grad_b0, grad_beta0, grad_b,
                           grad_beta, grad_alpha))
         #        print('f', f)
-        return f, grad.reshape(-1)
+        return fval, grad.reshape(-1)
 
     def crossvalidate(self, x):
         """crossvalidation of model with parameters in x using current data"""
@@ -444,8 +450,8 @@ class HuberCLZ(HuberBase, BaseCGSolver):
             # mat_ar: matrix of conditional probabilities
             dis_errors[r] = n_data - np.sum(
                 np.multiply(self.cat_data[:, glims[r]:glims[r + 1]], mat_ar))
-        b = np.dot(self.cat_data, beta.T) + np.dot(vec_e,
-                                                   beta0.T)  # n_data by n_cg
+        vec_b = np.dot(self.cat_data, beta.T) + np.dot(
+            vec_e, beta0.T)  # n_data by n_cg
 
         mat_m = np.dot(
             vec_e, alpha.T) + np.dot(self.cat_data, mat_r.T) - np.dot(
@@ -458,14 +464,12 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                                          self.meta['n_cg'], :].T)),
                                   axis=1)
 
-        mat_d = np.divide(mat_m, b) - self.cont_data  # regression residual
+        mat_d = np.divide(mat_m, vec_b) - self.cont_data  # regression residual
 
         cts_errors = np.sum(np.multiply(mat_d, mat_d), axis=0)
 
         dis_errors /= n_data
         cts_errors /= n_data
-        lval_testdata, grad = self.get_fval_and_grad(x,
-                                                     smooth=True,
-                                                     sparse=False)
+        lval_testdata, _ = self.get_fval_and_grad(x, smooth=True, sparse=False)
 
         return dis_errors, cts_errors, lval_testdata

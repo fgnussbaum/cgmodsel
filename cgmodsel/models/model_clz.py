@@ -2,6 +2,7 @@
 """
 Copyright: Frank Nussbaum (frank.nussbaum@uni-jena.de), 2019
 
+This is experimental code
 """
 import numpy as np
 
@@ -33,10 +34,10 @@ class ModelCLZ(BaseModel):
     La0 .. cont-cont interaction parameters
     Las .. cont-cont-discrete interaction parameters (n_cg x n_cg x ltot)
 
-    initialize with tuple pw = (u, Q, R, alpha, La0, Las)
+    initialize with tuple (u, Q, R, alpha, La0, Las)
     """
 
-    def __init__(self, clz_params, meta):
+    def __init__(self, clz_params: (tuple, list), meta: dict):
         # meta must provided with n_cg, n_cat
         BaseModel.__init__(self)
         self.meta['n_cg'] = meta['n_cg']

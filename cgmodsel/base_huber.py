@@ -69,9 +69,6 @@ class HuberBase(BaseGradSolver, BaseCGSolver):
         """preprocess input x"""
         raise NotImplementedError  # implemented in derived classes
 
-#    def get_fval_and_grad(self, x, verb=0, debugflag=None):
-#        raise NotImplementedError
-
     def _reset(self):
         """reset counters"""
         self.niter = 0  # counter for # inner iters
@@ -238,7 +235,6 @@ class HuberBase(BaseGradSolver, BaseCGSolver):
                      delta0=20,
                      maxiter_inner=100,
                      maxiter_outer=10,
-                     debugflag='-',
                      ftol=10E-10,
                      ftol_inner=10E-12,
                      disp_converg_msgs=False,
@@ -303,7 +299,6 @@ class HuberBase(BaseGradSolver, BaseCGSolver):
                               maxiter=maxiters,
                               delta=delta,
                               sparse=True,
-                              debugflag=debugflag,
                               ftol=ftol_inner)
 
             if disp_converg_msgs:
