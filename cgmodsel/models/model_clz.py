@@ -214,5 +214,4 @@ class ModelCLZ(BaseModel):
             nus = nus.reshape(sizes + [n_cg])
             lambdas = lambdas.reshape(sizes + [n_cg, n_cg])
             canparams = q, nus, lambdas
-
         return canon_to_meanparams(canparams)

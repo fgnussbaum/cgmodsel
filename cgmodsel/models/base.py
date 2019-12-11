@@ -269,6 +269,7 @@ def canon_to_meanparams(canparams: (tuple, list)):
     for x in range(n_covmats):
         sigmas[x, :, :] = np.linalg.inv(lambdas[x, :, :])
         dets[x] = np.linalg.det(sigmas[x, :, :])
+        print(x, dets[x])
 
     qx_store = np.empty(n_discrete_states)
     for x in range(n_discrete_states):
@@ -281,7 +282,7 @@ def canon_to_meanparams(canparams: (tuple, list)):
         qx_store[x] = q_x + 0.5 * np.einsum('i,i', nu_x, mu_x)
         p[x] = dets[covindex]**0.5  # omitted constant part
         # (later normalize anyway)
-
+    print(p, qx_store)
     qx_store = np.exp(qx_store - np.max(qx_store))  # save exp
     # note: normalization is done later
     p = np.multiply(p, qx_store)
