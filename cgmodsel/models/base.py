@@ -439,7 +439,7 @@ class BaseModelPW(BaseModel):
             if not in_padded:  # pad components
                 theta = _theta_from_components(mat_q, self.mat_r, self.mat_lbda)
                 theta = pad(theta, self.meta['sizes'])
-                self.mat_q, self.mat_r, self.mat_lbda = _split_theta(
+                mat_q, self.mat_r, self.mat_lbda = _split_theta(
                     theta, self.meta['ltot'])
         else:
             # retrieve parameters from dictionary

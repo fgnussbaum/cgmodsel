@@ -12,6 +12,7 @@ import numpy as np
 
 from cgmodsel.base_huber import HuberBase, _huberapprox
 from cgmodsel.base_solver import BaseCGSolver
+from cgmodsel.base_solver import set_sparsity_weights
 from cgmodsel.models.model_clz import ModelCLZ
 
 # not checked with pylint
@@ -37,6 +38,8 @@ class HuberCLZ(HuberBase, BaseCGSolver):
 
         self.cont_data_prod = None
         self.cont_data_square = None
+        
+        self.weights = None
 
     def _postsetup_data(self):
         """called after drop_data"""
@@ -64,6 +67,8 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                        ('Bdiag', (self.meta['n_cg'], ltot)),
                        ('alpha', (self.meta['n_cg'], 1))]
         self.n_params = sum([np.prod(shape[1]) for shape in self.shapes])
+        
+        self.weights = set_sparsity_weights(self.meta, self.cat_data, self.cont_data)
 
     def set_regularization_params(self, regparam):
         """set regularization parameters
@@ -351,7 +356,7 @@ class HuberCLZ(HuberBase, BaseCGSolver):
             for r in range(self.meta['n_cat']):  # Phis
                 for j in range(r):
                     wrj = self.lbda
-                    # wrj *= self.weights[('dis_dis', r, j)]
+                    wrj *= self.weights[('Q', r, j)]
                     tmp_fval, tmp_grad = _huberapprox(
                         mat_q[glims[r]:glims[r + 1], glims[j]:glims[j + 1]],
                         delta)
@@ -368,7 +373,7 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                         s * n_cg:(s + 1) * n_cg, glims[r]:glims[r + 1]].flatten(
                         )  # params la_{st}^{r:k} for t\in [d_g], k\in[L_r]
                     wrs = self.lbda
-                    # wrs *= self.weights[('dis_cts', s, r)]
+                    wrs *= self.weights[('R', s, r)]
                     tmp_fval, tmp_grad = _huberapprox(tmp_group, delta)
                     dis_cts += wrs * tmp_fval
                     grad_r[s,
@@ -386,7 +391,7 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                     tmp_group[:ltot] = mat_b[s * n_cg + t, :]
                     tmp_group[ltot] = mat_b0[s, t]
                     wst = self.lbda
-                    # wst *= self.weights[('cts_cts', s, t)]
+                    wst *= self.weights[('B', s, t)]
                     tmp_fval, tmp_grad = _huberapprox(tmp_group, delta)
                     cts_cts += wst * tmp_fval
                     grad_b[s * n_cg + t, :] += wst * tmp_grad[:ltot]
