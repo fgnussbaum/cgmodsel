@@ -269,7 +269,7 @@ def canon_to_meanparams(canparams: (tuple, list)):
     for x in range(n_covmats):
         sigmas[x, :, :] = np.linalg.inv(lambdas[x, :, :])
         dets[x] = np.linalg.det(sigmas[x, :, :])
-        print(x, dets[x])
+        # print(x, dets[x])
 
     qx_store = np.empty(n_discrete_states)
     for x in range(n_discrete_states):
@@ -282,7 +282,7 @@ def canon_to_meanparams(canparams: (tuple, list)):
         qx_store[x] = q_x + 0.5 * np.einsum('i,i', nu_x, mu_x)
         p[x] = dets[covindex]**0.5  # omitted constant part
         # (later normalize anyway)
-    print(p, qx_store)
+
     qx_store = np.exp(qx_store - np.max(qx_store))  # save exp
     # note: normalization is done later
     p = np.multiply(p, qx_store)
@@ -434,10 +434,10 @@ class BaseModelPW(BaseModel):
         assert isinstance(pw_params, (list, tuple, dict))
         # TODO(franknu): more assertions for sizes of components
         if isinstance(pw_params, (list, tuple)):
-            self.vec_u, mat_q, mat_r, self.alpha, mat_lbda = pw_params
+            self.vec_u, mat_q, self.mat_r, self.alpha, self.mat_lbda = pw_params
 
             if not in_padded:  # pad components
-                theta = _theta_from_components(mat_q, mat_r, mat_lbda)
+                theta = _theta_from_components(mat_q, self.mat_r, self.mat_lbda)
                 theta = pad(theta, self.meta['sizes'])
                 self.mat_q, self.mat_r, self.mat_lbda = _split_theta(
                     theta, self.meta['ltot'])
@@ -461,7 +461,7 @@ class BaseModelPW(BaseModel):
                 theta = pw_params['pw_mat']
                 if not in_padded:
                     theta = pad(theta, self.meta['sizes'])
-                self.mat_q, self.mat_r, self.mat_lbda = _split_theta(
+                mat_q, self.mat_r, self.mat_lbda = _split_theta(
                     theta, self.meta['ltot'])
 
         self.vec_u = self.vec_u.flatten()
@@ -471,7 +471,7 @@ class BaseModelPW(BaseModel):
 
         # zero out block diagonal of mat_q
         # since we store univariate effects extra in vec_u
-        self.mat_q = self.mat_q.copy()  # safe: operate on copy
+        self.mat_q = mat_q.copy()  # safe: operate on copy
         old_glim = 0
         for glim_r in self.meta['cat_glims'][1:]:
             self.mat_q[old_glim:glim_r, old_glim:glim_r] = 0

@@ -199,19 +199,40 @@ class ModelCLZ(BaseModel):
                 # lambdas is a 3D tensor.
                 # np.dot with a vector from the right maps to last component
 
-                tmp_eigvals = np.linalg.eigvals(lambdas[x, :, :])
-                tmp_min = np.min(tmp_eigvals)
-                # assert tmp_min > 0, 'Non-PD covariance of (flat) state %d with la_min=%f.'
-                # Pseudolikelihood estimation makes this possible.
-                # Note that nodewise prediction using this model still works
-                # (however it does not represent a valid joint distribution).'%(x, tmp_min)
-                if tmp_min < 0:
-                    print(x, lambdas[x, :, :], tmp_min)
-                    continue
-
             ## reshape to original forms
             q = q.reshape(sizes)
             nus = nus.reshape(sizes + [n_cg])
             lambdas = lambdas.reshape(sizes + [n_cg, n_cg])
             canparams = q, nus, lambdas
         return canon_to_meanparams(canparams)
+
+    def is_valid(self) -> bool:
+        """check if model represents a valid distribution, that is,
+        check that all precision matrices are positive definite"""
+        sizes = self.meta['sizes']
+        n_discrete_states = np.prod(sizes)
+        valid = True
+        for x in range(n_discrete_states):
+            unrvld_ind = np.unravel_index([x], sizes)
+
+            dummy = np.zeros((self.meta['ltot'], 1))
+            for r in range(
+                    self.meta['n_cat']):  # construct full dummy repr dummy of x
+                dummy[self.meta['cat_glims'][r] + unrvld_ind[r][0], 0] = 1
+
+            lambda_x = self.mat_lbda0
+            lambda_x += np.dot(self.mat_lbdas,
+                               dummy).reshape(self.mat_lbda0.shape)
+
+            tmp_eigvals = np.linalg.eigvals(lambda_x)
+            tmp_min = np.min(tmp_eigvals)
+            # assert tmp_min > 0, 'Non-PD covariance of (flat) state %d with la_min=%f.'
+            # Pseudolikelihood estimation makes this possible.
+            # Note that nodewise prediction using this model still works
+            # (however it does not represent a valid joint distribution).'%(x, tmp_min)
+            if tmp_min < 0:
+                # print(x, lambdas[x, :, :], tmp_min)
+                print('Warning: CLZ model has non-PD precision for state', 
+                      unrvld_ind, 'with smallest eigenvalue=%f' % (tmp_min))
+                valid = False
+        return valid

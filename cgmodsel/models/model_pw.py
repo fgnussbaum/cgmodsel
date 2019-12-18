@@ -271,9 +271,18 @@ class ModelPW(BaseModelPW):
         # then, occasionally reinitialize (account for numerical errors)
 
         n_cat = self.meta['n_cat']
-        assert n_cat > 0, 'Needs discrete variables'
-
         n_cg = self.meta['n_cg']
+        if n_cat == 0:
+            # TODO(franknu): code redundancy
+            mat_sigma = np.linalg.inv(self.mat_lbda)
+            mat_l = np.linalg.cholesky(mat_sigma)  # Sigma = LL^T with lower tri L
+    
+            cont_data = np.random.standard_normal((n, n_cg))  # zero mean
+            cont_data = np.dot(cont_data, mat_l.T)  # adjust cov matrix to Sigma
+    
+            mu_offset = np.squeeze(np.dot(mat_sigma, self.alpha))
+            cont_data += np.outer(np.ones(n), mu_offset)
+
         glims = self.meta['cat_glims']
 
         ## get discrete marginal model
