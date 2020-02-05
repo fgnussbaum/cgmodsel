@@ -9,7 +9,7 @@ Demo for Lumen
 from cgmodsel.dataops import load_prepare_data # function for loading data
 from cgmodsel.huber_clz import HuberCLZ # Huber solver for CLZ models (triple interactions)
 
-def get_graph_from_data(filename, model='PW', graphthreshold=1e-2, kS=1, **kwargs):
+def get_graph_from_data(filename, model='CLZ', graphthreshold=1e-2, kS=1, **kwargs):
     """
     filename   ... csv file containing data
     model      ... 'PW' (pairwise) or 'CLZ' (triple interactions ~ variable precision matrices)
@@ -30,7 +30,8 @@ def get_graph_from_data(filename, model='PW', graphthreshold=1e-2, kS=1, **kwarg
     print('Continuous Variables: %s\n' % (meta['contnames']))
     
     ### solve regularized problem
-    dSolvers = {'PW': None, 'CLZ': HuberCLZ} # TODO: add solver for sparse pairwise model (e.g., CG_PWS_Huber)
+    dSolvers = {'PW': None, 'CLZ': HuberCLZ}
+    # TODO(franknu): add solver for sparse pairwise model
     solver = dSolvers[model](meta, useweights=True) # initialize problem
     solver.drop_data(D, Y)
     solver.set_regularization_params(kS)
@@ -146,4 +147,6 @@ if __name__ == '__main__':
     x_reg = res.x # solution
     params = solver.get_canonicalparams(x_reg, verb=0) # model parameters
 
-    params.repr_graphical(graph=True, threshold=graphthreshold, caption='l1-regularized')
+    params.repr_graphical(graph=True,
+                          threshold=graphthreshold,
+                          caption='l1-regularized')
