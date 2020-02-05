@@ -595,14 +595,11 @@ class BaseSolverS(BaseCGSolver):
         hyperparams ... pair of regularization parameters
 
         ptype ... if 'std',
-                set lambda, rho = hyperparams * scaling(n, nvars), where
-                the parameters are for the problem
-                    min l(S-L) + lambda * ||S||_1
-                    s.t. S-L>0, L>=0
+                set lambda = regparam * scaling(n, nvars), where
                 Here, scaling(n, nvars) is a scaling suggested by
                 consistency results
                 Argument <scales> is not used in this case!
-              if 'direct', directly set lambda, rho = hyperparams
+              if 'direct', directly set lambda = regparam
               if 'convex' assume that alpha, beta = hyperparams and
               alpha, beta are weights in [0,1] and the problem is
                min (1-alpha-beta) * l(S-L) + alpha * ||S||_1 + beta * tr(L)
