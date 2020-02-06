@@ -19,7 +19,7 @@ import scipy  # use scipy.linalg.eigh (for real symmetric matrix), does not chec
 #from cgmodsel.models.model_pwsl import ModelPairwiseSL
 
 from cgmodsel.base_admm import BaseAdmm
-from cgmodsel.base_solver import BaseSolverSL
+from cgmodsel.base_solver import BaseSolverSL, BaseSolverPW
 from cgmodsel.prox import LikelihoodProx
 
 # pylint: disable=R0914
@@ -114,7 +114,7 @@ class AdmmGaussianSL(BaseSolverSL, BaseAdmm):
         dim = mat_theta.shape[0]
         eps_pri = np.sqrt(
             3 * dim**2) * self.opts['abstol'] + self.opts['reltol'] * max(
-                (fronorm_theta**2, fronorm_s**2 + fronorm_l**2))
+                (fronorm_theta, np.sqrt(fronorm_s**2 + fronorm_l**2)))
         eps_dual = np.sqrt(3 * dim**2) * self.opts['abstol'] + self.opts[
             'reltol'] * np.linalg.norm(mat_z, 'fro')
 
@@ -280,7 +280,7 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         dim = mat_theta.shape[0]
         eps_pri = np.sqrt(
             3 * dim**2) * self.opts['abstol'] + self.opts['reltol'] * max(
-                (fronorm_theta**2, fronorm_s**2 + fronorm_l**2))
+                (fronorm_theta, np.sqrt(fronorm_s**2 + fronorm_l**2)))
         eps_dual = np.sqrt(3 * dim**2) * self.opts['abstol'] + self.opts[
             'reltol'] * np.linalg.norm(mat_z, 'fro')
 
@@ -317,4 +317,135 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         obj = self.lbda * self.sparse_norm(mat_s) \
             + self.rho * np.trace(mat_l)
         obj += self.prox.plh(mat_s + mat_l, alpha)
+        return obj
+
+###############################################################################
+# pairwise CG models
+###############################################################################
+
+
+class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
+    """
+    solve the problem
+       min l(S) + lambda * ||S||_{2,1}
+       s.t. Lambda[S]>0
+    where l is the pseudo likelihood with pairwise parameters Theta=S+L,
+    here Lambda[S] extracts the quantitative-quantitative interactions
+    from the pairwise parameter matrix Theta=(Q & R^T \\ R & -Lbda),
+    that is, Lambda[Theta] = Lbda
+
+    The estimated probability model has (unnormalized) density
+        p(y) ~ exp(1/2 (D_x, y)^T Theta (D_x, y) + alpha^T y + u^T D_x)
+    where D_x is the indicator representation of the discrete variables x
+    (reduced by the indicator for the 0-th level for identifiability reasons),
+    and y are the quantitative variables.
+    Note that alpha and u are optional univariate parameters that can be included
+    in the optimization problem above.
+
+    The solver is an ADMM algorithm.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """"must provide with dictionary meta"""
+
+        super().__init__(*args, **kwargs)  # Python 3 syntax
+
+        self.name = 'S_ADMM'
+
+        self.prox = None
+        self.cat_format_required = 'dummy_red'
+
+    def _initialize_admm(self):
+        """initialize ADMM variables"""
+
+        ## ensure coherent options for prox solver
+        self.prox.opts['use_u'] = self.opts['use_u']
+        self.prox.opts['use_alpha'] = self.opts['use_alpha']
+
+        ## initialize ADMM variables
+        dim = self.meta['dim']
+        ltot = self.meta['ltot']
+        mat_theta = np.eye(dim)
+        mat_theta[ltot:, ltot:] *= -1
+        # since lower right block needs to be negative definite
+        # make Theta feasible/cleaned for plh
+        mat_theta = self.prox.clean_theta(mat_theta)
+
+        alpha = np.zeros((self.meta['n_cg'], 1))
+        mat_s = mat_theta.copy()
+        if not self.opts['use_u']:  # no univariate parameters
+            mat_s[:ltot, :ltot] -= np.diag(np.diag(mat_s[:ltot, :ltot]))
+        mat_z = np.zeros((dim, dim))
+
+        return mat_theta, mat_s, mat_z, alpha
+
+    def _do_iter_admm(self, current_vars: tuple):
+        """perform computations of one ADMM iteration"""
+
+        mat_theta, mat_s, mat_z, alpha = current_vars
+
+        mat_theta, alpha = self.prox.solve(mat_s + self.admm_param * mat_z,
+                                           self.admm_param,
+                                           (mat_theta, alpha))
+        mat_theta = (mat_theta + mat_theta.T) / 2
+
+        ## update S
+        mat_s_old = mat_s
+        mat_s, l21norm = self.shrink(mat_s - self.admm_param * mat_z,
+                                     self.admm_param * self.lbda)
+        mat_s = (mat_s + mat_s.T) / 2
+        if not self.opts['use_u']:  # no univariate parameters
+            ltot = self.meta['ltot']
+            mat_s[:ltot, :ltot] -= \
+                np.diag(np.diag(mat_s[:ltot, :ltot]))
+
+        ## update dual variables Z
+        resid_theta = mat_theta - mat_s
+        mat_z = mat_z - resid_theta / self.admm_param
+        mat_z = (mat_z + mat_z.T) / 2
+
+        ## diagnostics, reporting, termination checks
+        fronorm_s = np.linalg.norm(mat_s, 'fro')
+        fronorm_theta = np.linalg.norm(mat_theta, 'fro')
+
+        rnorm = np.linalg.norm(resid_theta, 'fro')
+        snorm = np.linalg.norm(mat_s - mat_s_old, 'fro') / self.admm_param
+
+        dim = mat_theta.shape[0]
+        eps_pri = np.sqrt(
+            2 * dim**2) * self.opts['abstol'] + self.opts['reltol'] * max(
+                (fronorm_theta**2, fronorm_s**2))
+        eps_dual = np.sqrt(2 * dim**2) * self.opts['abstol'] + self.opts[
+            'reltol'] * np.linalg.norm(mat_z, 'fro')
+
+        ## store stuff
+        residuals = rnorm, snorm, eps_pri, eps_dual
+        new_vars = mat_theta, mat_s, mat_z, alpha
+
+        stats = {}
+        stats['theta'] = mat_theta
+        stats['solution'] = mat_s, alpha
+        self.problem_vars = stats['solution']
+
+        stats['resid'] = resid_theta
+
+        stats['admm_obj'] = self.lbda * l21norm
+        # stats['true_obj'] = stats['admm_obj'] + self.plh(mat_s, alpha) # true objective
+        stats['admm_obj'] += self.prox.plh(mat_theta, alpha)
+
+        return new_vars, residuals, stats
+
+    def _postsetup_data(self):
+        """called after drop_data"""
+        self.prox = LikelihoodProx(self.cat_data, self.cont_data, self.meta)
+
+    def get_objective(self, mat_s, vec_u=None, alpha=None):
+        """return 'real' objective """
+        if self.meta['n_cat'] > 0 and not vec_u is None:
+            mat_s = mat_s.copy()
+            mat_s[:self.meta['ltot'], :self.meta['ltot']] += 2 * np.diag(vec_u)
+        if alpha is None:
+            alpha = np.zeros(self.meta['n_cg'])
+
+        obj = self.lbda * self.sparse_norm(mat_s) + self.prox.plh(mat_s, alpha)
         return obj

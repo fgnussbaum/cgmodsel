@@ -217,6 +217,23 @@ class BaseCGSolver(abc.ABC):
         """return model name"""
         return self.name
 
+    def shrink(self, mat_s, tau):
+        """return (group)- soft shrink of matrix mat_s with tau """
+        # print(self.meta['nonbinary'])
+        if self.meta['nonbinary']:
+            return grp_soft_shrink(mat_s, tau,
+                                   self.meta['n_cat'] + self.meta['n_cg'],
+                                   self.meta['glims'], self.opts['off'])
+        return grp_soft_shrink(mat_s, tau, off=self.opts['off'])
+
+    def sparse_norm(self, mat_s):
+        """return l21/ l1-norm of mat_s"""
+        #        print(self.meta['glims'])
+        if self.meta['nonbinary']:
+            return l21norm(mat_s, self.meta['n_cat'] + self.meta['n_cg'],
+                           self.meta['glims'], self.opts['off'])
+        return l21norm(mat_s, off=self.opts['off'])
+
 
 class BaseGradSolver(abc.ABC):
     """
@@ -385,23 +402,6 @@ class BaseSolverSL(BaseCGSolver):
         """get regularization parameters"""
         return self.lbda, self.rho
 
-    def shrink(self, mat_s, tau):
-        """return (group)- soft shrink of matrix mat_s with tau """
-        # print(self.meta['nonbinary'])
-        if self.meta['nonbinary']:
-            return grp_soft_shrink(mat_s, tau,
-                                   self.meta['n_cat'] + self.meta['n_cg'],
-                                   self.meta['glims'], self.opts['off'])
-        return grp_soft_shrink(mat_s, tau, off=self.opts['off'])
-
-    def sparse_norm(self, mat_s):
-        """return l21/ l1-norm of mat_s"""
-        #        print(self.meta['glims'])
-        if self.meta['nonbinary']:
-            return l21norm(mat_s, self.meta['n_cat'] + self.meta['n_cg'],
-                           self.meta['glims'], self.opts['off'])
-        return l21norm(mat_s, off=self.opts['off'])
-
     def set_regularization_params(self,
                                   hyperparams,
                                   scales=None,
@@ -436,27 +436,10 @@ class BaseSolverSL(BaseCGSolver):
         assert len(hyperparams) == 2
         assert hyperparams[0] >= 0 and hyperparams[1] >= 0
 
-        if not set_direct:
-            if not scales is None:
-                scale_lbda, scale_rho = scales
-            else:
-                assert self.meta['n_data'] > 0, \
-                    "data-dependent scaling, drop data first"
-                # calculate prescaling factor for the regularization parameters
-                # based on consistency analysis by Chandrasekaran et. al (2010)
-
-                #                assert 'reg_fac' in self.meta
-                scale_lbda = self.meta['reg_fac']
-                scale_rho = self.meta['reg_fac']
-
         if ptype == 'std':
             # standard regularization parameters
             # first for l21, second for nuclear norm
             self.lbda, self.rho = hyperparams
-            if not set_direct:
-                self.lbda *= scale_lbda
-                self.rho *= scale_rho
-
         elif ptype == 'convex':
             alpha, beta = hyperparams
             #            assert alpha + beta <= 1
@@ -468,23 +451,30 @@ class BaseSolverSL(BaseCGSolver):
             denom = 1 - alpha - beta
 
             if denom != 0:
-                self.lbda = scale_lbda * alpha / denom
-                self.rho = scale_rho * beta / denom
-
-
+                self.lbda = alpha / denom
+                self.rho = beta / denom
 #            else:
 #                # no likelihood part
 #                self.lbda, self.rho = 0, 0
-
-            if not set_direct:
-                self.lbda *= scale_lbda
-                self.rho *= scale_rho
-
         else:
             raise Exception('unknown ptype')
 
+        if not set_direct:
+            if not scales is None:
+                scale_lbda, scale_rho = scales
+            else:
+                assert self.meta['n_data'] > 0, \
+                    "data-dependent scaling, drop data first"
+                # calculate prescaling factor for the regularization parameters
+                # based on consistency analysis by Chandrasekaran et. al (2010)
 
-class BaseSolverS(BaseCGSolver):
+                # assert 'reg_fac' in self.meta
+                scale_lbda = self.meta['reg_fac']
+                scale_rho = self.meta['reg_fac']
+            self.lbda *= scale_lbda
+            self.rho *= scale_rho
+                
+class BaseSolverPW(BaseCGSolver):
     """
     base class for sparse graphical model solvers
     """
@@ -493,7 +483,7 @@ class BaseSolverS(BaseCGSolver):
         #        print('Init BaseSolverSL')
         super().__init__(*args, **kwargs)
 
-        self.alpha, self.beta = None, None
+        self.alpha = None
         self.lbda = None
 
         self.problem_vars = None
@@ -506,6 +496,8 @@ class BaseSolverS(BaseCGSolver):
         self.opts.setdefault('use_u', 1)
         self.opts.setdefault('use_alpha', 1)
 
+        self.weights = None
+
     def __str__(self):
         string = '<ADMMsolver> la=%s' % (self.lbda)
         string += ', use_alpha=%d' % (self.opts.setdefault('use_alpha', 1))
@@ -514,9 +506,9 @@ class BaseSolverS(BaseCGSolver):
         return string
 
     def get_canonicalparams(self):
-        """Retrieves the PW S+L CG model parameters from flat parameter vector.
+        """Retrieves the PW CG model parameters from flat parameter vector.
 
-        output: Model_PWSL instance"""
+        output: Model_PW instance"""
 
         mat_s, alpha = self.problem_vars
 
@@ -570,23 +562,6 @@ class BaseSolverS(BaseCGSolver):
         """get regularization parameters"""
         return self.lbda
 
-    def shrink(self, mat_s, tau):
-        """return (group)- soft shrink of matrix mat_s with tau """
-        # TODO(franknu): remove redundancy
-        if self.meta['nonbinary']:
-            return grp_soft_shrink(mat_s, tau,
-                                   self.meta['n_cat'] + self.meta['n_cg'],
-                                   self.meta['glims'], self.opts['off'])
-        return grp_soft_shrink(mat_s, tau, off=self.opts['off'])
-
-    def sparse_norm(self, mat_s):
-        """return l21/ l1-norm of mat_s"""
-        #        print(self.meta['glims'])
-        if self.meta['nonbinary']:
-            return l21norm(mat_s, self.meta['n_cat'] + self.meta['n_cg'],
-                           self.meta['glims'], self.opts['off'])
-        return l21norm(mat_s, off=self.opts['off'])
-
     def set_regularization_params(self, regparam, set_direct = False,
                                   scale = None, ptype = 'std'):
         """set regularization parameters for 
@@ -600,12 +575,10 @@ class BaseSolverS(BaseCGSolver):
                 consistency results
                 Argument <scales> is not used in this case!
               if 'direct', directly set lambda = regparam
-              if 'convex' assume that alpha, beta = hyperparams and
-              alpha, beta are weights in [0,1] and the problem is
-               min (1-alpha-beta) * l(S-L) + alpha * ||S||_1 + beta * tr(L)
-               s.t. S-L>0, L>=0
+              if 'convex' assume that alpha = regparam and
+                  min_S (1-alpha) * l(S) + alpha * ||S||_ {2,1} 
 
-        In addition to the specified regularization parameters,
+        In addition to the specified regularization parameter,
         the regularization parameters can be scaled by a fixed value (depending
         on the number of data points and variables):
 
@@ -613,77 +586,26 @@ class BaseSolverS(BaseCGSolver):
                    else  scales must be a nonnegative number with which lambda
                    is scaled
         """
-        if scale is None:
-            self.scale = self.unscaledlbda
-        else:
-            self.scale = scale
-        if ptype=='std': # standard regularization parameters, first for l21, second for nuclear norm
-            self.lbda = regparam
-            
-            if not set_direct:
-                self.lbda *= self.scale
 
-        else: # convex hyperparams are assumed
+        if ptype=='std': # standard regularization parameter for l21-norm
+            self.lbda = regparam
+
+        elif ptype == 'convex': # convex hyperparams are assumed
             self.alpha = regparam
             assert self.alpha < 1, "must contain likelihood part"
-            denom = 1-self.alpha
+            denom = 1 - self.alpha
             if denom != 0:
                 self.lbda = self.scale * self.alpha/denom
             else:
                 self.lbda = 0
-                
-    def set_regularization_params(self,
-                                  hyperparams,
-                                  scales=None,
-                                  set_direct=False,
-                                  ptype: str = 'std') -> None:
-
-        assert len(hyperparams) == 2
-        assert hyperparams[0] >= 0 and hyperparams[1] >= 0
-
-        if not set_direct:
-            if not scales is None:
-                scale_lbda, scale_rho = scales
-            else:
-                assert self.meta['n_data'] > 0, \
-                    "data-dependent scaling, drop data first"
-                # calculate prescaling factor for the regularization parameters
-                # based on consistency analysis by Chandrasekaran et. al (2010)
-
-                #                assert 'reg_fac' in self.meta
-                scale_lbda = self.meta['reg_fac']
-                scale_rho = self.meta['reg_fac']
-
-        if ptype == 'std':
-            # standard regularization parameters
-            # first for l21, second for nuclear norm
-            self.lbda, self.rho = hyperparams
-            if not set_direct:
-                self.lbda *= scale_lbda
-                self.rho *= scale_rho
-
-        elif ptype == 'convex':
-            alpha, beta = hyperparams
-            #            assert alpha + beta <= 1
-            assert alpha + beta < 1, "must contain likelihood part"
-
-            self.alpha = alpha
-            self.beta = beta
-
-            denom = 1 - alpha - beta
-
-            if denom != 0:
-                self.lbda = scale_lbda * alpha / denom
-                self.rho = scale_rho * beta / denom
-
-
-#            else:
-#                # no likelihood part
-#                self.lbda, self.rho = 0, 0
-
-            if not set_direct:
-                self.lbda *= scale_lbda
-                self.rho *= scale_rho
-
         else:
             raise Exception('unknown ptype')
+
+
+        if not set_direct:
+            if scale is None:
+                assert self.meta['n_data'] > 0, \
+                    "data-dependent scaling, drop data first"
+                scale = self.meta['reg_fac']
+                
+            self.lbda *= scale

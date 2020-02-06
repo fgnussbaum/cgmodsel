@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: Frank Nussbaum (frank.nussbaum@uni-jena.de), 2019
+@author: Frank Nussbaum (frank.nussbaum@uni-jena.de), 2020
 
 Demo for Lumen
 """
 
 from cgmodsel.dataops import load_prepare_data # function for loading data
 from cgmodsel.huber_clz import HuberCLZ # Huber solver for CLZ models (triple interactions)
+from cgmodsel.admm import AdmmCGaussianPW
 
 def get_graph_from_data(filename, model='CLZ', graphthreshold=1e-2, kS=1, **kwargs):
     """
@@ -30,21 +31,20 @@ def get_graph_from_data(filename, model='CLZ', graphthreshold=1e-2, kS=1, **kwar
     print('Continuous Variables: %s\n' % (meta['contnames']))
     
     ### solve regularized problem
-    dSolvers = {'PW': None, 'CLZ': HuberCLZ}
-    # TODO(franknu): add solver for sparse pairwise model
+    dSolvers = {'PW': AdmmCGaussianPW, 'CLZ': HuberCLZ}
+
     solver = dSolvers[model](meta, useweights=True) # initialize problem
     solver.drop_data(D, Y)
     solver.set_regularization_params(kS)
     
     print('Solving problem..')
     res = solver.solve_sparse(verb=1, innercallback=solver.nocallback)
-    #print(" Done.")
+    # print(" Done.")
     
     x_reg = res.x # solution
     params = solver.get_canonicalparams(x_reg, verb=0) # model parameters
 
     ## graphical representation
-    # group norm matrix
     params.repr_graphical(graph=True, threshold=graphthreshold, caption='l1-regularized')
 
     graph = params.get_graph(threshold=graphthreshold)    

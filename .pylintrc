@@ -1,0 +1,12 @@
+[MISCELLANEOUS]
+
+# Good variable names which should always be accepted, separated by a comma
+good-names=r, s, x, i, j, k, rk
+
+disable=W0511,R0912, R0913, R0914, R0915
+
+# W0511 TODOs
+# R0912 too many branches
+# R0913 too many arguments
+# R0914 too many locals
+# R0915 too many statements
