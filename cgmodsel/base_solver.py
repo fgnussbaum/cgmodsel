@@ -99,8 +99,8 @@ class BaseCGSolver(abc.ABC):
 
         uses and augments information contained in meta about the data
 
-        categorical data must be provided in dummy encoded form
-        (potentially leaving out 0-th levels)"""
+        categorical data must be provided in dummy-encoded form
+        (leaving out 0-th levels if required by the solver)"""
 
         # process argument data
         if isinstance(data, tuple):
