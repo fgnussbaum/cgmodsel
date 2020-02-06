@@ -10,6 +10,7 @@ import numpy as np
 
 #from cgmodsel.models.model_base import get_modeltype
 from cgmodsel.models.model_pwsl import ModelPWSL
+from cgmodsel.models.model_pw import ModelPW
 from cgmodsel.utils import grp_soft_shrink, l21norm
 # pylint: disable=W0511 # todos
 # pylint: disable=R0914 # too many locals
@@ -27,6 +28,7 @@ def set_sparsity_weights(meta, cat_data, cont_data):
     n_data = meta['n_data']
     n_cg = meta['n_cg']
     n_cat = meta['n_cat']
+    dim = n_cg + n_cat
 
     # CG variables
     mus = cont_data.sum(axis=0) / n_data
@@ -45,21 +47,36 @@ def set_sparsity_weights(meta, cat_data, cont_data):
 #        sigmas_cat = np.ones(n_cat)
 #        sigmas_cg = np.ones(n_cg)
 
-    weights = {}
-    for j in range(n_cat):
-        for r in range(j):
-            weights[('Q', r, j)] = sigmas_cat[r] * sigmas_cat[j]
-        for s in range(n_cg):
-            weights[('R', s, j)] = sigmas_cat[j] * sigmas_cg[s]
-    for i in range(n_cg):
-        for j in range(i):
-            weights[('B', j, i)] = sigmas_cg[j] * sigmas_cg[i]
+    # weights = {}
+    # for r in range(n_cat):
+    #     for j in range(r):
+    #         weights[('Q', r, j)] = sigmas_cat[r] * sigmas_cat[j]
+    #     for s in range(n_cg):
+    #         weights[('R', s, r)] = sigmas_cat[j] * sigmas_cg[s]
+    # for j in range(n_cg):
+    #     for i in range(j):
+    #         weights[('B', j, i)] = sigmas_cg[j] * sigmas_cg[i]
+            
+    # # print weights
+    # # for key in sorted([a for a in weights]):
+    #     # print(key, weights[key])
 
-    # print weights
-#        for key in sorted([a for a in weights]):
-#            print(key, weights[key])
+
+    weights = np.zeros((dim, dim))
+    for r in range(n_cat):
+        for j in range(r):
+            weights[r, j] = sigmas_cat[r] * sigmas_cat[j]
+        for s in range(n_cg):
+            weights[dim + s, r] = sigmas_cat[j] * sigmas_cg[s]
+    for j in range(n_cg):
+        for i in range(j):
+            weights[dim+j, dim+i] = sigmas_cg[j] * sigmas_cg[i]
+    weights += weights.T
+    # TODO(franknu): weights on diagonal
 
     return weights
+
+
 
 
 ###############################################################################
@@ -416,6 +433,211 @@ class BaseSolverSL(BaseCGSolver):
                    else  scales must be a two-tuple, and lambda and rho are
                    scaled according to the elements of this two-tuple
         """
+        assert len(hyperparams) == 2
+        assert hyperparams[0] >= 0 and hyperparams[1] >= 0
+
+        if not set_direct:
+            if not scales is None:
+                scale_lbda, scale_rho = scales
+            else:
+                assert self.meta['n_data'] > 0, \
+                    "data-dependent scaling, drop data first"
+                # calculate prescaling factor for the regularization parameters
+                # based on consistency analysis by Chandrasekaran et. al (2010)
+
+                #                assert 'reg_fac' in self.meta
+                scale_lbda = self.meta['reg_fac']
+                scale_rho = self.meta['reg_fac']
+
+        if ptype == 'std':
+            # standard regularization parameters
+            # first for l21, second for nuclear norm
+            self.lbda, self.rho = hyperparams
+            if not set_direct:
+                self.lbda *= scale_lbda
+                self.rho *= scale_rho
+
+        elif ptype == 'convex':
+            alpha, beta = hyperparams
+            #            assert alpha + beta <= 1
+            assert alpha + beta < 1, "must contain likelihood part"
+
+            self.alpha = alpha
+            self.beta = beta
+
+            denom = 1 - alpha - beta
+
+            if denom != 0:
+                self.lbda = scale_lbda * alpha / denom
+                self.rho = scale_rho * beta / denom
+
+
+#            else:
+#                # no likelihood part
+#                self.lbda, self.rho = 0, 0
+
+            if not set_direct:
+                self.lbda *= scale_lbda
+                self.rho *= scale_rho
+
+        else:
+            raise Exception('unknown ptype')
+
+
+class BaseSolverS(BaseCGSolver):
+    """
+    base class for sparse graphical model solvers
+    """
+
+    def __init__(self, *args, **kwargs):
+        #        print('Init BaseSolverSL')
+        super().__init__(*args, **kwargs)
+
+        self.alpha, self.beta = None, None
+        self.lbda = None
+
+        self.problem_vars = None
+
+        if not hasattr(self, 'opts'):
+            # should already be defined by other class
+            self.opts = {}
+        self.opts.setdefault('off', 0)  # if 1 regularize only off-diagonal
+        # model options # TODO(franknu): find better place
+        self.opts.setdefault('use_u', 1)
+        self.opts.setdefault('use_alpha', 1)
+
+    def __str__(self):
+        string = '<ADMMsolver> la=%s' % (self.lbda)
+        string += ', use_alpha=%d' % (self.opts.setdefault('use_alpha', 1))
+        string += ', use_u=%d' % (self.opts.setdefault('use_u', 1))
+        string += ', off=%d' % (self.opts.setdefault('off', 1))
+        return string
+
+    def get_canonicalparams(self):
+        """Retrieves the PW S+L CG model parameters from flat parameter vector.
+
+        output: Model_PWSL instance"""
+
+        mat_s, alpha = self.problem_vars
+
+        ltot = self.meta['ltot']
+
+        mat_lambda = -mat_s[ltot:, ltot:]  # cts-cts parameters
+        # have negative sign in CG pairwise interaction parameter matrix
+
+        if self.meta['n_cat'] > 0:
+
+            glims = self.meta['cat_glims']
+            sizes = self.meta['sizes']
+
+            mat_q = mat_s[:ltot, :ltot]
+            mat_r = mat_s[ltot:, :ltot]
+            vec_u = 0.5 * np.diag(mat_q).copy().reshape(ltot)
+            for r in range(self.meta['n_cat']):  # set block-diagonal to zero
+                mat_q[glims[r]:glims[r+1],
+                      glims[r]:glims[r+1]] = \
+                      np.zeros((sizes[r], sizes[r]))
+
+            if self.meta['red_levels']:
+                fullsizes = [size + 1 for size in sizes]
+            else:
+                fullsizes = sizes
+        else:
+            mat_q = np.empty(0)
+            mat_r = np.empty(0)
+            vec_u = np.empty(0)
+            fullsizes = []
+
+        can_params = vec_u, mat_q, mat_r, alpha, mat_lambda
+
+        annotations = {
+            'n': self.meta['n_data'],
+            'lambda': self.lbda,
+        }
+
+        meta = {
+            'n_cat': self.meta['n_cat'],
+            'n_cg': self.meta['n_cg'],
+            'sizes': fullsizes
+        }
+
+        return ModelPW(can_params,
+                       meta,
+                       annotations=annotations,
+                       in_padded=False)
+
+    def get_regularization_params(self):
+        """get regularization parameters"""
+        return self.lbda
+
+    def shrink(self, mat_s, tau):
+        """return (group)- soft shrink of matrix mat_s with tau """
+        # TODO(franknu): remove redundancy
+        if self.meta['nonbinary']:
+            return grp_soft_shrink(mat_s, tau,
+                                   self.meta['n_cat'] + self.meta['n_cg'],
+                                   self.meta['glims'], self.opts['off'])
+        return grp_soft_shrink(mat_s, tau, off=self.opts['off'])
+
+    def sparse_norm(self, mat_s):
+        """return l21/ l1-norm of mat_s"""
+        #        print(self.meta['glims'])
+        if self.meta['nonbinary']:
+            return l21norm(mat_s, self.meta['n_cat'] + self.meta['n_cg'],
+                           self.meta['glims'], self.opts['off'])
+        return l21norm(mat_s, off=self.opts['off'])
+
+    def set_regularization_params(self, regparam, set_direct = False,
+                                  scale = None, ptype = 'std'):
+        """set regularization parameters for 
+        min l(S) + la*||S||_{2/1}
+
+        hyperparams ... pair of regularization parameters
+
+        ptype ... if 'std',
+                set lambda = regparam * scaling(n, nvars), where
+                Here, scaling(n, nvars) is a scaling suggested by
+                consistency results
+                Argument <scales> is not used in this case!
+              if 'direct', directly set lambda = regparam
+              if 'convex' assume that alpha, beta = hyperparams and
+              alpha, beta are weights in [0,1] and the problem is
+               min (1-alpha-beta) * l(S-L) + alpha * ||S||_1 + beta * tr(L)
+               s.t. S-L>0, L>=0
+
+        In addition to the specified regularization parameters,
+        the regularization parameters can be scaled by a fixed value (depending
+        on the number of data points and variables):
+
+        scales ... if None, use standard scaling np.sqrt(log(dg)/n)
+                   else  scales must be a nonnegative number with which lambda
+                   is scaled
+        """
+        if scale is None:
+            self.scale = self.unscaledlbda
+        else:
+            self.scale = scale
+        if ptype=='std': # standard regularization parameters, first for l21, second for nuclear norm
+            self.lbda = regparam
+            
+            if not set_direct:
+                self.lbda *= self.scale
+
+        else: # convex hyperparams are assumed
+            self.alpha = regparam
+            assert self.alpha < 1, "must contain likelihood part"
+            denom = 1-self.alpha
+            if denom != 0:
+                self.lbda = self.scale * self.alpha/denom
+            else:
+                self.lbda = 0
+                
+    def set_regularization_params(self,
+                                  hyperparams,
+                                  scales=None,
+                                  set_direct=False,
+                                  ptype: str = 'std') -> None:
+
         assert len(hyperparams) == 2
         assert hyperparams[0] >= 0 and hyperparams[1] >= 0
 
