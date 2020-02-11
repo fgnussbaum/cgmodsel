@@ -140,7 +140,7 @@ class BaseAdmm(abc.ABC):
 
         out['history'] = history
         out['iter'] = i
-        #        out['admm_obj'] = history['objval'][i] # already in stats, see below
+        # out['admm_obj'] = history['objval'][i] # already in stats, see below
 
         out.update(stats)
 
@@ -159,7 +159,7 @@ class BaseAdmm(abc.ABC):
 
 #        print(snorm_rel, rnorm_rel)
 
-# do scaling of admm_param if necessary
+        ## do scaling of admm_param if necessary
         if rnorm_rel > snorm_rel * criticalratio:
             # decrease admm_param
             self.admm_param /= self.opts['continuation_fac']
@@ -198,11 +198,10 @@ class BaseAdmm(abc.ABC):
         else:
             scaling_factor = snorm_rel / rnorm_rel
 
-
 #        if self.opts['verb']:
 #            print(snorm_rel, rnorm_rel)
 
-## do scaling of admm_param if necessary
+        ## do scaling of admm_param if necessary
         if max((scaling_factor, 1 / scaling_factor)) > criticalratio:
 
             if rnorm_rel >= 1 and snorm_rel >= 1:

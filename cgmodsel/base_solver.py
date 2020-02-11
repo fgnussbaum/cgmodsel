@@ -219,7 +219,6 @@ class BaseCGSolver(abc.ABC):
 
     def shrink(self, mat_s, tau):
         """return (group)- soft shrink of matrix mat_s with tau """
-        # print(self.meta['nonbinary'])
         if self.meta['nonbinary']:
             return grp_soft_shrink(mat_s, tau,
                                    self.meta['n_cat'] + self.meta['n_cg'],
@@ -228,7 +227,6 @@ class BaseCGSolver(abc.ABC):
 
     def sparse_norm(self, mat_s):
         """return l21/ l1-norm of mat_s"""
-        #        print(self.meta['glims'])
         if self.meta['nonbinary']:
             return l21norm(mat_s, self.meta['n_cat'] + self.meta['n_cg'],
                            self.meta['glims'], self.opts['off'])

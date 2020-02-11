@@ -31,11 +31,13 @@ def grp_soft_shrink(mat, tau, n_groups=None, glims=None, off=False):
         tmp = np.abs(mat) - tau
         tmp[tmp < 1e-25] = 0
         shrinked = np.multiply(np.sign(mat), tmp)
+        l1norm = np.sum(np.abs(shrinked.flatten()))
         if off:
+            l1norm -= np.sum(np.abs(np.diag(shrinked)))
             shrinked -= np.diag(np.diag(shrinked))
             shrinked += np.diag(np.diag(mat))
 
-        return shrinked, np.sum(np.abs(shrinked.flatten()))
+        return shrinked, l1norm
 
     # group soft shrink
     tmp = np.empty(mat.shape)
