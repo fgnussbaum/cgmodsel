@@ -230,6 +230,8 @@ class BaseSparseSolver(BaseCGSolver):
         super().__init__()
         self.opts.setdefault('off', 0)  # if 1 regularize only off-diagonal
         # model options # TODO(franknu): find better place
+        self.opts.setdefault('use_alpha', 1)
+        self.opts.setdefault('use_u', 1)
 
         self.name = 'base-sparse'
 
