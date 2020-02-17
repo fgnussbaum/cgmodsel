@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: Frank Nussbaum (frank.nussbaum@uni-jena.de), 2019
+@author: Frank Nussbaum (frank.nussbaum@uni-jena.de), 2020
 
-Demo for "Pairwise Sparse + Low-Rank Models for Variables of Mixed Type"
-as submitted to the Journal of Multivariate Analysis (JMVA)
+Demo for
+Nussbaum, F. & Giesen, J. (2020). Pairwise sparse + low-rank models for variables of mixed type.
+Journal of Multivariate Analysis, 2020.
+
+If you use this software, please consider citing this article.
 """
 
 # pylint: disable=C0103
 
 from cgmodsel.admm import AdmmCGaussianSL, AdmmGaussianSL
 from cgmodsel.dataops import load_prepare_data  # function to read data
-
 
 def load(dataset: dict):
     """
