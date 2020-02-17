@@ -21,7 +21,7 @@ You can also use the code without doing the third step from inside the folder. F
 
 ### Usage ###
 
-If you use this software, please consider citing
+If you use this software, please consider citing:
 
 Nussbaum, F. & Giesen, J. (2020). Pairwise sparse + low-rank models for variables of mixed type. *Journal of Multivariate Analysis*, 2020.
 
