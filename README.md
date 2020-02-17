@@ -2,11 +2,11 @@
 
 cgmodsel - a Python3 package to estimate conditional Gaussian (CG) distributions from data
 
-Version 1.0(b), 06.12.2019
+Version 1.0, 17.2.2020
 
 ### Content ###
 
-This package contains ADMM solvers (with proximal gradient step) for estimating pairwise sparse + low-rank CG models.
+This package contains solvers (mostly ADMM-based) for estimating various types of CG models (sparse pairwise, sparse + low-rank pairwise, mean parameters).
 Please see the [Wiki](https://github.com/franknu/cgmodsel/wiki) for additional information.
 
 ### Setup cgmodsel ###
@@ -17,7 +17,13 @@ For normal usage:
 2. Open a terminal and navigate to the chosen directory using cd.
 3. Install the `cgmodsel` package locally by typing `pip install .`
 
-You can also use the code without doing the third step from inside the folder. For a quick start, please execute the file `quick_cgmod.py` from the main folder.
+You can also use the code without doing the third step from inside the folder. For a quick start, execute the file `quick_cgmod.py` from the main folder.
+
+### Usage ###
+
+If you use this software, please consider citing
+
+Nussbaum, F. & Giesen, J. (2020). Pairwise sparse + low-rank models for variables of mixed type. *Journal of Multivariate Analysis*, 2020.
 
 ### Contact ###
 
@@ -25,4 +31,4 @@ If you have questions, comments, bug reports, feature requests, etc. please cont
 
 ### Copyright ###
 
-© 2019 Frank Nussbaum (frank.nussbaum@uni-jena.de). All Rights Reserved.
+© 2020 Frank Nussbaum (frank.nussbaum@uni-jena.de). All Rights Reserved.
