@@ -1,7 +1,7 @@
 [MISCELLANEOUS]
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=r, s, x, i, j, k, rk
+good-names= q, r, s, t, x, i, j, k, rk
 
 disable=W0511,R0912, R0913, R0914, R0915
 

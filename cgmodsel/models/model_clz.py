@@ -232,7 +232,7 @@ class ModelCLZ(BaseModel):
             # (however it does not represent a valid joint distribution).'%(x, tmp_min)
             if tmp_min < 0:
                 # print(x, lambdas[x, :, :], tmp_min)
-                print('Warning: CLZ model has non-PD precision for state', 
+                print('Warning: CLZ model has non-PD precision for state',
                       unrvld_ind, 'with smallest eigenvalue=%f' % (tmp_min))
                 valid = False
         return valid

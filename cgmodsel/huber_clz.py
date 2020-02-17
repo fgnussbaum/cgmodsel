@@ -38,7 +38,7 @@ class HuberCLZ(HuberBase, BaseCGSolver):
 
         self.cont_data_prod = None
         self.cont_data_square = None
-        
+
         self.weights = None
 
     def _postsetup_data(self):
@@ -67,7 +67,7 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                        ('Bdiag', (self.meta['n_cg'], ltot)),
                        ('alpha', (self.meta['n_cg'], 1))]
         self.n_params = sum([np.prod(shape[1]) for shape in self.shapes])
-        
+
         self.weights = set_sparsity_weights(self.meta, self.cat_data, self.cont_data)
 
     def set_regularization_params(self, regparam):

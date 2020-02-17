@@ -56,7 +56,7 @@ def set_sparsity_weights(meta, cat_data, cont_data):
     # for j in range(n_cg):
     #     for i in range(j):
     #         weights[('B', j, i)] = sigmas_cg[j] * sigmas_cg[i]
-            
+
     # # print weights
     # # for key in sorted([a for a in weights]):
     #     # print(key, weights[key])
@@ -83,7 +83,6 @@ def set_sparsity_weights(meta, cat_data, cont_data):
 # base class for all CG model solvers
 ###############################################################################
 
-
 class BaseCGSolver(abc.ABC):
     """
     base class for all CG model solver
@@ -102,6 +101,10 @@ class BaseCGSolver(abc.ABC):
 
         #        self.problem_vars = None #TODO(franknu)
         self.meta = {'n_data': 0}
+
+        if not hasattr(self, 'opts'):
+            # should already be defined by other class
+            self.opts = {}
 
         # variables that need to be overridden by derived classes
         self.name = 'base'
@@ -217,6 +220,19 @@ class BaseCGSolver(abc.ABC):
         """return model name"""
         return self.name
 
+
+
+class BaseSparseSolver(BaseCGSolver):
+    """
+    base class that contains proximal operators
+    """
+    def __init__(self):
+        super().__init__()
+        self.opts.setdefault('off', 0)  # if 1 regularize only off-diagonal
+        # model options # TODO(franknu): find better place
+
+        self.name = 'base-sparse'
+
     def shrink(self, mat_s, tau):
         """return (group)- soft shrink of matrix mat_s with tau """
         if self.meta['nonbinary']:
@@ -231,7 +247,6 @@ class BaseCGSolver(abc.ABC):
             return l21norm(mat_s, self.meta['n_cat'] + self.meta['n_cg'],
                            self.meta['glims'], self.opts['off'])
         return l21norm(mat_s, off=self.opts['off'])
-
 
 class BaseGradSolver(abc.ABC):
     """
@@ -248,7 +263,9 @@ class BaseGradSolver(abc.ABC):
 
         #        self.problem_vars = None
 
-        self.opts = {}
+        if not hasattr(self, 'opts'):
+            # should already be defined by other class
+            self.opts = {}
         self._set_defaults()
 
     def _set_defaults(self):
@@ -312,7 +329,7 @@ class BaseGradSolver(abc.ABC):
         return params
 
 
-class BaseSolverSL(BaseCGSolver):
+class BaseSolverSL(BaseSparseSolver):
     """
     base class for S+L model solvers
     """
@@ -325,14 +342,6 @@ class BaseSolverSL(BaseCGSolver):
         self.lbda, self.rho = None, None
 
         self.problem_vars = None
-
-        if not hasattr(self, 'opts'):
-            # should already be defined by other class
-            self.opts = {}
-        self.opts.setdefault('off', 0)  # if 1 regularize only off-diagonal
-        # model options # TODO(franknu): find better place
-        self.opts.setdefault('use_u', 1)
-        self.opts.setdefault('use_alpha', 1)
 
     def __str__(self):
         string = '<ADMMsolver> la=%s' % (self.lbda) + ', rho=%s' % (self.rho)
@@ -471,8 +480,8 @@ class BaseSolverSL(BaseCGSolver):
                 scale_rho = self.meta['reg_fac']
             self.lbda *= scale_lbda
             self.rho *= scale_rho
-                
-class BaseSolverPW(BaseCGSolver):
+
+class BaseSolverPW(BaseSparseSolver):
     """
     base class for sparse graphical model solvers
     """
@@ -485,14 +494,6 @@ class BaseSolverPW(BaseCGSolver):
         self.lbda = None
 
         self.problem_vars = None
-
-        if not hasattr(self, 'opts'):
-            # should already be defined by other class
-            self.opts = {}
-        self.opts.setdefault('off', 0)  # if 1 regularize only off-diagonal
-        # model options # TODO(franknu): find better place
-        self.opts.setdefault('use_u', 1)
-        self.opts.setdefault('use_alpha', 1)
 
         self.weights = None
 
@@ -560,9 +561,9 @@ class BaseSolverPW(BaseCGSolver):
         """get regularization parameters"""
         return self.lbda
 
-    def set_regularization_params(self, regparam, set_direct = False,
-                                  scale = None, ptype = 'std'):
-        """set regularization parameters for 
+    def set_regularization_params(self, regparam, set_direct=False,
+                                  scale=None, ptype='std'):
+        """set regularization parameters for
         min l(S) + la*||S||_{2/1}
 
         hyperparams ... pair of regularization parameters
@@ -574,7 +575,7 @@ class BaseSolverPW(BaseCGSolver):
                 Argument <scales> is not used in this case!
               if 'direct', directly set lambda = regparam
               if 'convex' assume that alpha = regparam and
-                  min_S (1-alpha) * l(S) + alpha * ||S||_ {2,1} 
+                min_S (1-alpha) * l(S) + alpha * ||S||_ {2,1}
 
         In addition to the specified regularization parameter,
         the regularization parameters can be scaled by a fixed value (depending
@@ -585,7 +586,7 @@ class BaseSolverPW(BaseCGSolver):
                    is scaled
         """
 
-        if ptype=='std': # standard regularization parameter for l21-norm
+        if ptype == 'std': # standard regularization parameter for l21-norm
             self.lbda = regparam
 
         elif ptype == 'convex': # convex hyperparams are assumed
@@ -593,7 +594,7 @@ class BaseSolverPW(BaseCGSolver):
             assert self.alpha < 1, "must contain likelihood part"
             denom = 1 - self.alpha
             if denom != 0:
-                self.lbda = self.scale * self.alpha/denom
+                self.lbda = self.alpha/denom
             else:
                 self.lbda = 0
         else:
@@ -605,5 +606,5 @@ class BaseSolverPW(BaseCGSolver):
                 assert self.meta['n_data'] > 0, \
                     "data-dependent scaling, drop data first"
                 scale = self.meta['reg_fac']
-                
+
             self.lbda *= scale

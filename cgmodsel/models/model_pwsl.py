@@ -632,7 +632,7 @@ class ModelPWSL(BaseModelPW):
 
     def sample(self, n: int, gibbs_iter: int = 10):
         """ A Gibbs sampler for pairwise models
-        n       ...  number of datapoints to be produced   
+        n       ...  number of datapoints to be produced
         k       ... steps the Markov Chain should do until accepting the outcome
         """
         return self.to_pwmodel().sample(n, gibbs_iter=gibbs_iter)

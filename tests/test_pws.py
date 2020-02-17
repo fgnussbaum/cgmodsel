@@ -12,7 +12,7 @@ import numpy as np
 from cgmodsel.admm import AdmmCGaussianPW
 from cgmodsel.dataops import load_prepare_data  # function to read data
 
-    
+
 #@unittest.skip
 class TestPWSolvers(unittest.TestCase):
     """"""
@@ -25,10 +25,10 @@ class TestPWSolvers(unittest.TestCase):
         self.solver.admm_param = 5
         self.ftol = 1e-4
         self.tic = time.time()
-        
+  
     def tearDown(self):
         toc = time.time() - self.tic
-        print ("%s: %.3f(s)" % (self.id(), toc) )
+        print ("%s: %.3f(s)" % (self.id(), toc))
 
 
 #    @unittest.skip('')
