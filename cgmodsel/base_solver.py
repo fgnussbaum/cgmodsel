@@ -24,7 +24,6 @@ FLAT = 'flat'
 def set_sparsity_weights(meta, cat_data, cont_data):
     """  use adjusted weights for all groups as suggested by LST2015
     (may be essential for "good", "consistent" results)"""
-    #TODO(franknu): matrix W
     n_data = meta['n_data']
     n_cg = meta['n_cg']
     n_cat = meta['n_cat']
@@ -43,40 +42,20 @@ def set_sparsity_weights(meta, cat_data, cont_data):
                            k]  # relative probability that x_r has value k
             sigma_r += p_xr_k * (1 - p_xr_k)
         sigmas_cat[r] = np.sqrt(sigma_r)
-#    else:
-#        sigmas_cat = np.ones(n_cat)
-#        sigmas_cg = np.ones(n_cg)
-
-    # weights = {}
-    # for r in range(n_cat):
-    #     for j in range(r):
-    #         weights[('Q', r, j)] = sigmas_cat[r] * sigmas_cat[j]
-    #     for s in range(n_cg):
-    #         weights[('R', s, r)] = sigmas_cat[j] * sigmas_cg[s]
-    # for j in range(n_cg):
-    #     for i in range(j):
-    #         weights[('B', j, i)] = sigmas_cg[j] * sigmas_cg[i]
-
-    # # print weights
-    # # for key in sorted([a for a in weights]):
-    #     # print(key, weights[key])
-
 
     weights = np.zeros((dim, dim))
     for r in range(n_cat):
         for j in range(r):
             weights[r, j] = sigmas_cat[r] * sigmas_cat[j]
         for s in range(n_cg):
-            weights[dim + s, r] = sigmas_cat[j] * sigmas_cg[s]
+            weights[n_cat + s, r] = sigmas_cat[r] * sigmas_cg[s]
     for j in range(n_cg):
         for i in range(j):
-            weights[dim+j, dim+i] = sigmas_cg[j] * sigmas_cg[i]
+            weights[n_cat + j, n_cat + i] = sigmas_cg[j] * sigmas_cg[i]
     weights += weights.T
     # TODO(franknu): weights on diagonal
 
     return weights
-
-
 
 
 ###############################################################################
@@ -92,7 +71,6 @@ class BaseCGSolver(abc.ABC):
 
     def __init__(self):
         """must call method drop_data after initialization"""
-        #        print('Init BaseCGSolver')
         super().__init__()
 
         self.cat_data = None  # discrete data, dropped later
@@ -103,10 +81,9 @@ class BaseCGSolver(abc.ABC):
         self.meta = {'n_data': 0}
 
         if not hasattr(self, 'opts'):
-            # should already be defined by other class
+            # since this may already be defined from other base classes
             self.opts = {}
 
-        # variables that need to be overridden by derived classes
         self.name = 'base'
 
     def _postsetup_data(self):
@@ -221,7 +198,6 @@ class BaseCGSolver(abc.ABC):
         return self.name
 
 
-
 class BaseSparseSolver(BaseCGSolver):
     """
     base class that contains proximal operators
@@ -249,6 +225,7 @@ class BaseSparseSolver(BaseCGSolver):
             return l21norm(mat_s, self.meta['n_cat'] + self.meta['n_cg'],
                            self.meta['glims'], self.opts['off'])
         return l21norm(mat_s, off=self.opts['off'])
+
 
 class BaseGradSolver(abc.ABC):
     """
@@ -284,7 +261,6 @@ class BaseGradSolver(abc.ABC):
         #        self.opts.setdefault('reltol', 1e-5)
         self.opts.setdefault('tol', 1e-12)
         self.opts.setdefault('maxiter', 500)
-
 
 #        self.opts.setdefault('useweights', False)
 #        self.opts.setdefault('maxrank', -1)
@@ -482,6 +458,7 @@ class BaseSolverSL(BaseSparseSolver):
                 scale_rho = self.meta['reg_fac']
             self.lbda *= scale_lbda
             self.rho *= scale_rho
+
 
 class BaseSolverPW(BaseSparseSolver):
     """

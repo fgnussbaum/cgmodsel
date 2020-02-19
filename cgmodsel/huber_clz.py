@@ -353,8 +353,9 @@ class HuberCLZ(HuberBase, BaseCGSolver):
             dis_cts = 0
             cts_cts = 0
             # discrete - discrete, as in pairwise model
-            dim = self.meta['n_cg'] + self.meta['n_cat']
-            for r in range(self.meta['n_cat']):  # Phis
+            n_cg = self.meta['n_cg']
+            n_cat = self.meta['n_cat']
+            for r in range(n_cat):  # Phis
                 for j in range(r):
                     wrj = self.lbda
                     wrj *= self.weights[r, j]
@@ -366,7 +367,7 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                            glims[j]:glims[j + 1]] += wrj * tmp_grad
 
             # continuous - discrete
-            for r in range(self.meta['n_cat']):  # Rhos
+            for r in range(n_cat):  # Rhos
                 tmp_group = np.empty(sizes[r] * (1 + n_cg))
                 for s in range(n_cg):
                     tmp_group[:sizes[r]] = mat_r[s, glims[r]:glims[r + 1]]
@@ -374,7 +375,7 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                         s * n_cg:(s + 1) * n_cg, glims[r]:glims[r + 1]].flatten(
                         )  # params la_{st}^{r:k} for t\in [d_g], k\in[L_r]
                     wrs = self.lbda
-                    wrs *= self.weights[dim+s, r]
+                    wrs *= self.weights[n_cat+s, r]
                     tmp_fval, tmp_grad = _huberapprox(tmp_group, delta)
                     dis_cts += wrs * tmp_fval
                     grad_r[s,
@@ -392,7 +393,7 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                     tmp_group[:ltot] = mat_b[s * n_cg + t, :]
                     tmp_group[ltot] = mat_b0[s, t]
                     wst = self.lbda
-                    wst *= self.weights[dim + s, dim + t]
+                    wst *= self.weights[n_cat + s, n_cat + t]
                     tmp_fval, tmp_grad = _huberapprox(tmp_group, delta)
                     cts_cts += wst * tmp_fval
                     grad_b[s * n_cg + t, :] += wst * tmp_grad[:ltot]
