@@ -16,7 +16,12 @@ import numpy as np
 #################################################################################
 
 
-def grp_soft_shrink(mat, tau, n_groups=None, glims=None, off=False):
+def grp_soft_shrink(mat,
+                    tau,
+                    n_groups=None,
+                    glims=None,
+                    off=False,
+                    weights=None):
     """
     calculate (group-)soft-shrinkage of mat with shrinkage parameter tau
     soft shrink if no n_groups is given
@@ -28,7 +33,12 @@ def grp_soft_shrink(mat, tau, n_groups=None, glims=None, off=False):
     """
     shrinkednorm = 0
     if n_groups is None:
-        tmp = np.abs(mat) - tau
+        tmp = np.abs(mat)
+        if not weights is None: # weighted l1-norm
+#            tmp = np.multiply(tmp, weights).flatten
+            tmp -= tau * weights
+        else:
+            tmp -= tau
         tmp[tmp < 1e-25] = 0
         shrinked = np.multiply(np.sign(mat), tmp)
         l1norm = np.sum(np.abs(shrinked.flatten()))
@@ -40,6 +50,8 @@ def grp_soft_shrink(mat, tau, n_groups=None, glims=None, off=False):
         return shrinked, l1norm
 
     # group soft shrink
+    if weights is None:
+        weights = np.ones(mat.shape) # TODO(franknu): improve style
     tmp = np.empty(mat.shape)
     for i in range(n_groups):
         for j in range(n_groups):
@@ -50,18 +62,19 @@ def grp_soft_shrink(mat, tau, n_groups=None, glims=None, off=False):
                 continue
 
             gnorm = np.linalg.norm(group, 'fro')
-            if gnorm <= tau:
+            w_ij = tau * weights[i,j]
+            if gnorm <= w_ij:
                 tmp[glims[i]:glims[i + 1],
                     glims[j]:glims[j + 1]] = np.zeros(group.shape)
             else:
                 tmp[glims[i]:glims[i+1], glims[j]:glims[j+1]] = \
-                    group * (1 - tau / gnorm)
-                shrinkednorm += (1 - tau / gnorm) * gnorm
+                    group * (1 - w_ij / gnorm)
+                shrinkednorm += (1 - w_ij / gnorm) * gnorm
 
     return tmp, shrinkednorm
 
 
-def l21norm(mat, n_groups=None, glims=None, off=False):
+def l21norm(mat, n_groups=None, glims=None, off=False, weights=None):
     """
     calculate l_{2,1}-norm or l_1-norm of mat
     l_1-norm if no n_groups is given
@@ -69,18 +82,28 @@ def l21norm(mat, n_groups=None, glims=None, off=False):
     cumulative sizes of groups (glims)
     """
     if n_groups is None:
-        tmp = np.sum(np.abs(mat.flatten()))
+        # calculate regular l1-norm
+        tmp = np.abs(mat) # tmp is copy, can do this inplace by specifying out
+        if not weights is None: # weighted l1-norm
+            tmp = np.multiply(tmp, weights).flatten
+        tmp = np.sum(tmp)
         if off:
             tmp -= np.sum(np.diag(np.abs(mat)))
         return tmp
-        # calculate regular l1-norm
+        
     l21sum = 0
-    for i in range(n_groups):
-        for j in range(i):
-            group = mat[glims[i]:glims[i + 1], glims[j]:glims[j + 1]]
-            l21sum += np.linalg.norm(group, 'fro')
+    if weights is None:
+        for i in range(n_groups):
+            for j in range(i):
+                group = mat[glims[i]:glims[i + 1], glims[j]:glims[j + 1]]
+                l21sum += np.linalg.norm(group, 'fro')
+    else:
+        for i in range(n_groups):
+            for j in range(i):
+                group = mat[glims[i]:glims[i + 1], glims[j]:glims[j + 1]]
+                l21sum += weights[i,j] * np.linalg.norm(group, 'fro')        
 
-    l21sum *= 2  # use symmetry
+    l21sum *= 2 # use symmetry
     if not off:
         for i in range(n_groups):
             group = mat[glims[i]:glims[i + 1], glims[i]:glims[i + 1]]

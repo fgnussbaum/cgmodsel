@@ -202,29 +202,50 @@ class BaseSparseSolver(BaseCGSolver):
     """
     base class that contains proximal operators
     """
-    def __init__(self):
+    def __init__(self, useweights=False):
         super().__init__()
         self.opts.setdefault('off', 0)  # if 1 regularize only off-diagonal
         # model options # TODO(franknu): find better place
         self.opts.setdefault('use_alpha', 1)
         self.opts.setdefault('use_u', 1)
+        
+        self.useweights = useweights
+        self.weights = None
 
         self.name = 'base-sparse'
+
+    def _postsetup_data(self):
+        """called after drop_data"""
+       
+        if self.useweights:
+            self.weights = set_sparsity_weights(self.meta,
+                                                self.cat_data,
+                                                self.cont_data)
+        else:
+            self.weights = None
 
     def shrink(self, mat_s, tau):
         """return (group)- soft shrink of matrix mat_s with tau """
         if self.meta['nonbinary']:
             return grp_soft_shrink(mat_s, tau,
                                    self.meta['n_cat'] + self.meta['n_cg'],
-                                   self.meta['glims'], self.opts['off'])
-        return grp_soft_shrink(mat_s, tau, off=self.opts['off'])
+                                   self.meta['glims'],
+                                   self.opts['off'],
+                                   weights=self.weights)
+        return grp_soft_shrink(mat_s,
+                               tau,
+                               off=self.opts['off'],
+                               weights=self.weights)
 
     def sparse_norm(self, mat_s):
         """return l21/ l1-norm of mat_s"""
         if self.meta['nonbinary']:
-            return l21norm(mat_s, self.meta['n_cat'] + self.meta['n_cg'],
-                           self.meta['glims'], self.opts['off'])
-        return l21norm(mat_s, off=self.opts['off'])
+            return l21norm(mat_s,
+                           self.meta['n_cat'] + self.meta['n_cg'],
+                           self.meta['glims'],
+                           self.opts['off'],
+                           weights=self.weights)
+        return l21norm(mat_s, off=self.opts['off'], weights=self.weights)
 
 
 class BaseGradSolver(abc.ABC):
@@ -313,7 +334,6 @@ class BaseSolverSL(BaseSparseSolver):
     """
 
     def __init__(self, *args, **kwargs):
-        #        print('Init BaseSolverSL')
         super().__init__(*args, **kwargs)
 
         self.alpha, self.beta = None, None
@@ -466,15 +486,12 @@ class BaseSolverPW(BaseSparseSolver):
     """
 
     def __init__(self, *args, **kwargs):
-        #        print('Init BaseSolverSL')
         super().__init__(*args, **kwargs)
 
         self.alpha = None
         self.lbda = None
 
         self.problem_vars = None
-
-        self.weights = None
 
     def __str__(self):
         string = '<ADMMsolver> la=%s' % (self.lbda)

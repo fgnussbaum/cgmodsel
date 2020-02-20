@@ -27,7 +27,7 @@ class HuberCLZ(HuberBase, BaseCGSolver):
     code in this class is experimental
     """
 
-    def __init__(self):
+    def __init__(self, useweights=True):
         """pass a dictionary that provides with keys dg, dc, and L"""
         super().__init__()
 
@@ -39,6 +39,7 @@ class HuberCLZ(HuberBase, BaseCGSolver):
         self.cont_data_prod = None
         self.cont_data_square = None
 
+        self.useweights = useweights
         self.weights = None
 
     def _postsetup_data(self):
@@ -68,7 +69,12 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                        ('alpha', (self.meta['n_cg'], 1))]
         self.n_params = sum([np.prod(shape[1]) for shape in self.shapes])
 
-        self.weights = set_sparsity_weights(self.meta, self.cat_data, self.cont_data)
+        if self.useweights:
+            self.weights = set_sparsity_weights(self.meta, self.cat_data, self.cont_data)
+
+        else:
+            self.weights = np.ones((self.meta['n_catcg'],
+                                    self.meta['n_catcg']))
 
     def set_regularization_params(self, regparam):
         """set regularization parameters
