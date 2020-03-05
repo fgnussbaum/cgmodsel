@@ -2,7 +2,7 @@
 
 cgmodsel - a Python3 package to estimate conditional Gaussian (CG) distributions from data
 
-Version 1.0, 17.2.2020
+Version 1.0, 5.3.2020
 
 ### Content ###
 
@@ -23,7 +23,7 @@ You can also use the code without doing the third step from inside the folder. F
 
 If you use this software, please consider citing:
 
-Nussbaum, F. & Giesen, J. (2020). Pairwise sparse + low-rank models for variables of mixed type. *Journal of Multivariate Analysis*, 2020.
+Nussbaum, F., & Giesen, J. (2020). Pairwise sparse+ low-rank models for variables of mixed type. *Journal of Multivariate Analysis*, 104601.
 
 ### Contact ###
 
