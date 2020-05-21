@@ -1,15 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: Frank Nussbaum (frank.nussbaum@uni-jena.de), 2020
-
-Demo for
-Nussbaum, F. & Giesen, J. (2020). Pairwise sparse + low-rank models for variables of mixed type.
-Journal of Multivariate Analysis, 2020.
-
-If you use this software, please consider citing this article.
+@author: -----, 2020
 """
-
 # pylint: disable=C0103
 
 from cgmodsel.admm_nuc import AdmmIsingSL
