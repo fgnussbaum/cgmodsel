@@ -15,7 +15,13 @@ import numpy as np
 # norms and shrinkage operators
 #################################################################################
 
-
+def shrink(array, tau):
+    """perform soft-shrink operation on array with parameter tau"""
+    tmp = np.abs(array)
+    tmp -= tau
+    tmp[tmp < 1e-25] = 0
+    return np.multiply(np.sign(array), tmp)
+    
 def grp_soft_shrink(mat,
                     tau,
                     n_groups=None,

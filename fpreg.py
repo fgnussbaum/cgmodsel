@@ -12,7 +12,7 @@ If you use this software, please consider citing this article.
 
 # pylint: disable=C0103
 
-from cgmodsel.admm import AdmmCGaussianSL, AdmmGaussianSL
+from cgmodsel.admm_nuc import AdmmIsingSL
 from cgmodsel.dataops import load_prepare_data  # function to read data
 
 def load(dataset: dict):
@@ -56,29 +56,12 @@ if __name__ == '__main__':
         }  # values that binary variables take
     }
 
-    ## quantitative ##
-    LSVT = {
-        'filename': "datasets/LSVT.csv",
-        'regparams': (.1, 1),
-    }
-
-    ## mixed binary-quantitative ##
-    ALLBUS = {
-        'filename': "datasets/allbus2016_proc.csv",
-        'regparams': (1, 2),
-    }
-    HELP = {
-        'filename': "datasets/HELPmiss_proc.csv",
-        'regparams': (.5, 2),
-    }
-
     ###### select and load data set
 
     # ********************************* #
     # comment out all but one line here #
     data = CFMT
-#    data = LSVT
-#    data = HELP
+
     # ********************************* #
 
     print('Loading data...(%s)'%(data['filename']))
@@ -88,11 +71,8 @@ if __name__ == '__main__':
 
     ## initialize solver and drop data ##
     if meta['n_cat'] > 0:  # binary variables are present
-        solver = AdmmCGaussianSL()
+        solver = AdmmIsingSL()
         solver.drop_data((cat_data, cont_data), meta)
-    else:  # purely Gaussian model
-        solver = AdmmGaussianSL()
-        solver.drop_data(cont_data, meta)
 
     ## set regularization parameters ##
     # you may try different values, any pair of positive reals will do
