@@ -135,7 +135,7 @@ class AdmmGaussianSL(BaseSolverSL, BaseAdmm):
         self.problem_vars = -mat_s, mat_l, alpha
         stats['eig_theta'] = eig_theta
         stats['eig_l'] = eig_l
-        stats['resid'] = resid
+        stats['resid'] = resid # TODO: store norm of residual
 
         return new_vars, residuals, stats
 

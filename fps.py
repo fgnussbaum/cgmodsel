@@ -25,19 +25,48 @@ class FPS:
     def __str__(self):
         return 'F_%d(%d,p=%d)...'%(self.explb, self.base, self.prec)
 
-    def visualize(self):
+    def visualize(self, plot_bound=False):
         explb, base, p = self.get_fpsparams()
-        
+
+
         print('Visualizing', self)
         denom = base ** (p-1)
         numbers = []
-        bars = [base ** (-i) for i in range(1, explb+1)]
-    
-        plt.plot(bars, np.ones(len(bars)),
-                     linestyle='None', marker='|', c='black', ms = 25)
-        plt.plot([0,1], np.ones(2),
-                     linestyle='None', marker='|', c='black', ms = 30)
-    
+        bars = [base ** (-i) for i in range(1, explb+2)]
+        print(bars, explb)
+        ms = 50
+
+        fig = plt.figure(figsize=(15,2))
+#        fig = plt.figure(figsize=(15,.5))
+
+        if plot_bound or 1:
+            plt.ylim(-.03,.4)
+            nn = 1000
+#            xs = np.array(list(range(int(nn/4), nn)))
+            xs = np.array(list(range(nn)))
+            ts = [self.round_down(np.array([i/nn])) for i in xs]
+            ts2 = []
+            for i in xs:
+                xl = self.store_array(np.array([i/nn]))[0]
+                try:
+                    tmp =xl[1]
+                except:
+                    tmp = xl
+                ts2.append(base ** (tmp-p))
+            ts = np.array(ts).flatten()
+#            print(xs.shape, ts.shape)
+            ts = ts * base ** (1 - p)
+#            print(ts)
+#            ts2 = 250 * [0,] + 250 * [.125, ] + 500 * [.25,]
+            ts2 = np.array(ts2).flatten()
+            plt.plot(xs/nn, ts2, linestyle='--', label='Lemma 2')
+#            plt.plot(xs/nn, ts, linestyle='-', label='Lemma 1')
+        else:
+            plt.plot(bars, np.zeros(len(bars)),
+                         linestyle='None', marker='|', c='black', ms = .6*ms)
+            plt.plot([0,1], np.zeros(2),
+                         linestyle='None', marker='|', c='black', ms = ms)
+        
         texts = []
         fps = []
 
@@ -45,25 +74,30 @@ class FPS:
             fac = base ** (-e-p)
             texts.append(r'\frac{1}{%d}'%fac)
             numbers = [m * fac for m in range(denom, base * denom)]
-            plt.plot(numbers, np.ones(len(numbers)),
-                     linestyle='None', marker='o', ms=5, label=r'e=-%d'%e)
+            color = 'C%d'%(e % 10)
+            plt.plot(numbers, np.zeros(len(numbers)),
+                     linestyle='None', marker='o', ms=8, c=color, label=r'e=-%d'%e)
             print(numbers, 'for exp=%d'%e)
             fps += numbers
-        plt.plot([0], np.ones(1),
-                     linestyle='None', marker='s', ms=5, label=r'e=0')
+        plt.plot([0], np.zeros(1),
+                     linestyle='None', marker='o', ms=8, c='black', label=r'e=0')
         
         print('The FPS contains %d+1 numbers'%len(fps))
         
         fsize = 20
-        plt.text(-.02, .965, '0', {'size':fsize})
-        plt.text(1-.02, .965, '1', {'size':fsize})
-        plt.hlines(1,0,1)  # Draw a horizontal line
-        plt.xlim(0,1)
-        plt.ylim(0.9,1.1)
-        plt.axis('off')
+
+#        plt.text(-.008, .75-1, '0', {'size':fsize})
+#        plt.text(1-.008, .75-1, '1', {'size':fsize})
+        plt.hlines(0,0,1)  # Draw a horizontal line
+        plt.xlim(-.01,1.01)
+#        plt.ylim(-0.4,0.4)
+#        plt.axis('off')
 #        plt.legend(prop={'size': 12}, loc=9, ncol=4, borderaxespad=0.) # upper center
         
-        plt.savefig('F_%db%dp%d.pdf'%(explb, base, p), bbox_inches='tight')
+
+
+        
+        plt.savefig('F_%db%dp%d.png'%(explb, base, p), bbox_inches='tight')
         plt.show()
     
     def round_down(self, array):
@@ -103,7 +137,7 @@ class FPS:
 
         self.fpsarray = fpsarray
 #        print(self.fpsarray)
-#        return self.get_nparray()
+        return self.fpsarray
     
     def get_nparray(self, fpsarray=None):
         """return numpy array"""
@@ -154,20 +188,21 @@ class FPS:
     
 if __name__ == '__main__':
     
-    fps = FPS(1, 4, 2)
-    fps = FPS(1, 2, 2)
+
+    fps = FPS(2, 2, 2)
 #    fps = FPS(0, 2, 2)
+#    fps = FPS(1, 4, 2)
 #    fps = FPS(5, 2, 3)
     
     fps.visualize()
     
-    a = np.array([0, 0.2, 0.3, 0.5, .7, 0.8, 1])
-    ra = fps.round_down(a)
-    print('exact:  ', a)
-    print('rounded:', ra)
-    
-    uba = fps.get_ub()
-    
-    print('ubarray:', uba)
+#    a = np.array([0, 0.2, 0.3, 0.5, .7, 0.8, 1])
+#    ra = fps.round_down(a)
+#    print('exact:  ', a)
+#    print('rounded:', ra)
+#    
+#    uba = fps.get_ub()
+#    
+#    print('ubarray:', uba)
 
    

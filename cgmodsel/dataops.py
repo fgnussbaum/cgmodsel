@@ -277,11 +277,11 @@ def load_prepare_split_data(filename: str,
     return cat_datatrain, cont_datatrain, cat_datatest, cont_datatest, meta
 
 
-def split_traintest(filename: str, splittingfactor, **kwargs):
+def split_traintest(filename: str, splittingfactor, cattype='index', **kwargs):
     """wrapper for  load_prepare_split_data, writes split data to csv"""
     _, _, _, _, meta = \
       load_prepare_split_data(filename, splittingfactor=splittingfactor,
-                              write_csv=True, cattype='index', **kwargs)
+                              write_csv=True, cattype=cattype, **kwargs)
 
     meta['ntrain'] = int(splittingfactor * meta['n_data'])
     return meta
