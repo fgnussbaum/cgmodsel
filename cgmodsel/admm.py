@@ -60,7 +60,7 @@ class AdmmGaussianSL(BaseSolverSL, BaseAdmm):
         """initialize ADMM variables"""
         dim = self.sigma0.shape[1]
         mat_theta = np.eye(dim)
-        mat_s = mat_theta
+        mat_s = mat_theta.copy()
         mat_l = np.zeros((dim, dim))
         mat_z = np.zeros((dim, dim))
 
@@ -320,9 +320,154 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         return obj
 
 ###############################################################################
-# pairwise CG models
+# (sparse) pairwise CG models
 ###############################################################################
 
+
+class GL_ADMM:
+    
+    def __init__(self, meta):
+#        self.dg = meta['dg']
+#        self.totalnumberofparams = 2 * self.dg ** 2
+        
+        self.alpha = None
+        self.lbda = None
+        
+        self.opts = {}
+    
+#    def __str__(self):
+#        s='<ADMMsolver> la=%s'%(self.lbda) 
+#        s+=', alpha=%s'%(self.alpha)
+#        s+=', sc_a=%s'%(self.scale_l1)
+#        
+#        return s
+
+    def _postsetup_data(self):
+        """called after drop_data"""
+#        self.n, self.dg = Y.shape
+        self.sigma0 = np.dot(self.contdata.T, self.contdata)
+        self.sigma0 /= self.meta['n_data']
+        
+#        self.unscaledlbda = np.sqrt(np.log(self.dg)/self.n)
+#        self.scales = self.unscaledlbda
+    
+    def _initialize_admm(self):
+        """initialize ADMM variables"""
+        dim = self.sigma0.shape[1] # dim = self.meta['dim']
+
+        mat_theta = np.eye(dim)
+#        mat_theta *= -1 # lower right block must be neg definite
+        # TODO: make Theta feasible/cleaned for plh
+#        mat_theta = self.prox.clean_theta(mat_theta)
+
+        alpha = np.zeros((self.meta['n_cg'], 1))
+        mat_s = mat_theta.copy()
+        mat_z = np.zeros((dim, dim))
+
+        return mat_theta, mat_s, mat_z, alpha
+
+    def _do_iter_admm(self, current_vars: tuple):
+        """perform computations of one ADMM iteration"""
+
+        mat_theta, mat_s, mat_z, alpha = current_vars
+
+        tmp = self.admm_param * self.sigma0 - self.admm_param * mat_z - mat_s
+        eig, mat_u = scipy.linalg.eigh(tmp) # TODO: symmetry?
+
+        eig_theta = (-eig + np.sqrt(np.square(eig) + 4 * self.admm_param)) / 2
+        # always positive (though might round to 0 due to bad precision)
+        eig_theta[eig_theta == 0] = 1e-16 # TODO: hacky, however previous calculation is not numerically stable
+        mat_theta = np.dot(np.dot(mat_u, np.diag(eig_theta)), mat_u.T)
+        mat_theta = (mat_theta + mat_theta.T) / 2
+        
+        # TODO: alpha
+
+        ## update S
+        mat_s_old = mat_s
+        mat_s, l1norm = self.shrink(mat_s - self.admm_param * mat_z,
+                                     self.admm_param * self.lbda)
+        mat_s = (mat_s + mat_s.T) / 2
+
+        ## update dual variables Z
+        resid_theta = mat_theta - mat_s
+        mat_z = mat_z - resid_theta / self.admm_param
+        mat_z = (mat_z + mat_z.T) / 2
+
+        ## diagnostics, reporting, termination checks
+        fronorm_s = np.linalg.norm(mat_s, 'fro')
+        fronorm_theta = np.linalg.norm(mat_theta, 'fro')
+
+        rnorm = np.linalg.norm(resid_theta, 'fro')
+        snorm = np.linalg.norm(mat_s - mat_s_old, 'fro') / self.admm_param
+
+        dim = mat_theta.shape[0]
+        eps_pri = np.sqrt(
+            2 * dim**2) * self.opts['abstol'] + self.opts['reltol'] * max(
+                (fronorm_theta**2, fronorm_s**2))
+        eps_dual = np.sqrt(2 * dim**2) * self.opts['abstol'] + self.opts[
+            'reltol'] * np.linalg.norm(mat_z, 'fro')
+
+        ## store stuff
+        residuals = rnorm, snorm, eps_pri, eps_dual
+        new_vars = mat_theta, mat_s, mat_z, alpha
+
+        stats = {}
+        stats['theta'] = mat_theta
+        stats['solution'] = mat_s, alpha
+        self.problem_vars = stats['solution']
+
+        stats['resid'] = resid_theta
+
+        stats['admm_obj'] = self.lbda * l1norm
+        # stats['true_obj'] = stats['admm_obj'] + self.plh(mat_s, alpha) # true objective
+        stats['admm_obj'] += np.sum(np.sum(np.multiply(mat_s, self.sigma0)))
+#        stats['admm_obj'] -=  np.linalg.slogdet(mat_s)[1]
+        stats['admm_obj'] -= np.sum(np.log(eig_theta))
+        return new_vars, residuals, stats
+
+
+    
+
+#    def get_f_vec(self, x):
+#        """vector objective value (for Benson algorithm) """
+#        S =  x.reshape((self.dg, self.dg))
+#   
+#        # smooth part
+#
+#        logdet_tiLambda = np.linalg.slogdet(S)[1] # logdet of PSD matrix (hopefully also PD)
+#
+#        fsmooth = np.trace(np.dot(S, self.Sigma0)) - logdet_tiLambda
+#
+#        # l1 part
+#        if self.opts['off']:
+#            l1sum = self.scale_l1 * l1norm_off(S)
+#        else:
+#            l1sum = self.scale_l1 * l1norm(S)
+#        
+#
+#        return np.array([np.squeeze(fsmooth), l1sum])
+#
+#    def get_objective(self, mat_s, alpha):
+##        print(self.lbda, self.rho)
+#        obj = self.lbda * l21norm
+#        obj += np.sum(np.sum(np.multiply(mat_s, self.cov_mat)))
+#        obj -=  np.linalg.slogdet(mat_s)[1]
+#        return obj
+#
+#
+#    def crossvalidate(self, x):
+#        S = x.reshape((self.dg, self.dg))
+#   
+#        # smooth part
+#        logdet_tiLambda = np.linalg.slogdet(S)[1] # logdet of PSD matrix (hopefully also PD)
+#        trace = np.trace(np.dot(S, self.Sigma0))
+#        
+#        lval_testdata = trace - logdet_tiLambda
+#
+#        return -logdet_tiLambda, trace, lval_testdata # note: this does not compute individual errors on the nodes (in contrast to PLH cross validation)
+
+
+## CG with Pseudo LH
 
 class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
     """
