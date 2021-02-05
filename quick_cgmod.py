@@ -147,9 +147,9 @@ if __name__ == '__main__':
     ## set regularization parameters ##
     # you may try different values, any pair of positive reals will do
     # e.g., regparams = (.1, 1)
-    model = learn_sl_model(data, regparams=data['regparams'])
+#    model = learn_sl_model(data, regparams=data['regparams'])
     
-#    model = learn_sparse_model(data, regparam=1.0)
+    model = learn_sparse_model(data, regparam=1.0)
     
     # model.get_params()
     # model.get_meanparams()
