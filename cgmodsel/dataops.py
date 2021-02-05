@@ -183,6 +183,8 @@ def load_prepare_data(datasource,
               (meta['contnames'][:20]))
 
     if shuffle:
+        if verb:
+            print('Randomly shuffling data...')
         data = data.sample(frac=1, random_state=shuffleseed)
 
     if meta['n_cg'] > 0:
@@ -201,6 +203,8 @@ def load_prepare_data(datasource,
     if standardize:
         # recommended to avoid exp overflow
         # means, sigmas =
+        if verb:
+            print('Standardizing continuous data...')
         standardize_continuous_data(cont_data)
 
     return cat_data, cont_data, meta

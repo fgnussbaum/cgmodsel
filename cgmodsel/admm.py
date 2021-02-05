@@ -324,16 +324,24 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
 ###############################################################################
 
 
-class GL_ADMM:
+class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
+    """
+    solve the problem
+       min l(S) + lambda * ||S||_1  s.t.  S positive definite
+    where l is the negative log likelihood with pairwise parameters S
+
+    The solver is an ADMM algorithm with an analytical solution of the
+    proximal mapping of the likelihood, compare Ma et al. 2012
+    """
     
-    def __init__(self, meta):
+    def __init__(self, *args, **kwargs):
+        """"must provide with dictionary meta"""
+        super().__init__(*args, **kwargs)  # Python 3 syntax
 #        self.dg = meta['dg']
 #        self.totalnumberofparams = 2 * self.dg ** 2
         
-        self.alpha = None
-        self.lbda = None
-        
-        self.opts = {}
+#        self.alpha = None
+#        self.lbda = None
     
 #    def __str__(self):
 #        s='<ADMMsolver> la=%s'%(self.lbda) 
@@ -345,7 +353,7 @@ class GL_ADMM:
     def _postsetup_data(self):
         """called after drop_data"""
 #        self.n, self.dg = Y.shape
-        self.sigma0 = np.dot(self.contdata.T, self.contdata)
+        self.sigma0 = np.dot(self.cont_data.T, self.cont_data)
         self.sigma0 /= self.meta['n_data']
         
 #        self.unscaledlbda = np.sqrt(np.log(self.dg)/self.n)
@@ -472,12 +480,11 @@ class GL_ADMM:
 class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
     """
     solve the problem
-       min l(S) + lambda * ||S||_{2,1}
-       s.t. Lambda[S]>0
-    where l is the pseudo likelihood with pairwise parameters Theta=S+L,
+       min l(S) + lambda * ||S||_{2,1}  s.t.  Lambda[S]>0
+    where l is the pseudo likelihood with pairwise parameters S,
     here Lambda[S] extracts the quantitative-quantitative interactions
-    from the pairwise parameter matrix Theta=(Q & R^T \\ R & -Lbda),
-    that is, Lambda[Theta] = Lbda
+    from the pairwise parameter matrix S=(Q & R^T \\ R & -Lbda),
+    that is, Lambda[S] = Lbda
 
     The estimated probability model has (unnormalized) density
         p(y) ~ exp(1/2 (D_x, y)^T Theta (D_x, y) + alpha^T y + u^T D_x)

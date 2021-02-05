@@ -142,6 +142,7 @@ class BaseCGSolver(abc.ABC):
             self.meta['ltot'] = 0
             self.meta['red_levels'] = False  # value irrelevant, no cat vars
             self.meta['cat_glims'] = [0]
+            self.meta['nonbinary'] = False
         else:
             if 'n_data' in self.meta:
                 assert self.meta['n_data'] == cat_data.shape[0]
