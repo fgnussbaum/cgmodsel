@@ -62,6 +62,8 @@ def learn_sparse_model(data, regparam):
 
     model = solver.get_canonicalparams()  # PW model instance
     model.repr_graphical(diagonal=0) # plottype='pn'
+    
+    return model
 
 def learn_sl_model(data, regparams):
     cat_data, cont_data, meta = load(data)  # load the data
@@ -126,12 +128,17 @@ if __name__ == '__main__':
         'regparams': (.5, 2),
     }
 
+    IRIS = {
+            'filename': 'datasets/iris.csv'#,
+#            'sparams': ''
+            }
     ###### select and load data set
 
     # ********************************* #
     # comment out all but one line here #
 #    data = CFMT
     data = LSVT
+    data = IRIS
 #    data = HELP
     # ********************************* #
 
@@ -140,6 +147,6 @@ if __name__ == '__main__':
     # e.g., regparams = (.1, 1)
 #    learn_sl_model(data, regparams=data['regparams'])
     
-    learn_sparse_model(data, regparam=1.0)
+    model = learn_sparse_model(data, regparam=1.0)
     
 
