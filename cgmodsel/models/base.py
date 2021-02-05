@@ -4,6 +4,9 @@
 
 """
 import abc
+import pickle
+import os
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -302,6 +305,8 @@ class BaseModel(abc.ABC):
     """
     base class for all models
     """
+    
+    name = 'base'
 
     def __init__(self):
         self.n_latent = 0  # number of latent variables
@@ -309,7 +314,6 @@ class BaseModel(abc.ABC):
         # (e.g. how it was learned)
 
         self.meta = {}
-        self.name = 'base'
 
     def get_numberofedges(self, threshold=10E-2):
         """ return number of edges in the graph"""
@@ -627,3 +631,44 @@ class BaseModelPW(BaseModel):
     def sample(self, n: int, gibbs_iter: int = 10):
         """sample n data points from the model"""
         raise NotImplementedError
+
+###############################################################################
+# Model IO
+###############################################################################
+
+    def update_annotations(self, **kwargs):
+        """add anotations to the model by specifying keyword args"""
+        self.annotations.update(kwargs)
+
+    def save(self, outfile=None, foldername="savedmodels", trial=None):
+        """save model to file <outfile> (if provided),
+        else save in folder <foldername> and try to infer a filename"""
+        params = {
+                'params': self.get_params(),
+                'meta': self.meta,
+                'annotations': self.annotations, 
+                'type': self.name
+                }
+
+        if outfile is None:  # try to construct filename from annotations
+            if not os.path.exists(foldername):
+                os.mkdir(foldername)
+            print("Directory ", foldername, " Created ")
+            if trial == -1:
+                outfile = "d%dgen" % (self.meta['n_cat'] + self.meta['n_cg'])
+            else:
+                try:
+                    n_data = self.annotations['n_data']
+
+    #                seed = self.annotations['seed']
+                except:
+                    raise (
+                        "No filename provided and could not construct filename")
+                outfile = "d%dn%d" % (self.meta['n_cat'] + self.meta['n_cg'],
+                                      n_data)
+            if not trial is None:
+                outfile += "_t%d" % (trial)
+            outfile = "%s/%s.npy" % (foldername, outfile)
+        pickle.dump(params, open(outfile, "wb"))
+
+        return outfile

@@ -3,6 +3,7 @@
 @author: Frank Nussbaum (frank.nussbaum@uni-jena.de), 2019
 
 """
+import pickle
 import numpy as np
 
 from cgmodsel.models.base import _invert_indices
@@ -44,10 +45,28 @@ class ModelPW(BaseModelPW):
         p(y) ~ exp(-1/2 y^T precisionmatrix y + alpha^T y)
     """
 
-    def __init__(self, pw_params: (dict, tuple, list), meta: dict, **kwargs):
-        BaseModelPW.__init__(self, pw_params, meta, **kwargs)
+    name = 'PW'
 
-        self.name = 'PW'
+    def __init__(self,
+                 pw_params: tuple = None,
+                 meta: dict = None,
+                 infile: str = None,
+                 annotations: dict = {},
+                 **kwargs):
+
+
+        if not infile is None:
+            # load model from file
+            params = pickle.load(open(infile, "rb"))
+            assert params['type'] == self.name, \
+            "Wrong model type (is %s, should be %s)"%(params['type'], self.name)
+            pw_params = params['params']
+            meta = params['meta']
+            annotations.update(params['annotations'])
+        
+        assert (not pw_params is None) and (not meta is None), "Incomplete data"
+        
+        BaseModelPW.__init__(self, pw_params, meta, **kwargs)
 
     def __str__(self):
         """a string representation of the model"""

@@ -90,6 +90,8 @@ def learn_sl_model(data, regparams):
 
     model = solver.get_canonicalparams()  # S + L model instance
     model.plot_sl(plottype='pn')
+    
+    return model
 
 
 if __name__ == '__main__':
@@ -129,8 +131,8 @@ if __name__ == '__main__':
     }
 
     IRIS = {
-            'filename': 'datasets/iris.csv'#,
-#            'sparams': ''
+            'filename': 'datasets/iris.csv',
+            'regparams': (.5, 2)
             }
     ###### select and load data set
 
@@ -139,14 +141,19 @@ if __name__ == '__main__':
 #    data = CFMT
     data = LSVT
     data = IRIS
-#    data = HELP
+#    data = ALLBUS
     # ********************************* #
 
     ## set regularization parameters ##
     # you may try different values, any pair of positive reals will do
     # e.g., regparams = (.1, 1)
-#    learn_sl_model(data, regparams=data['regparams'])
+    model = learn_sl_model(data, regparams=data['regparams'])
     
-    model = learn_sparse_model(data, regparam=1.0)
+#    model = learn_sparse_model(data, regparam=1.0)
+    
+    # model.get_params()
+    # model.get_meanparams()
+    # model.get_meta()
+    # model.save("saved_model")
     
 

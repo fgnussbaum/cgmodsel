@@ -4,7 +4,6 @@
 
 """
 import pickle
-import os
 
 import numpy as np
 
@@ -49,6 +48,8 @@ class ModelPWSL(BaseModelPW):
     instead of the representation in Chandrasekaran et al. (2011)
         p(y) ~ exp( -1/2 y^T (S-L) y + alpha^T y)
     """
+    
+    name = 'SL'  # model name
 
     def __init__(self,
                  sl_params: tuple = None,
@@ -60,13 +61,11 @@ class ModelPWSL(BaseModelPW):
         if not infile is None:
             # load model from file
             params = pickle.load(open(infile, "rb"))
-            sl_params = params[:-4]
-            meta = {
-                'n_cat': params[-4],
-                'n_cg': params[-3],
-                'sizes': params[-2]
-            }
-            annotations.update(params[-1])
+            assert params['type'] == self.name, \
+            "Wrong model type (is %s, should be %s)"%(params['type'], self.name)
+            sl_params = params['params']
+            meta = params['meta']
+            annotations.update(params['annotations'])
 
         assert (not sl_params is None) and (not meta is None), "Incomplete data"
 
@@ -80,8 +79,6 @@ class ModelPWSL(BaseModelPW):
             self.mat_l = pad(mat_l, self.meta['sizes'])
         else:
             self.mat_l = mat_l  # low-rank matrix
-
-        self.name = 'SL'  # model name
 
     def __str__(self):
         """a string representation for the model"""
@@ -636,45 +633,3 @@ class ModelPWSL(BaseModelPW):
         k       ... steps the Markov Chain should do until accepting the outcome
         """
         return self.to_pwmodel().sample(n, gibbs_iter=gibbs_iter)
-
-
-###############################################################################
-# Model IO
-###############################################################################
-
-    def update_annotations(self, **kwargs):
-        """add anotations to the model by specifying keyword args"""
-        self.annotations.update(kwargs)
-
-    def save(self, outfile=None, foldername="savedmodels", trial=None):
-        """save model to file in folder <foldername>
-
-        """
-        params = list(self.get_params()) + [
-            self.meta['n_cat'], self.meta['n_cg'], self.meta['sizes'],
-            self.annotations
-        ]
-
-        if not os.path.exists(foldername):
-            os.mkdir(foldername)
-            print("Directory ", foldername, " Created ")
-
-        if outfile is None:  # try to construct filename from annotations and
-            if trial == -1:
-                outfile = "d%dgen" % (self.meta['n_cat'] + self.meta['n_cg'])
-            else:
-                try:
-                    n_data = self.annotations['n_data']
-
-    #                seed = self.annotations['seed']
-                except:
-                    raise (
-                        "No filename provided and could not construct filename")
-                outfile = "d%dn%d" % (self.meta['n_cat'] + self.meta['n_cg'],
-                                      n_data)
-            if not trial is None:
-                outfile += "_t%d" % (trial)
-            outfile = "%s/%s.npy" % (foldername, outfile)
-        pickle.dump(params, open(outfile, "wb"))
-
-        return outfile
