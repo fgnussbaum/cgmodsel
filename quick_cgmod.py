@@ -40,6 +40,8 @@ def load(dataset: dict):
 def learn_sparse_model(data, regparam):
     cat_data, cont_data, meta = load(data)  # load the data
 
+    print(meta)
+    return
     ###### fit models
 
     ## initialize solver and drop data ##
@@ -54,9 +56,9 @@ def learn_sparse_model(data, regparam):
 
     solver.set_regularization_params(regparam)
 
-    ## solve the problem, that is, estimate a sparse + low-rank model ##
+    ## solve the problem, that is, estimate a sparse model ##
     print('Solving the problem...')
-    solver.solve(verb=0)
+    solver.solve(verb=0, use_u=0) # use_u=0 turns of univariate discrete parameters
 
     ###### model visualization
 
@@ -125,6 +127,8 @@ if __name__ == '__main__':
         'filename': "datasets/allbus2016_proc.csv",
         'regparams': (1, 2),
     }
+    
+    ADULT = {'filename':'datasets/adult_train.csv'}
     HELP = {
         'filename': "datasets/HELPmiss_proc.csv",
         'regparams': (.5, 2),
@@ -141,6 +145,7 @@ if __name__ == '__main__':
 #    data = CFMT
     data = LSVT
     data = IRIS
+    data = ADULT
 #    data = ALLBUS
     # ********************************* #
 
@@ -154,6 +159,6 @@ if __name__ == '__main__':
     # model.get_params()
     # model.get_meanparams()
     # model.get_meta()
-    # model.save("saved_model")
+    # model.save(outfile="saved_model")
     
 

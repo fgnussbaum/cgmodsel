@@ -17,7 +17,7 @@ import pandas as pd
 ###############################################################################
 
 
-def load_data_from_csv(filename: str, drop=(), verb: bool = False):
+def load_data_from_csv(filename: str, drop=(), names=None, verb: bool = False):
     """read data from csv file <filename> into a panda dataframe
     return the data frame"""
     tic = time.time()
@@ -27,6 +27,7 @@ def load_data_from_csv(filename: str, drop=(), verb: bool = False):
     data = pd.read_csv(filename,
                        index_col=None,
                        usecols=func,
+                       names=names,
                        skipinitialspace=0)
 
     #    print(data.columns)
@@ -41,8 +42,10 @@ def load_data_from_csv(filename: str, drop=(), verb: bool = False):
 def get_meta_data(data,
                   verb: bool = False,
                   catuniques=None,
+                  categoricals=None,
                   coded_colnames: bool = False,
-                  detectindexcols: bool = True):
+                  detectindexcols: bool = True,
+                  **kwargs):
     """ extracts and returns dictionary of meta data for <data>
     particularly, detect categorical/numerical columns
 
@@ -51,6 +54,7 @@ def get_meta_data(data,
                     (this might be useful if certain discrete labels are
                     unobserved)
                     or list of levels, if the same for all discrete variables
+    categoricals ... optional list of column names for discrete variables
 
     coded_colnames...  if True, recognize categorical variables by prefix 'X' in
                     column name
@@ -63,7 +67,15 @@ def get_meta_data(data,
     # TODO(franknu): use heuristic to diff between cat and numerical cols
     # e.g., #uniques < 10% of columns
     # also, there exists a dtype option in pd.read_csv
-    categoricals = []
+    if categoricals is None:
+        categoricals = []
+        infer_categoricals = True
+    else:
+        for categorical in categoricals:
+            if not categorical in data:
+                print('No column %s loaded, removing it from provided list of categoricals'%categorical)
+                categoricals.remove(categorical)
+        infer_categoricals = False
     numericals = []
     sizes = []
     n_cat = 0
@@ -83,19 +95,28 @@ def get_meta_data(data,
     for colname in data:
         column = data[colname]
 
-        categorical1 = column.dtype.name == "category" or \
-          column.dtype.name == "bool" or column.dtype == "object" or \
-           colname in categoricals or (colname[0] == 'X' and coded_colnames)
+        if infer_categoricals:
+            categorical1 = (column.dtype.name == "category" or 
+                            column.dtype.name == "bool" or 
+                            column.dtype == "object" or 
+                            colname in categoricals or
+                            (colname[0] == 'X' and coded_colnames))
 
-        detected = False
-        if not categorical1 and detectindexcols and column.dtype.name == "int64":
-            uniques = sorted(column.unique())
-            if len(uniques) == 1 or \
-                (len(uniques) == 2 and uniques[1] == uniques[0] + 1):
-                detected = True
+            categorical2 = False
+            if (not categorical1 and detectindexcols
+                and column.dtype.name == "int64"):
+                uniques = sorted(column.unique())
+                if len(uniques) == 1 or \
+                    (len(uniques) == 2 and uniques[1] == uniques[0] + 1):
+                    categorical2 = True
+                    
+            is_categorical = categorical1 or categorical2
+            if is_categorical:
+                categoricals.append(colname)
+        else:
+            is_categorical = colname in categoricals
 
-        if detected or categorical1:
-
+        if is_categorical:
             uniques = sorted(column.unique())
 
             if catuniques_provided:
@@ -106,8 +127,6 @@ def get_meta_data(data,
                         "Imcompatible catuniques, new label %s"%(label)
             else:
                 catuniques[colname] = uniques
-
-            categoricals.append(colname)
             sizes.append(len(catuniques[colname]))
             n_cat += 1
         else:
@@ -135,8 +154,8 @@ def get_meta_data(data,
     meta['n_cg'] = n_cg
     meta['n_data'] = data.shape[0]
 
-    meta['catnames'] = categoricals
-    meta['contnames'] = numericals
+    meta['categoricals'] = categoricals
+    meta['numerical'] = numericals
 
     meta['catval2ind'] = catval2ind
     meta['cat_glims'] = np.cumsum([0] + sizes)
@@ -146,7 +165,7 @@ def get_meta_data(data,
     meta['catuniques'] = catuniques
 
     if verb:
-        print('Data Meta Processing time:', time.time() - tic)
+        print('Meta data processing time: %.1f'%(time.time() - tic))
     return meta
 
 
@@ -160,6 +179,7 @@ def load_prepare_data(datasource,
                       verb: bool = False,
                       standardize: bool = False,
                       cattype: str = 'dummy',
+                      names=None,
                       shuffle: bool = False,
                       shuffleseed: int = 10,
                       **kwargs):
@@ -168,19 +188,19 @@ def load_prepare_data(datasource,
     drop       ... (optional) if loading data, specifies columns not to load
     """
     if isinstance(datasource, str):  # filename
-        data = load_data_from_csv(datasource, drop=drop)
+        data = load_data_from_csv(datasource, names=names, drop=drop)
     else:
         data = datasource
-    meta = get_meta_data(data, **kwargs)
+    meta = get_meta_data(data, verb=verb, **kwargs)
 
     if verb and isinstance(datasource, str):
         print('Filename:', datasource)
         print(
             'Loaded a dataset with %d samples, %d discrete and %d continuous variables.'
             % (meta['n_data'], meta['n_cat'], meta['n_cg']))
-        print('Discrete Variables (at most 20): %s' % (meta['catnames'][:20]))
+        print('Discrete Variables (at most 20): %s' % (meta['categoricals'][:20]))
         print('Continuous Variables (at most 20): %s\n' %
-              (meta['contnames'][:20]))
+              (meta['numerical'][:20]))
 
     if shuffle:
         if verb:
@@ -188,13 +208,13 @@ def load_prepare_data(datasource,
         data = data.sample(frac=1, random_state=shuffleseed)
 
     if meta['n_cg'] > 0:
-        cont_data = data[meta['contnames']].values
+        cont_data = data[meta['numerical']].values
     else:
         cont_data = np.empty((meta['n_data'], 0))
 
     # transform discrete variables to indicator data/ flat index etc.
     if meta['n_cat'] > 0:
-        cat_data = prepare_cat_data(data[meta['catnames']],
+        cat_data = prepare_cat_data(data[meta['categoricals']],
                                     meta,
                                     cattype=cattype)
     else:
@@ -309,9 +329,9 @@ def load_traintest_datasets(filename_trunk: str, verb: bool = True, **kwargs):
               (meta['n_cat'], meta['n_cg']))
         print('Training data has %d samples, test data has %d samples' %
               (meta['n_data'], meta_test['n_data']))
-        print('Discrete Variables (at most 20): %s' % (meta['catnames'][:20]))
+        print('Discrete Variables (at most 20): %s' % (meta['categoricals'][:20]))
         print('Continuous Variables (at most 20): %s\n' %
-              (meta['contnames'][:20]))
+              (meta['numerical'][:20]))
 
     return cat_datatrain, cont_datatrain, cat_datatest, cont_datatest, meta
 
@@ -374,7 +394,7 @@ def prepare_cat_data(data,
     if n_cat == 0:
         return np.array([])
 
-    catcols = meta['catnames']
+    catcols = meta['categoricals']
     catval2ind = meta['catval2ind']
     cat_glims = meta['cat_glims']
     ltot = cat_glims[-1]
@@ -478,12 +498,12 @@ def write_to_csv(filename: str,
                   in particular they are eliminated permanently from
                   the continuous data cont_data
       gaussnames: column names for Gaussian variables
-      catnames:   column names for Gaussian variables
+      categoricals:   column names for Gaussian variables
     """
     ## column names
     n_cat = meta['n_cat']
-    if 'catnames' in meta:
-        catcols = meta['catnames'][:]
+    if 'categoricals' in meta:
+        catcols = meta['categoricals'][:]
         assert len(catcols) == n_cat
     else:
         catcols = ['X%d' % (i) for i in range(n_cat)]

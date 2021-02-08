@@ -6,7 +6,7 @@
 import pickle
 import numpy as np
 
-from cgmodsel.models.base import _invert_indices
+from cgmodsel.models.base import _invert_indices, unpad
 from cgmodsel.models.base import BaseModelPW
 
 # pylint: disable=R0914 # too many local variable
@@ -198,6 +198,15 @@ class ModelPW(BaseModelPW):
     def get_params(self):
         """return model parameters """
         return self.vec_u, self.mat_q, self.mat_r, self.alpha, self.mat_lbda
+    
+    def get_pairwiseparams(self, padded=True):
+        """return pairwise parameter matrix Theta, u, alpha"""
+        theta = self.get_group_mat(aggr=False)
+        if not padded:
+            sizes = self.meta['sizes']
+            theta = unpad(theta, sizes)
+            return theta, unpad(self.vec_u, sizes), self.alpha
+        return theta, self.vec_u, self.alpha
 
     def marginalize(self, drop_idx: (tuple, list), verb: bool = False):
         """ marginalize out CG variables

@@ -545,6 +545,7 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
         mat_s_old = mat_s
         mat_s, l21norm = self.shrink(mat_s - self.admm_param * mat_z,
                                      self.admm_param * self.lbda)
+
         mat_s = (mat_s + mat_s.T) / 2
         if not self.opts['use_u']:  # no univariate parameters
             ltot = self.meta['ltot']
@@ -577,6 +578,7 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
         stats = {}
         stats['theta'] = mat_theta
         stats['solution'] = mat_s, alpha
+        stats['dual'] = mat_z
         self.problem_vars = stats['solution']
 
         stats['resid'] = resid_theta
@@ -591,13 +593,14 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
         """called after drop_data"""
         self.prox = LikelihoodProx(self.cat_data, self.cont_data, self.meta)
 
-    def get_objective(self, mat_s, vec_u=None, alpha=None):
+    def get_objective(self, mat_s, vec_u=None, alpha=None, use_reg=True):
         """return 'real' objective """
         if self.meta['n_cat'] > 0 and not vec_u is None:
             mat_s = mat_s.copy()
             mat_s[:self.meta['ltot'], :self.meta['ltot']] += 2 * np.diag(vec_u)
         if alpha is None:
             alpha = np.zeros(self.meta['n_cg'])
-
-        obj = self.lbda * self.sparse_norm(mat_s) + self.prox.plh(mat_s, alpha)
+        obj = self.prox.plh(mat_s, alpha)
+        if use_reg:
+            obj += self.lbda * self.sparse_norm(mat_s) 
         return obj

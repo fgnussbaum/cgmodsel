@@ -15,63 +15,88 @@ import numpy as np
 # norms and shrinkage operators
 #################################################################################
 
-
-def grp_soft_shrink(mat,
-                    tau,
-                    n_groups=None,
-                    glims=None,
-                    off=False,
-                    weights=None):
-    """
-    calculate (group-)soft-shrinkage of mat with shrinkage parameter tau
-    soft shrink if no n_groups is given
-    else must provide with n_groups (# groups per row/column) and
-    cumulative sizes of groups (glims)
-
-    this code could be made much faster
-    (by parallizing loops, efficient storage access)
-    """
-    shrinkednorm = 0
-    if n_groups is None:
-        tmp = np.abs(mat)
-        if not weights is None: # weighted l1-norm
-#            tmp = np.multiply(tmp, weights).flatten
-            tmp -= tau * weights
-        else:
-            tmp -= tau
-        tmp[tmp < 1e-25] = 0
-        shrinked = np.multiply(np.sign(mat), tmp)
-        l1norm = np.sum(np.abs(shrinked.flatten()))
-        if off:
-            l1norm -= np.sum(np.abs(np.diag(shrinked)))
-            shrinked -= np.diag(np.diag(shrinked))
-            shrinked += np.diag(np.diag(mat))
-
-        return shrinked, l1norm
-
-    # group soft shrink
-    if weights is None:
-        weights = np.ones(mat.shape) # TODO(franknu): improve style
-    tmp = np.empty(mat.shape)
-    for i in range(n_groups):
-        for j in range(n_groups):
-            # TODO(franknu): use symmetry
-            group = mat[glims[i]:glims[i + 1], glims[j]:glims[j + 1]]
-            if (i == j) and off:
-                tmp[glims[i]:glims[i + 1], glims[i]:glims[i + 1]] = group
-                continue
-
-            gnorm = np.linalg.norm(group, 'fro')
-            w_ij = tau * weights[i,j]
-            if gnorm <= w_ij:
-                tmp[glims[i]:glims[i + 1],
-                    glims[j]:glims[j + 1]] = np.zeros(group.shape)
+try:
+#    import os
+#    os.system('python cgmodsel/setup.py build_ext --inplace')
+    from cgmodsel.shrink.shrink import grp as grp_soft_shrink # requires setup
+#    from shrink.shrink import grp_weighted as grp_soft_shrink_weighted
+    print('successfully imported shrink.shrink')
+except Exception as e:
+    print(e)
+    # naive and slow implementations
+    print('''
+          Failed to import Cython shrink functions, setup is required...
+          using slower native Python functions instead''')
+#    def grp_soft_shrink2(mat, tau, glims):
+#        """naive slow Python implementation RPCA version"""
+#        shrinkednorm = 0
+#        for i in range(len(glims) - 1):
+#            for j in range(mat.shape[1]):
+#                # g = z[glims[i]:glims[i+1], j] # i-th group of j-th data vector
+#    
+#                gnorm = np.linalg.norm(mat[glims[i]:glims[i + 1], j])
+#                if gnorm > 0:
+#                    fac = max(0, (1 - tau / gnorm))
+#                    mat[glims[i]:glims[i + 1], j] *= fac  # in place
+#                    shrinkednorm += fac * gnorm
+#    
+#        return mat, shrinkednorm
+    def grp_soft_shrink(mat,
+                        tau,
+                        glims=None,
+                        off=False,
+                        n_groups=None,
+                        weights=None):
+        """
+        calculate (group-)soft-shrinkage of mat with shrinkage parameter tau
+        soft shrink if no n_groups is given
+        else must provide with n_groups (# groups per row/column) and
+        cumulative sizes of groups (glims)
+    
+        this code could be made much faster
+        (by parallizing loops, efficient storage access)
+        """
+        shrinkednorm = 0
+        if n_groups is None:
+            tmp = np.abs(mat)
+            if not weights is None: # weighted l1-norm
+    #            tmp = np.multiply(tmp, weights).flatten
+                tmp -= tau * weights
             else:
-                tmp[glims[i]:glims[i+1], glims[j]:glims[j+1]] = \
-                    group * (1 - w_ij / gnorm)
-                shrinkednorm += (1 - w_ij / gnorm) * gnorm
-
-    return tmp, shrinkednorm
+                tmp -= tau
+            tmp[tmp < 1e-25] = 0
+            shrinked = np.multiply(np.sign(mat), tmp)
+            l1norm = np.sum(np.abs(shrinked.flatten()))
+            if off:
+                l1norm -= np.sum(np.abs(np.diag(shrinked)))
+                shrinked -= np.diag(np.diag(shrinked))
+                shrinked += np.diag(np.diag(mat))
+    
+            return shrinked, l1norm
+    
+        # group soft shrink
+        if weights is None:
+            weights = np.ones(mat.shape) # TODO(franknu): improve style
+        tmp = np.empty(mat.shape)
+        for i in range(n_groups):
+            for j in range(n_groups):
+                # TODO(franknu): use symmetry
+                group = mat[glims[i]:glims[i + 1], glims[j]:glims[j + 1]]
+                if (i == j) and off:
+                    tmp[glims[i]:glims[i + 1], glims[i]:glims[i + 1]] = group
+                    continue
+    
+                gnorm = np.linalg.norm(group, 'fro')
+                w_ij = tau * weights[i,j]
+                if gnorm <= w_ij:
+                    tmp[glims[i]:glims[i + 1],
+                        glims[j]:glims[j + 1]] = np.zeros(group.shape)
+                else:
+                    tmp[glims[i]:glims[i+1], glims[j]:glims[j+1]] = \
+                        group * (1 - w_ij / gnorm)
+                    shrinkednorm += (1 - w_ij / gnorm) * gnorm
+    
+        return tmp, shrinkednorm
 
 
 def l21norm(mat, n_groups=None, glims=None, off=False, weights=None):

@@ -176,8 +176,8 @@ class BaseCGSolver(abc.ABC):
             # calculate cumulative # of levels/ group delimiters
             self.meta['cat_glims'] = np.cumsum([0] + self.meta['sizes'])
 
-            self.meta['glims'] = list(self.meta['cat_glims']) + \
-                [1 + self.meta['ltot'] + s for s in range(self.meta['n_cg'])]
+            self.meta['glims'] = np.cumsum([0] + self.meta['sizes']
+            + self.meta['n_cg'] * [1,])
             # TODO(franknu): self.meta['glims'] for sparse reg only
 
             self.meta['nonbinary'] = (self.meta['ltot'] > self.meta['n_cat'] *
@@ -227,16 +227,16 @@ class BaseSparseSolver(BaseCGSolver):
 
     def shrink(self, mat_s, tau):
         """return (group)- soft shrink of matrix mat_s with tau """
+        # TODO (franknu): add support for weighted group norm
         if self.meta['nonbinary']:
             return grp_soft_shrink(mat_s, tau,
-                                   self.meta['n_cat'] + self.meta['n_cg'],
+#                                   self.meta['n_cat'] + self.meta['n_cg'],
                                    self.meta['glims'],
-                                   self.opts['off'],
-                                   weights=self.weights)
+                                   self.opts['off'])
         return grp_soft_shrink(mat_s,
                                tau,
-                               off=self.opts['off'],
-                               weights=self.weights)
+                               self.meta['glims'], # 
+                               off=self.opts['off'])
 
     def sparse_norm(self, mat_s):
         """return l21/ l1-norm of mat_s"""

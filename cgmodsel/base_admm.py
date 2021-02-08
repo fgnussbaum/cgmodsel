@@ -70,12 +70,14 @@ class BaseAdmm(abc.ABC):
 
         self.opts.setdefault('verb', 0)
 
-    def _solve(self):
+    def _solve(self, warminit=None):
         """
         solve a generic ADMM problem
         """
         ## initialization
         current_vars = self._initialize_admm()
+        if not warminit is None:
+            current_vars = warminit
 
         hist = np.empty((5, self.opts['maxiter'] + 1))
         history = {
@@ -212,7 +214,7 @@ class BaseAdmm(abc.ABC):
                 print('scaling_factor', scaling_factor)
             self.admm_param *= scaling_factor
 
-    def solve(self, report=0, **kwargs):
+    def solve(self, report=0, warminit=None, **kwargs):
         """solve the problem """
 
         self.opts.update(**kwargs)  # update solver options
@@ -222,7 +224,7 @@ class BaseAdmm(abc.ABC):
 
         ## select appropriate sparsity-inducing norms and corresponding proximity operators
 
-        out = self._solve()
+        out = self._solve(warminit=warminit)
 
         if report:
             self._report(out)
