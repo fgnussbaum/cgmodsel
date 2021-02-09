@@ -100,6 +100,8 @@ def learn_sparse_models(dataname, srange, logger, opts,
         warminit = out['theta'], out['solution'][0], out['dual'], out['solution'][1]
 #        print(warminit)
         model = solver.get_canonicalparams()  # PW model instance
+        model.update_annotations(categoricals=categoricals,
+                                 numericals=numericals)
         model.save("%s/%s%df%d.pw"%(MODELFOLDER, dataname, frac, i))
         
         theta, u, alpha = model.get_pairwiseparams(padded=False)
@@ -153,8 +155,8 @@ if __name__ == '__main__':
 #    logger.info('Test')
 
 
-    steps = 5
-    end = 3
+    steps = 4
+    end = 0
     frac = 10
     srange = end, steps, frac
     opts = {'maxiter':1000}
