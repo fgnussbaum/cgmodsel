@@ -6,6 +6,7 @@
 requires package cgmodsel (check out the latest version from the spwmodels branch)
 """
 # pylint: disable=C0103
+import sys
 import time
 import numpy as np
 
@@ -111,6 +112,7 @@ def learn_sparse_models(dataname, srange, logger, opts,
         msg = '[%s] alpha=%d/%d gamma=%.3f (%.1fs, GE=%.2f, it=%d)'%(
                 dataname, i, frac, gamma, t2 - t1, plh_test, out['iter'])
         print(msg)
+        sys.stdout.flush()
         logger.info(msg)
         if plh_test < best_ge:
             best_ge = plh_test
@@ -138,12 +140,12 @@ if __name__ == '__main__':
 #    dataname = 'breast' # D=1, C=10, N=411
 #    dataname = 'breast-cancer' # D=10, C=0, N=165
 #    dataname = 'cars' # D=2, C=7, N=235
-#    dataname = 'cleve' # D=, C=, N=
-#    dataname = 'crx' # D=, C=, N=
-#    dataname = 'diabetes' # D=, C=, N=
-#    dataname = 'german' # D=, C=, N=
-#    dataname = 'german-org' # D=, C=, N=
-#    dataname = 'heart' # D=, C=, N=
+#    dataname = 'cleve' # D=8, C=6, N=178
+#    dataname = 'crx' # D=10, C=6, N=418
+#    dataname = 'diabetes' # D=1, C=8, N=461
+#    dataname = 'german' # D=14, C=7, N=600
+#    dataname = 'german-org' # D=13, C=12, N=600
+#    dataname = 'heart' # D=1, C=13, N=162
 #    dataname = 'iris' # D=, C=, N=
     # ********************************* #
 
@@ -155,11 +157,11 @@ if __name__ == '__main__':
 #    logger.info('Test')
 
 
-    steps = 4
+    steps = 10
     end = 0
-    frac = 10
+    frac = 100
     srange = end, steps, frac
-    opts = {'maxiter':1000}
+    opts = {'maxiter':1200}
     model = learn_sparse_models(dataname, srange, logger, opts, solver_verb=100)
     
 
