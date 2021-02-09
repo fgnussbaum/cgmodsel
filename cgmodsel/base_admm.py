@@ -103,7 +103,8 @@ class BaseAdmm(abc.ABC):
             history['eps_pri'][i] = eps_pri
             history['eps_dual'][i] = eps_dual
 
-            if self.opts['verb']:
+#            print(i % self.opts['verb'])
+            if self.opts['verb'] and i % self.opts['verb'] == 0:
                 print('%3d\t%10.4f %10.4f %10.4f %10.4f %10.2f' %
                       (i, history['r_norm'][i], history['eps_pri'][i],
                        history['s_norm'][i], history['eps_dual'][i],

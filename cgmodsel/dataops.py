@@ -187,10 +187,14 @@ def load_prepare_data(datasource,
     datasource ... either filename of csv-file (load data!) or panda data frame
     drop       ... (optional) if loading data, specifies columns not to load
     """
+    t1 = time.time()
     if isinstance(datasource, str):  # filename
         data = load_data_from_csv(datasource, names=names, drop=drop)
     else:
         data = datasource
+    t2 = time.time()
+    if verb:
+        print("Data loading time: %.1f"%(t2-t1))
     meta = get_meta_data(data, verb=verb, **kwargs)
 
     if verb and isinstance(datasource, str):
