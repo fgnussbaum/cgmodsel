@@ -38,7 +38,12 @@ def learn_sparse_models(dataname, srange, logger, opts,
                 numericals.append(name)
             else:
                 categoricals.append(name)
-                levels = levels[:-2].split(',')
+                if levels[-1] == '.':
+                    levels = levels[:-1]
+                else:
+                    levels = levels[:-2]
+                levels = levels.split(',')
+                print(name, levels)
                 try:
                     levels = [int(level) for level in levels]
                 except:
