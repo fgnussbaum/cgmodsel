@@ -43,7 +43,6 @@ def learn_sparse_models(dataname, srange, logger, opts,
                 else:
                     levels = levels[:-2]
                 levels = levels.split(',')
-                print(name, levels)
                 try:
                     levels = [int(level) for level in levels]
                 except:
