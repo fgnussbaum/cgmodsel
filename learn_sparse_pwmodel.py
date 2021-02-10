@@ -66,7 +66,9 @@ def learn_sparse_models(dataname, srange, logger, opts,
                                                   catuniques=catuniques,
                                                   cattype='dummy_red',
                                                   **opts)
-    return
+#    print(meta)
+#    print(np.prod(meta['sizes']))
+#    return
     t1 = time.time()
 #    print(meta)
 #    return
