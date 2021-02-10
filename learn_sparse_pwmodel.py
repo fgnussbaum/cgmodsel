@@ -51,7 +51,7 @@ def learn_sparse_models(dataname, srange, logger, opts,
                 catuniques[name] = levels
 #    print(categoricals)
 #    print(numericals)
-#    return
+
     cat_data, cont_data, meta = load_prepare_data(file_train,
                                                   verb=True,
                                                   categoricals=categoricals,
@@ -67,6 +67,8 @@ def learn_sparse_models(dataname, srange, logger, opts,
                                                   cattype='dummy_red',
                                                   **opts)
     t1 = time.time()
+#    print(meta)
+#    return
     meanssigmas = standardize_continuous_data(cont_data)
     standardize_continuous_data(cont_test, meanssigmas)
     if verb:
@@ -102,7 +104,11 @@ def learn_sparse_models(dataname, srange, logger, opts,
 #        print(warminit)
         model = solver.get_canonicalparams()  # PW model instance
         model.update_annotations(categoricals=categoricals,
-                                 numericals=numericals)
+                                 numericals=numericals,
+                                 alpha=alpha,
+                                 gamma=gamma,
+                                 iter =out['iter'])
+        print(model.annotations)
         model.save("%s/%s%df%d.pw"%(MODELFOLDER, dataname, frac, i))
         
         theta, u, alpha = model.get_pairwiseparams(padded=False)
@@ -134,12 +140,13 @@ if __name__ == '__main__':
     dataname = 'adult' # D=, C=, N=
 #    dataname = 'australian' # D=, C=, N=
 #    dataname = 'anneal-U' # D=33, C=6, N=539
-#    dataname = 'autism' # D=8, C=10, N=2217
+    dataname = 'autism' # D=18, C=10, N=2217
+    dataname = 'autism2' # D=7, C=21, N=2217
 #    dataname = 'auto'  # D=11, C=15, N=97
 #    dataname = 'balance-scale' # D=1, C=4, N=375
 #    dataname = 'breast' # D=1, C=10, N=411
 #    dataname = 'breast-cancer' # D=10, C=0, N=165
-#    dataname = 'cars' # D=2, C=7, N=235
+    dataname = 'cars' # D=2, C=7, N=235
 #    dataname = 'cleve' # D=8, C=6, N=178
 #    dataname = 'crx' # D=10, C=6, N=418
 #    dataname = 'diabetes' # D=1, C=8, N=461
@@ -157,9 +164,9 @@ if __name__ == '__main__':
 #    logger.info('Test')
 
 
-    steps = 10
-    end = 0
-    frac = 100
+    steps = 1
+    end = 5
+    frac = 10
     srange = end, steps, frac
     opts = {'maxiter':1200}
     model = learn_sparse_models(dataname, srange, logger, opts, solver_verb=100)

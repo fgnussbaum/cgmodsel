@@ -195,6 +195,17 @@ class ModelPW(BaseModelPW):
 
         return self._get_meanparams(pwparams)
 
+    def get_no_edges(self, threshold=1e-2, **kwargs):
+        """"return number of edges of S
+        threshold ... cutoff for edges and principal components
+        """
+
+        graph = self.get_graph(threshold=threshold, **kwargs)
+        graph = graph.astype(int)
+        no_edges = int(np.sum(graph) / 2)
+
+        return no_edges
+    
     def get_params(self):
         """return model parameters """
         return self.vec_u, self.mat_q, self.mat_r, self.alpha, self.mat_lbda
