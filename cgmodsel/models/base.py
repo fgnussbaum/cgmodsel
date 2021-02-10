@@ -5,6 +5,7 @@
 """
 import abc
 import pickle
+import time
 import os
 
 import numpy as np
@@ -649,6 +650,7 @@ class BaseModelPW(BaseModel):
                 'annotations': self.annotations, 
                 'type': self.name
                 }
+        params['annotations']['timestamp'] = time.time()
 
         if outfile is None:  # try to construct filename from annotations
             if not os.path.exists(foldername):
