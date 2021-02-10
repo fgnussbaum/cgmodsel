@@ -168,7 +168,7 @@ if __name__ == '__main__':
 
 
     steps = 5
-    end = 5
+    end = 0
     frac = 1000
     srange = end, steps, frac
     opts = {'maxiter':1200}
