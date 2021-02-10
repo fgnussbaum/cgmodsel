@@ -167,9 +167,9 @@ if __name__ == '__main__':
 #    logger.info('Test')
 
 
-    steps = 10
-    end = 0
-    frac = 100
+    steps = 5
+    end = 5
+    frac = 1000
     srange = end, steps, frac
     opts = {'maxiter':1200}
     model = learn_sparse_models(dataname, srange, logger, opts, solver_verb=100)
