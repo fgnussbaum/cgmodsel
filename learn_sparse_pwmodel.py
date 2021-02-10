@@ -140,13 +140,13 @@ if __name__ == '__main__':
     dataname = 'adult' # D=, C=, N=
 #    dataname = 'australian' # D=, C=, N=
 #    dataname = 'anneal-U' # D=33, C=6, N=539
-    dataname = 'autism' # D=18, C=10, N=2217
-    dataname = 'autism2' # D=7, C=21, N=2217
+#    dataname = 'autism' # D=18, C=10, N=2217
+#    dataname = 'autismC' # D=7, C=21, N=2217
 #    dataname = 'auto'  # D=11, C=15, N=97
 #    dataname = 'balance-scale' # D=1, C=4, N=375
 #    dataname = 'breast' # D=1, C=10, N=411
 #    dataname = 'breast-cancer' # D=10, C=0, N=165
-    dataname = 'cars' # D=2, C=7, N=235
+#    dataname = 'cars' # D=2, C=7, N=235
 #    dataname = 'cleve' # D=8, C=6, N=178
 #    dataname = 'crx' # D=10, C=6, N=418
 #    dataname = 'diabetes' # D=1, C=8, N=461
@@ -164,8 +164,8 @@ if __name__ == '__main__':
 #    logger.info('Test')
 
 
-    steps = 1
-    end = 5
+    steps = 5
+    end = 0
     frac = 10
     srange = end, steps, frac
     opts = {'maxiter':1200}

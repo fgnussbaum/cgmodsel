@@ -66,7 +66,9 @@ class ModelPW(BaseModelPW):
         
         assert (not pw_params is None) and (not meta is None), "Incomplete data"
         
-        BaseModelPW.__init__(self, pw_params, meta, **kwargs)
+        BaseModelPW.__init__(self, pw_params, meta,
+                             annotations=annotations,
+                             **kwargs)
 
     def __str__(self):
         """a string representation of the model"""
