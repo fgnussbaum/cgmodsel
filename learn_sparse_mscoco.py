@@ -60,12 +60,12 @@ def learn_sparse_model(logger, opts,
 #    meanssigmas = standardize_continuous_data(cont_data)
 #    standardize_continuous_data(cont_test, meanssigmas)
 
-    print(1)
+#    print(1)
     ## initialize solver/validater and drop data ##
     solver = AdmmCGaussianPW()
-    print(2)
+#    print(2)
     solver.drop_data((cat_data, cont_data), meta)
-    print(3)
+#    print(3)
 #    validater = AdmmCGaussianPW()
 #    validater.drop_data((cat_test, cont_test), meta)
     
@@ -93,7 +93,7 @@ def learn_sparse_model(logger, opts,
 #        print(warminit)
         model = solver.get_canonicalparams()  # PW model instance
         model.update_annotations(categoricals=LABELS,
-                                 numericals=['Y%d' for i in range(cont_data.shape[1])],
+                                 numericals=['Y%d'%i for i in range(cont_data.shape[1])],
 #                                 alpha=alpha,
                                  gamma=gamma,
                                  iter =out['iter'])
