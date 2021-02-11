@@ -134,7 +134,51 @@ def learn_sparse_models(dataname, srange, logger, opts,
     
     return best_model
 
+def parse_mscoco():
+    import pickle, csv
+    labels = [
+            "person", "bicycle", "car", "motorcycle", "airplane", "bus",
+            "train", "truck", "boat", "traffic light", "fire hydrant",
+            "street sign", "stop sign", "parking meter", "bench", "bird",
+            "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra",
+            "giraffe", "hat", "backpack", "umbrella", "shoe", "eye glasses",
+            "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard",
+            "sports ball", "kite", "baseball bat", "baseball glove",
+            "skateboard", "surfboard", "tennis racket", "bottle",
+            "plate", "wine glass", "cup", "fork", "knife", "spoon", "bowl",
+            "banana", "apple", "sandwich", "orange", "broccoli",
+            "carrot", "hot dog", "pizza", "donut", "cake", "chair",
+            "couch", "potted plant", "bed", "mirror", "dining table",
+            "window", "desk", "toilet", "door", "tv", "laptop", "mouse",
+            "remote", "keyboard", "cell phone", "microwave", "oven",
+            "toaster", "sink", "refrigerator", "blender", "book",
+            "clock", "vase", "scissors", "teddy bear",
+            "hair drier", "toothbrush", "hair brush"]
+    print(len(labels))
+    
+    prefix = 'data/mscoco/'
+    R_train = open(prefix+'R_train.pkl', "rb")
+    cont_data = pickle.load(R_train)
+    m, n = cont_data.shape
+    print(m, n)
+#    return
+    cat_data = np.zeros((m, 100))
+    y_train = open(prefix+'Y_train.pkl', "rb")
+    y_train = pickle.load(y_train)
+    for i in range(m):
+        for j in range(100):
+            label = y_train[i, j] - 1
+            cat_data[i, label] == 1
+#    print(y_train[:1, :], y_train.shape)
+            
+    with open('data/mscoco.train.csv', 'w', newline='') as outcsv: # newline='' for WINDOWS
 
+        writer = csv.writer(outcsv)
+        writer.writerow(["Y%d"%(i) for i in range(256)] + 
+                         ['X'+label for label in labels])
+        for i in range(m):
+            writer.writerow(list(cont_data[i, :]) + list(cat_data[i, :]))
+    
 
 if __name__ == '__main__':
 
@@ -157,8 +201,9 @@ if __name__ == '__main__':
 #    dataname = 'german-org' # D=13, C=12, N=600
 #    dataname = 'heart' # D=1, C=13, N=162
 #    dataname = 'iris' # D=, C=, N=
+    dataname = 'mscoco'
     # ********************************* #
-
+    parse_mscoco()
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
 
     logger = logging.getLogger('sp_pw') # https://stackoverflow.com/questions/35325042/python-logging-disable-logging-from-imported-modules
@@ -172,6 +217,6 @@ if __name__ == '__main__':
     frac = 1000
     srange = end, steps, frac
     opts = {'maxiter':1200}
-    model = learn_sparse_models(dataname, srange, logger, opts, solver_verb=100)
+#    model = learn_sparse_models(dataname, srange, logger, opts, solver_verb=100)
     
 

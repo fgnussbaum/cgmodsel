@@ -41,7 +41,7 @@ def learn_sparse_model(data, regparam):
     cat_data, cont_data, meta = load(data)  # load the data
 
     print(meta)
-    return
+#    return
     ###### fit models
 
     ## initialize solver and drop data ##
@@ -58,7 +58,7 @@ def learn_sparse_model(data, regparam):
 
     ## solve the problem, that is, estimate a sparse model ##
     print('Solving the problem...')
-    solver.solve(verb=0, use_u=0) # use_u=0 turns of univariate discrete parameters
+    solver.solve(verb=1, use_u=0) # use_u=0 turns of univariate discrete parameters
 
     ###### model visualization
 
@@ -138,6 +138,11 @@ if __name__ == '__main__':
             'filename': 'datasets/iris.csv',
             'regparams': (.5, 2)
             }
+    
+    MSCOCO = {
+            'filename': 'data/mscoco.train.csv',
+            'sparams': {'coded_colnames':True}
+            }
     ###### select and load data set
 
     # ********************************* #
@@ -146,7 +151,7 @@ if __name__ == '__main__':
     data = LSVT
     data = IRIS
     data = ADULT
-#    data = ALLBUS
+    data = MSCOCO
     # ********************************* #
 
     ## set regularization parameters ##
@@ -154,7 +159,7 @@ if __name__ == '__main__':
     # e.g., regparams = (.1, 1)
 #    model = learn_sl_model(data, regparams=data['regparams'])
     
-    model = learn_sparse_model(data, regparam=1.0)
+    model = learn_sparse_model(data, regparam=5.0)
     
     # model.get_params()
     # model.get_meanparams()
