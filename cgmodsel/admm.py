@@ -503,9 +503,11 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
         super().__init__(*args, **kwargs)  # Python 3 syntax
 
         self.name = 'S_ADMM'
+        self.graph = None
 
         self.prox = None
         self.cat_format_required = 'dummy_red'
+
 
     def _initialize_admm(self):
         """initialize ADMM variables"""
@@ -543,8 +545,21 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
 
         ## update S
         mat_s_old = mat_s
-        mat_s, l21norm = self.shrink(mat_s - self.admm_param * mat_z,
-                                     self.admm_param * self.lbda)
+        if self.graph is None:
+            # shrink matrix according to regularization
+            mat_s, l21norm = self.shrink(mat_s - self.admm_param * mat_z,
+                                         self.admm_param * self.lbda)
+        else:
+            # project matrix S on the graph
+            mat_s = mat_s.copy()
+            glims = self.meta['glims']
+            sizes = self.meta['sizes_all']
+            for i in range(self.meta["dim"]):
+                for j in range(self.meta["dim"]):
+                    mat_s[glims[i]:glims[i + 1], glims[j]:glims[j] + 1] = (
+                            np.zeros((sizes[i], sizes[j])))
+                    
+            
 
         mat_s = (mat_s + mat_s.T) / 2
         if not self.opts['use_u']:  # no univariate parameters
@@ -604,3 +619,8 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
         if use_reg:
             obj += self.lbda * self.sparse_norm(mat_s) 
         return obj
+    
+    def set_graph(self, graph):
+        self.graph = graph
+        
+        assert self.graph.shape[0] == self.meta['dim'], "Mismatching graph dimensions"

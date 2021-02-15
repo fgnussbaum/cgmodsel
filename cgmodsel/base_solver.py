@@ -192,6 +192,7 @@ class BaseCGSolver(abc.ABC):
         self.meta['reg_fac'] = fac  # potentially used as prescaling factor
         # for regularization parameters
 
+        self.meta['sizes_all'] = self.meta['sizes'] + self.meta['n_cg'] * [1,]
         self._postsetup_data()
 
     def get_name(self):
