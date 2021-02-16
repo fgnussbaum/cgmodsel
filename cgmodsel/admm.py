@@ -551,15 +551,18 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
                                          self.admm_param * self.lbda)
         else:
             # project matrix S on the graph
+            l21norm = 0 # no regularization in ADMM objective
             mat_s = mat_s.copy()
             glims = self.meta['glims']
             sizes = self.meta['sizes_all']
-            for i in range(self.meta["dim"]):
-                for j in range(self.meta["dim"]):
-                    mat_s[glims[i]:glims[i + 1], glims[j]:glims[j] + 1] = (
-                            np.zeros((sizes[i], sizes[j])))
-                    
-            
+#            print(sizes)
+#            print(glims)
+            for i in range(self.meta['n_catcg']):
+                for j in range(self.meta['n_catcg']):
+#                    print(i,j, sizes[i], sizes[j])
+                    if not self.graph[i,j]:
+                        mat_s[glims[i]:glims[i + 1], glims[j]:glims[j + 1]] = (
+                                np.zeros((sizes[i], sizes[j])))
 
         mat_s = (mat_s + mat_s.T) / 2
         if not self.opts['use_u']:  # no univariate parameters
@@ -622,5 +625,4 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
     
     def set_graph(self, graph):
         self.graph = graph
-        
-        assert self.graph.shape[0] == self.meta['dim'], "Mismatching graph dimensions"
+        assert self.graph.shape[0] == self.meta['n_catcg'], "Mismatching graph dimensions"
