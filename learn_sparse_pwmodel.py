@@ -166,7 +166,7 @@ if __name__ == '__main__':
 #    dataname = 'german-org' # D=13, C=12, N=600
 #    dataname = 'heart' # D=1, C=13, N=162
     dataname = 'iris' # D=, C=, N=
-    dataname = 'allbus' # D=5, C=4, N=1374
+#    dataname = 'allbus' # D=5, C=4, N=1374
 #    dataname = 'mscoco'
     # ********************************* #
 
@@ -178,7 +178,7 @@ if __name__ == '__main__':
 #    logger.info('Test')
 
 
-    steps = 10
+    steps = 1
     end = 5
     frac = 100
     srange = end, steps, frac

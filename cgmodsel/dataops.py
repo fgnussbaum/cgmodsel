@@ -139,6 +139,12 @@ def get_meta_data(data,
 
     #    print(categoricals,  numericals)
 
+    cat_in_indexform = True
+    for colname in categoricals:
+        nlevels = len(catuniques[colname])
+        for i in range(nlevels):
+            if not i in catuniques[colname]:
+                cat_in_indexform = False
     ##### ** dictionary for translating cat data to indices **
     catval2ind = {
     }  # dictionary probably best for retrieving index from catvalue
@@ -158,6 +164,7 @@ def get_meta_data(data,
     meta['numerical'] = numericals
 
     meta['catval2ind'] = catval2ind
+    meta['cat_in_indexform'] = cat_in_indexform
     meta['cat_glims'] = np.cumsum([0] + sizes)
 
     meta['sizes'] = sizes
@@ -422,12 +429,18 @@ def prepare_cat_data(data,
     elif cattype == 'dummy_red':
         # store dummy encoded discrete variables (apart from 0-th level)
         cat_data = np.zeros((n_data, ltot - n_cat), dtype=np.int64)
-        for i in range(n_data):  # TODO: code redundancy
-            for j in range(n_cat):
-                posj = catval2ind[catcols[j]][data.iloc[i, j]]
-                # posj: position of j. variable value
-                if posj != 0:
-                    cat_data[i, cat_glims[j] - j + posj - 1] = 1
+        if meta['cat_in_indexform']:
+            for i in range(n_data):
+                row = data.iloc[i, :]
+                for j in range(n_cat):
+                    cat_data[i, cat_glims[j] - j + row[j] - 1] = 1
+        else:
+            for i in range(n_data):  # TODO: code redundancy
+                for j in range(n_cat):
+                    posj = catval2ind[catcols[j]][data.iloc[i, j]]
+                    # posj: position of j. variable value
+                    if posj != 0:
+                        cat_data[i, cat_glims[j] - j + posj - 1] = 1
     elif cattype in ('index', 'index+1'):
         # just store tuples of indices for each categorical variable
         cat_data = np.empty((n_data, n_cat), dtype=np.int64)

@@ -98,7 +98,7 @@ def learn_sparse_model(logger, opts,
                                  gamma=gamma,
                                  iter =out['iter'])
         print(model.annotations)
-        model.save("%s/%s%.5f.pw"%(MODELFOLDER, dataname, gamma))
+        model.save("%s/N%s%.5f.pw"%(MODELFOLDER, dataname, gamma))
         
 #        theta, u, alpha = model.get_pairwiseparams(padded=False)
 #        print(theta, u, alpha)
@@ -120,27 +120,35 @@ def learn_sparse_model(logger, opts,
     
     return best_model
 
-def parse_mscoco():
+def parse_mscoco(meanssigmas=None):
     import pickle, csv
-    print(len(labels))
+#    print(len(labels))
     
+    mode = 'valid'
+#    mode = 'train'
     prefix = 'data/mscoco/'
-    R_train = open(prefix+'R_train.pkl', "rb")
+    R_train = open(prefix+'R_%s.pkl'%mode, "rb")
     cont_data = pickle.load(R_train)
-    standardize_continuous_data(cont_data)
+    meanssigmas = standardize_continuous_data(cont_data,
+                                              meanssigmas=meanssigmas)
+    print(meanssigmas)
     m, n = cont_data.shape
-    print(m, n)
-#    return
-    cat_data = np.zeros((m, 100))
-    y_train = open(prefix+'Y_train.pkl', "rb")
+#    print(m, n)
+#    return meanssigmas
+    cat_data = np.zeros((m, 100), dtype=np.int64)
+    y_train = open(prefix+'Y_%s.pkl'%mode, "rb")
     y_train = pickle.load(y_train)
     for i in range(m):
         for j in range(100):
             label = y_train[i, j] - 1
-            cat_data[i, label] == 1
-#    print(y_train[:1, :], y_train.shape)
+#            print(label)
+            if label != -1:
+                cat_data[i, label] = 1
+#        print(y_train[i, :])
+#        return
+    print(y_train[:1, :], y_train.shape)
             
-    with open('data/mscoco.train.csv', 'w', newline='') as outcsv: # newline='' for WINDOWS
+    with open('data/mscoco.%s.csv'%mode, 'w', newline='') as outcsv: # newline='' for WINDOWS
 
         writer = csv.writer(outcsv)
         writer.writerow(["Y%d"%(i) for i in range(256)] + LABELS)
@@ -154,7 +162,8 @@ if __name__ == '__main__':
     # comment out all but one line here #
     dataname = 'mscoco'
     # ********************************* #
-#    parse_mscoco()
+#    ms = parse_mscoco()
+#    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
 
     logger = logging.getLogger('sp_pw') # https://stackoverflow.com/questions/35325042/python-logging-disable-logging-from-imported-modules
