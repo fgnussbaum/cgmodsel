@@ -81,7 +81,7 @@ def learn_sparse_model(logger, opts,
 #        if alpha == 0:
 #            alpha += 1e-3
 #        gamma = alpha / (1 - alpha)
-        gamma = .000001
+        gamma = 0.01
         t1 = time.time()
         solver.set_regularization_params(gamma)
         out = solver.solve(verb=solver_verb, 
@@ -98,7 +98,7 @@ def learn_sparse_model(logger, opts,
                                  gamma=gamma,
                                  iter =out['iter'])
         print(model.annotations)
-        model.save("%s/N%s%.5f.pw"%(MODELFOLDER, dataname, gamma))
+        model.save("%s/N%s%.2f.pw"%(MODELFOLDER, dataname, gamma))
         
 #        theta, u, alpha = model.get_pairwiseparams(padded=False)
 #        print(theta, u, alpha)
@@ -172,10 +172,10 @@ if __name__ == '__main__':
 #    logger.info('Test')
 
 
-    steps = 5
-    end = 0
-    frac = 1000
-    srange = end, steps, frac
+#    steps = 5
+#    end = 0
+#    frac = 1000
+#    srange = end, steps, frac
     opts = {'maxiter':1200}
     model = learn_sparse_model(logger, opts, solver_verb=100)
     
