@@ -563,6 +563,7 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
                     if not self.graph[i,j]:
                         mat_s[glims[i]:glims[i + 1], glims[j]:glims[j + 1]] = (
                                 np.zeros((sizes[i], sizes[j])))
+        print(np.linalg.norm(mat_s))
 
         mat_s = (mat_s + mat_s.T) / 2
         if not self.opts['use_u']:  # no univariate parameters

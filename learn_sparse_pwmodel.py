@@ -112,8 +112,8 @@ def learn_sparse_models(dataname, srange, logger, opts,
                                  gamma=gamma,
                                  iter =out['iter'])
 #        print(model.annotations)
-#        graph = model.get_graph(threshold=1e-2)
-#        print(graph)
+        graph = model.get_graph(threshold=1e-2)
+        print(graph)
         
         model.save("%s/%s%df%d.pw"%(MODELFOLDER, dataname, frac, i))
         
@@ -127,12 +127,12 @@ def learn_sparse_models(dataname, srange, logger, opts,
         sys.stdout.flush()
         logger.info(msg)
         
-#        solver.set_graph(graph=graph)
-#        out = solver.solve(verb=solver_verb, 
-#                           warminit=warminit,
-#                           use_u=0, off=0, **opts)
-#        modelg = solver.get_canonicalparams()
-#        modelg.repr_graphical(diagonal=0)
+        solver.set_graph(graph=graph)
+        out = solver.solve(verb=solver_verb, 
+                           warminit=warminit,
+                           use_u=0, off=0, **opts)
+        modelg = solver.get_canonicalparams()
+        modelg.repr_graphical(diagonal=0)
         if plh_test < best_ge:
             best_ge = plh_test
             best_model = model
@@ -182,7 +182,7 @@ if __name__ == '__main__':
     end = 5
     frac = 100
     srange = end, steps, frac
-    opts = {'maxiter':1200}
-    model = learn_sparse_models(dataname, srange, logger, opts, solver_verb=100)
+    opts = {'maxiter':200}
+    model = learn_sparse_models(dataname, srange, logger, opts, solver_verb=5)
     
 

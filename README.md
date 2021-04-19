@@ -31,4 +31,4 @@ If you have questions, comments, bug reports, feature requests, etc. please cont
 
 ### Copyright ###
 
-© 2020 Frank Nussbaum (frank.nussbaum@uni-jena.de). All Rights Reserved.
+© 2021 Frank Nussbaum (frank.nussbaum@uni-jena.de). All Rights Reserved.
