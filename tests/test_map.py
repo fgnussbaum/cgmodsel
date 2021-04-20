@@ -95,8 +95,9 @@ class TestMAP(unittest.TestCase):
                 except AssertionError as e:
                     success = False
                     print(e, '\n')
-                    print(x_ref)
-                    print(x_learned)
+                    k = 10
+                    print(x_ref[:k])
+                    print(x_learned[:k])
         self.assertTrue(success)
             
 

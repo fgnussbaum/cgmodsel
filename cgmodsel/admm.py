@@ -333,21 +333,22 @@ class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
     The solver is an ADMM algorithm with an analytical solution of the
     proximal mapping of the likelihood, compare Ma et al. 2012
     """
-    
+
     def __init__(self, *args, **kwargs):
         """"must provide with dictionary meta"""
         super().__init__(*args, **kwargs)  # Python 3 syntax
 #        self.dg = meta['dg']
 #        self.totalnumberofparams = 2 * self.dg ** 2
-        
+
 #        self.alpha = None
 #        self.lbda = None
-    
+        self.sigma0 = None
+
 #    def __str__(self):
-#        s='<ADMMsolver> la=%s'%(self.lbda) 
+#        s='<ADMMsolver> la=%s'%(self.lbda)
 #        s+=', alpha=%s'%(self.alpha)
 #        s+=', sc_a=%s'%(self.scale_l1)
-#        
+#
 #        return s
 
     def _postsetup_data(self):
@@ -355,10 +356,10 @@ class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
 #        self.n, self.dg = Y.shape
         self.sigma0 = np.dot(self.cont_data.T, self.cont_data)
         self.sigma0 /= self.meta['n_data']
-        
+
 #        self.unscaledlbda = np.sqrt(np.log(self.dg)/self.n)
 #        self.scales = self.unscaledlbda
-    
+
     def _initialize_admm(self):
         """initialize ADMM variables"""
         dim = self.sigma0.shape[1] # dim = self.meta['dim']
@@ -384,16 +385,17 @@ class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
 
         eig_theta = (-eig + np.sqrt(np.square(eig) + 4 * self.admm_param)) / 2
         # always positive (though might round to 0 due to bad precision)
-        eig_theta[eig_theta == 0] = 1e-16 # TODO: hacky, however previous calculation is not numerically stable
+        eig_theta[eig_theta == 0] = 1e-16
+        # TODO: hacky, however previous calculation is not numerically stable
         mat_theta = np.dot(np.dot(mat_u, np.diag(eig_theta)), mat_u.T)
         mat_theta = (mat_theta + mat_theta.T) / 2
-        
+
         # TODO: alpha
 
         ## update S
         mat_s_old = mat_s
         mat_s, l1norm = self.shrink(mat_s - self.admm_param * mat_z,
-                                     self.admm_param * self.lbda)
+                                    self.admm_param * self.lbda)
         mat_s = (mat_s + mat_s.T) / 2
 
         ## update dual variables Z
@@ -434,12 +436,12 @@ class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
         return new_vars, residuals, stats
 
 
-    
+
 
 #    def get_f_vec(self, x):
 #        """vector objective value (for Benson algorithm) """
 #        S =  x.reshape((self.dg, self.dg))
-#   
+#
 #        # smooth part
 #
 #        logdet_tiLambda = np.linalg.slogdet(S)[1] # logdet of PSD matrix (hopefully also PD)
@@ -451,7 +453,7 @@ class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
 #            l1sum = self.scale_l1 * l1norm_off(S)
 #        else:
 #            l1sum = self.scale_l1 * l1norm(S)
-#        
+#
 #
 #        return np.array([np.squeeze(fsmooth), l1sum])
 #
@@ -465,14 +467,16 @@ class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
 #
 #    def crossvalidate(self, x):
 #        S = x.reshape((self.dg, self.dg))
-#   
+#
 #        # smooth part
 #        logdet_tiLambda = np.linalg.slogdet(S)[1] # logdet of PSD matrix (hopefully also PD)
 #        trace = np.trace(np.dot(S, self.Sigma0))
-#        
+#
 #        lval_testdata = trace - logdet_tiLambda
 #
-#        return -logdet_tiLambda, trace, lval_testdata # note: this does not compute individual errors on the nodes (in contrast to PLH cross validation)
+#        return -logdet_tiLambda, trace, lval_testdata
+#        # note: this does not compute individual errors on the nodes
+#        # (in contrast to PLH cross validation)
 
 
 ## CG with Pseudo LH
@@ -531,6 +535,10 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
             mat_s[:ltot, :ltot] -= np.diag(np.diag(mat_s[:ltot, :ltot]))
         mat_z = np.zeros((dim, dim))
 
+        if not self.graph is None:
+            print("""Warning... graph-constrained solver is not tested
+                  and probably instable""")
+
         return mat_theta, mat_s, mat_z, alpha
 
     def _do_iter_admm(self, current_vars: tuple):
@@ -555,15 +563,12 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
             mat_s = mat_s.copy()
             glims = self.meta['glims']
             sizes = self.meta['sizes_all']
-#            print(sizes)
-#            print(glims)
             for i in range(self.meta['n_catcg']):
                 for j in range(self.meta['n_catcg']):
-#                    print(i,j, sizes[i], sizes[j])
-                    if not self.graph[i,j]:
+                    if not self.graph[i, j]:
                         mat_s[glims[i]:glims[i + 1], glims[j]:glims[j + 1]] = (
-                                np.zeros((sizes[i], sizes[j])))
-        print(np.linalg.norm(mat_s))
+                            np.zeros((sizes[i], sizes[j])))
+#        print(np.linalg.norm(mat_s))
 
         mat_s = (mat_s + mat_s.T) / 2
         if not self.opts['use_u']:  # no univariate parameters
@@ -621,9 +626,10 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
             alpha = np.zeros(self.meta['n_cg'])
         obj = self.prox.plh(mat_s, alpha)
         if use_reg:
-            obj += self.lbda * self.sparse_norm(mat_s) 
+            obj += self.lbda * self.sparse_norm(mat_s)
         return obj
-    
+
     def set_graph(self, graph):
+        """set graph constraint (experimental feature)"""
         self.graph = graph
         assert self.graph.shape[0] == self.meta['n_catcg'], "Mismatching graph dimensions"
