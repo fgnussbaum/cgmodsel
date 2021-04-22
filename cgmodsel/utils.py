@@ -48,13 +48,20 @@ except Exception as e:
                         n_groups=None,
                         weights=None):
         """
-        calculate (group-)soft-shrinkage of mat with shrinkage parameter tau
-        soft shrink if no n_groups is given
-        else must provide with n_groups (# groups per row/column) and
-        cumulative sizes of groups (glims)
+        calculate (group-)soft-shrinkage.
+        
+        Args:
+            mat (np.array): matrix.
+            tau (float): non-negative shrinkage parameter.
+            off (bool): if True, do not shrink diagonal entries.
+            
+            glims: group delimiters (cumulative sizes of groups).
+            n_groups: # groups per row/column (if this is given,
+                perform group soft shrink instead of soft shrink).
     
-        this code could be made much faster
-        (by parallizing loops, efficient storage access)
+        Note:
+            this code could be made much faster
+            (by parallizing loops, efficient storage access).
         """
         shrinkednorm = 0
         if n_groups is None:

@@ -79,11 +79,20 @@ class LikelihoodProx(BaseGradSolver):
         self._fold = fnew
 
     def solve(self, mat_z, prox_param, old_thetaalpha):
-        """solve proximal mapping of negative pseudo loglikelihood
-        min_{Theta, alpha} l_p(Theta, alpha) + 1 / (2mu) * ||Theta-Z||_F^2
+        """Solve proximal mapping of negative pseudo loglikelihood.
         
         Note:
+            The problem that is solved is given by
+            min_{Theta, alpha} l_p(Theta, alpha) + 1/(2mu) * ||Theta-Z||_F^2.
             This method should usually not be called from users.
+        
+        Args:
+            mat_z (np.array): matrix Z, see above.
+            prox_param (float): parameter mu, see above.
+            old_thetaalpha (tuple): used for initialization of the solver. 
+        
+        Returns:
+            tuple: theta, alpha (solution of the proximal mapping).
 
         Waring:
             known issue with ADMM:

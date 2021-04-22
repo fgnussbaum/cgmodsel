@@ -558,8 +558,8 @@ def write_to_csv(filename: str,
             required options in meta are n_cat (# of discrete variables),
             n_cg (# of Gaussian variables), optional options in meta are
             n_latent (if >0, then the last dl Gaussian columns are dropped,
-                  they are eliminated permanently from
-                  the continuous data cont_data), 
+            they are eliminated permanently from
+            the continuous data cont_data), 
             gaussnames (column names for Gaussian variables), 
             categoricals (column names for Gaussian variables),
         method (str): method for storing discrete data, can be
