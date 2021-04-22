@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: Frank Nussbaum (translation to Python)
+@author: Frank Nussbaum
 
-This file implements Proximal Gradient ADM algorithms similar to the
+This module implements proximal gradient ADMM algorithms similar to the
 one described in
 "Alternating Direction Methods for Latent Variable Gaussian Graphical
-Model Selection", 2013, by Ma, Xue and Zou,
-for solving Latent Variable Gaussian Graphical Model Selection
-min l(Theta) + alpha * ||S||_{2,1} + beta * tr(L)
-s.t. Theta = S + L, continuous-continuous interactions parameters in Theta PSD,
-     and L>=0
-
+Model Selection", 2013, by Ma, Xue and Zou.
 """
 import numpy as np
 import scipy  # use scipy.linalg.eigh (for real symmetric matrix), does not check for symmetry
@@ -26,25 +21,27 @@ from cgmodsel.prox import LikelihoodProx
 
 
 class AdmmGaussianSL(BaseSolverSL, BaseAdmm):
-    """
-    solve the problem
-       min l(S-L) + lambda * ||S||_1 + rho * tr(L)
-       s.t. S-L>0, L>=0
+    """solve the problem
+
+    ..
+
+        min_{S, L} l(S-L) + lambda ||S||_1 + gamma tr(L) s.t. S-L>0, L>=0
+        
     where l is the Gaussian likelihood with pairwise parameters Theta=S-L,
-    here Theta is the precision matrix (inverse of the covariance matrix)
-    of the z(unnormalized) zero-mean Gaussian model
-        p(y) ~ exp(-1/2 y^T Theta y)
+    here Theta is the precision matrix 
+    of the (unnormalized) zero-mean Gaussian model
 
-    Solver is an ADMM algorithm with proximal gradient step
+    ..
+    
+        p(y) ~ exp(-1/2 y^T Theta y).
 
+    Solver is an ADMM algorithm with proximal gradient step.
     """
 
     def __init__(self, *args, **kwargs):
         """"must provide with dictionary meta"""
 
         super().__init__(*args, **kwargs)  # Python 3 syntax
-        #        BaseAdmm.__init__(self)
-        #        BaseSolverSL.__init__(self, meta=meta)
 
         self.sigma0 = None
         self.cat_format_required = 'dummy_red'
@@ -164,26 +161,34 @@ class AdmmGaussianSL(BaseSolverSL, BaseAdmm):
 class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
     """
     solve the problem
-       min l(S+L) + lambda * ||S||_{2,1} + rho * tr(L)
-       s.t. Lambda[S+L]>0, L>=0
+    
+    ..
+    
+       min_{S,L} l(S+L) + lambda ||S||_{1,2} + rho * tr(L)
+       s.t. Lambda[S+L]>0, L>=0,
+
     where l is the pseudo likelihood with pairwise parameters Theta=S+L,
     here Lambda[S+L] extracts the quantitative-quantitative interactions
-    from the pairwise parameter matrix Theta=(Q & R^T \\ R & -Lbda),
-    that is, Lambda[Theta] = Lbda
+    from the pairwise parameter matrix Theta=(Q & R^T \\\\ \\\\ R & -Lbda),
+    that is, Lambda[Theta] = Lbda.
 
     The estimated probability model has (unnormalized) density
-        p(y) ~ exp(1/2 (D_x, y)^T Theta (D_x, y) + alpha^T y + u^T D_x)
-    where D_x is the indicator representation of the discrete variables x
+    
+    ..
+    
+        p(x,y) ~ exp(1/2 (x, y)^T Theta (x, y) + alpha^T y + u^T x)
+    
+    where x are indicator-coded discrete variables
     (reduced by the indicator for the 0-th level for identifiability reasons),
     and y are the quantitative variables.
-    Note that alpha and u are optional univariate parameters that can be included
-    in the optimization problem above.
+    Note that alpha and u are optional univariate parameters
+    that can be included in the optimization problem above.
 
     The solver is an ADMM algorithm with a proximal gradient step.
     """
 
     def __init__(self, *args, **kwargs):
-        """"must provide with dictionary meta"""
+        """must provide with dictionary meta"""
 
         super().__init__(*args, **kwargs)  # Python 3 syntax
 
@@ -307,7 +312,17 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         self.prox = LikelihoodProx(self.cat_data, self.cont_data, self.meta)
 
     def get_objective(self, mat_s, mat_l, vec_u=None, alpha=None):
-        """return 'real' objective """
+        """compute real objective (not the ADMM objective)
+        
+        Args:
+            mat_s (np.array): sparse component.
+            mat_l (np.array): low-rank component.
+            vec_u (np.array, optional): univariate discrete parameters.
+            alpha (np.array, optional): univariate continuous parameters.
+        
+        Returns:
+            float: objective value
+        """
         if self.meta['n_cat'] > 0 and not vec_u is None:
             mat_s = mat_s.copy()
             mat_s[:self.meta['ltot'], :self.meta['ltot']] += 2 * np.diag(vec_u)
@@ -319,6 +334,7 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         obj += self.prox.plh(mat_s + mat_l, alpha)
         return obj
 
+
 ###############################################################################
 # (sparse) pairwise CG models
 ###############################################################################
@@ -327,21 +343,25 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
 class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
     """
     solve the problem
+    
+    ..
+    
        min l(S) + lambda * ||S||_1  s.t.  S positive definite
-    where l is the negative log likelihood with pairwise parameters S
+    
+    where l is the negative log likelihood with pairwise parameters S.
 
     The solver is an ADMM algorithm with an analytical solution of the
-    proximal mapping of the likelihood, compare Ma et al. 2012
+    proximal mapping of the likelihood, compare Ma et al. 2012.
     """
 
     def __init__(self, *args, **kwargs):
         """"must provide with dictionary meta"""
         super().__init__(*args, **kwargs)  # Python 3 syntax
-#        self.dg = meta['dg']
-#        self.totalnumberofparams = 2 * self.dg ** 2
+        #        self.dg = meta['dg']
+        #        self.totalnumberofparams = 2 * self.dg ** 2
 
-#        self.alpha = None
-#        self.lbda = None
+        #        self.alpha = None
+        #        self.lbda = None
         self.sigma0 = None
 
 #    def __str__(self):
@@ -353,7 +373,7 @@ class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
 
     def _postsetup_data(self):
         """called after drop_data"""
-#        self.n, self.dg = Y.shape
+        #        self.n, self.dg = Y.shape
         self.sigma0 = np.dot(self.cont_data.T, self.cont_data)
         self.sigma0 /= self.meta['n_data']
 
@@ -362,12 +382,12 @@ class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
 
     def _initialize_admm(self):
         """initialize ADMM variables"""
-        dim = self.sigma0.shape[1] # dim = self.meta['dim']
+        dim = self.sigma0.shape[1]  # dim = self.meta['dim']
 
         mat_theta = np.eye(dim)
-#        mat_theta *= -1 # lower right block must be neg definite
+        #        mat_theta *= -1 # lower right block must be neg definite
         # TODO: make Theta feasible/cleaned for plh
-#        mat_theta = self.prox.clean_theta(mat_theta)
+        #        mat_theta = self.prox.clean_theta(mat_theta)
 
         alpha = np.zeros((self.meta['n_cg'], 1))
         mat_s = mat_theta.copy()
@@ -381,7 +401,7 @@ class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
         mat_theta, mat_s, mat_z, alpha = current_vars
 
         tmp = self.admm_param * self.sigma0 - self.admm_param * mat_z - mat_s
-        eig, mat_u = scipy.linalg.eigh(tmp) # TODO: symmetry?
+        eig, mat_u = scipy.linalg.eigh(tmp)  # TODO: symmetry?
 
         eig_theta = (-eig + np.sqrt(np.square(eig) + 4 * self.admm_param)) / 2
         # always positive (though might round to 0 due to bad precision)
@@ -431,11 +451,9 @@ class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
         stats['admm_obj'] = self.lbda * l1norm
         # stats['true_obj'] = stats['admm_obj'] + self.plh(mat_s, alpha) # true objective
         stats['admm_obj'] += np.sum(np.sum(np.multiply(mat_s, self.sigma0)))
-#        stats['admm_obj'] -=  np.linalg.slogdet(mat_s)[1]
+        #        stats['admm_obj'] -=  np.linalg.slogdet(mat_s)[1]
         stats['admm_obj'] -= np.sum(np.log(eig_theta))
         return new_vars, residuals, stats
-
-
 
 
 #    def get_f_vec(self, x):
@@ -458,6 +476,17 @@ class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
 #        return np.array([np.squeeze(fsmooth), l1sum])
 #
 #    def get_objective(self, mat_s, alpha):
+#        """compute real objective (not the ADMM objective)
+#        
+#        Args:
+#            mat_s (np.array): sparse component.
+#            mat_l (np.array): low-rank component.
+#            vec_u (np.array, optional): univariate discrete parameters.
+#            alpha (np.array, optional): univariate continuous parameters.
+#        
+#        Returns:
+#            objective value (float)
+#        """
 ##        print(self.lbda, self.rho)
 #        obj = self.lbda * l21norm
 #        obj += np.sum(np.sum(np.multiply(mat_s, self.cov_mat)))
@@ -478,27 +507,33 @@ class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
 #        # note: this does not compute individual errors on the nodes
 #        # (in contrast to PLH cross validation)
 
-
 ## CG with Pseudo LH
+
 
 class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
     """
     solve the problem
-       min l(S) + lambda * ||S||_{2,1}  s.t.  Lambda[S]>0
-    where l is the pseudo likelihood with pairwise parameters S,
-    here Lambda[S] extracts the quantitative-quantitative interactions
-    from the pairwise parameter matrix S=(Q & R^T \\ R & -Lbda),
-    that is, Lambda[S] = Lbda
+
+    ..    
+    
+        min l(S) + lambda ||S||_{1,2} s.t. Lambda[S]>0
+
+    via ADMM, where l is the pseudo likelihood with pairwise parameters S.
+    Here, S extracts the quantitative-quantitative interactions
+    from the pairwise parameter matrix S=(Q & R^T \\\\ \\\\ R & -Lbda),
+    that is, Lambda[S]=Lbda.
 
     The estimated probability model has (unnormalized) density
-        p(y) ~ exp(1/2 (D_x, y)^T Theta (D_x, y) + alpha^T y + u^T D_x)
-    where D_x is the indicator representation of the discrete variables x
+
+    ..
+
+        p(x, y) ~ exp(1/2 (x, y)^T Theta (x, y) + alpha^T y + u^T x)
+
+    where x are indicator-coded discrete variables 
     (reduced by the indicator for the 0-th level for identifiability reasons),
     and y are the quantitative variables.
     Note that alpha and u are optional univariate parameters that can be included
     in the optimization problem above.
-
-    The solver is an ADMM algorithm.
     """
 
     def __init__(self, *args, **kwargs):
@@ -511,7 +546,6 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
 
         self.prox = None
         self.cat_format_required = 'dummy_red'
-
 
     def _initialize_admm(self):
         """initialize ADMM variables"""
@@ -547,8 +581,7 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
         mat_theta, mat_s, mat_z, alpha = current_vars
 
         mat_theta, alpha = self.prox.solve(mat_s + self.admm_param * mat_z,
-                                           self.admm_param,
-                                           (mat_theta, alpha))
+                                           self.admm_param, (mat_theta, alpha))
         mat_theta = (mat_theta + mat_theta.T) / 2
 
         ## update S
@@ -559,15 +592,18 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
                                          self.admm_param * self.lbda)
         else:
             # project matrix S on the graph
-            l21norm = 0 # no regularization in ADMM objective
+            l21norm = 0  # no regularization in ADMM objective
             mat_s = mat_s.copy()
             glims = self.meta['glims']
             sizes = self.meta['sizes_all']
             for i in range(self.meta['n_catcg']):
                 for j in range(self.meta['n_catcg']):
                     if not self.graph[i, j]:
-                        mat_s[glims[i]:glims[i + 1], glims[j]:glims[j + 1]] = (
-                            np.zeros((sizes[i], sizes[j])))
+                        mat_s[glims[i]:glims[i + 1],
+                              glims[j]:glims[j + 1]] = (np.zeros(
+                                  (sizes[i], sizes[j])))
+
+
 #        print(np.linalg.norm(mat_s))
 
         mat_s = (mat_s + mat_s.T) / 2
@@ -618,7 +654,17 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
         self.prox = LikelihoodProx(self.cat_data, self.cont_data, self.meta)
 
     def get_objective(self, mat_s, vec_u=None, alpha=None, use_reg=True):
-        """return 'real' objective """
+        """compute real objective (not the ADMM objective)
+        
+        Args:
+            mat_s (np.array): sparse parameter matrix.
+            vec_u (np.array, optional): univariate discrete parameters.
+            alpha (np.array, optional): univariate continuous parameters.
+            use_reg (bool, optional): include value of regularization.
+        
+        Returns:
+            float: objective value
+        """
         if self.meta['n_cat'] > 0 and not vec_u is None:
             mat_s = mat_s.copy()
             mat_s[:self.meta['ltot'], :self.meta['ltot']] += 2 * np.diag(vec_u)
@@ -630,6 +676,10 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
         return obj
 
     def set_graph(self, graph):
-        """set graph constraint (experimental feature)"""
+        """set graph constraint (experimental feature)
+        
+        Args:
+            graph (np.array): graph as incidence matrix"""
         self.graph = graph
-        assert self.graph.shape[0] == self.meta['n_catcg'], "Mismatching graph dimensions"
+        assert self.graph.shape[0] == self.meta[
+            'n_catcg'], "Mismatching graph dimensions"

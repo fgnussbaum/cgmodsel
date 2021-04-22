@@ -14,16 +14,18 @@ import numpy as np
 
 
 class BaseAdmm(abc.ABC):
-    """
-    base class for ADMM solvers
+    """A base class for ADMM solvers.
+    
+    Attributes:
+        admm_param (float): initial admm parameter
+        opts (dict): dictionary of solver options
     """
 
     def __init__(self):
-        #        print('Init BaseAdmm')
         super().__init__()
         self.admm_param = 1  # TODO(franknu): external access
-
-        self._set_defaults_admm()
+        self.opts = {}
+        self.set_defaults_admm()
 
     @abc.abstractmethod
     def _do_iter_admm(self, current_vars: tuple):
@@ -53,8 +55,11 @@ class BaseAdmm(abc.ABC):
         for i, var in enumerate(out['solution']):
             print('norm optvar%d=%f' % (i, np.linalg.norm(var)))
 
-    def _set_defaults_admm(self):
-        """default solver options"""
+    def set_defaults_admm(self):
+        """Set default solver options in class attribute opt.
+        
+        Adjustable solver options contain abstol, reltol,
+        maxiter, stoptol, verb, etc."""
         self.opts = {}
         self.opts.setdefault('abstol', 1e-5)
         self.opts.setdefault('reltol', 1e-5)
@@ -127,9 +132,9 @@ class BaseAdmm(abc.ABC):
                 admm_state = eps_pri, eps_dual, rnorm, snorm
 
                 if (i / self.opts['num_continuation']) % 5 == 1:
-                    self.cont_update_2019(admm_state)
+                    self._cont_update_2019(admm_state)
                 else:
-                    self.cont_update_s2a(admm_state)
+                    self._cont_update_s2a(admm_state)
 
                 if self.opts['verb'] and self.admm_param != admm_param_old:
                     print('>> New ADMM parameter', self.admm_param,
@@ -149,7 +154,7 @@ class BaseAdmm(abc.ABC):
 
         return out
 
-    def cont_update_s2a(self, admm_state, criticalratio: int = 5):
+    def _cont_update_s2a(self, admm_state, criticalratio: int = 5):
         """ update S2a from my master thesis
         uses more robust constant size updates of admm_param"""
 
@@ -170,7 +175,7 @@ class BaseAdmm(abc.ABC):
             # increase admm_param
             self.admm_param *= self.opts['continuation_fac']
 
-    def cont_update_2019(self,
+    def _cont_update_2019(self,
                          admm_state,
                          criticalratio: int = 5,
                          cutoff: tuple = (1e-2, 1e2)):
@@ -215,10 +220,19 @@ class BaseAdmm(abc.ABC):
                 print('scaling_factor', scaling_factor)
             self.admm_param *= scaling_factor
 
-    def solve(self, report=0, warminit=None, **kwargs):
-        """solve the problem """
+    def solve(self, report=False, warminit=None, **kwargs):
+        """solve the problem
+        
+        Args:
+            report (bool): whether to print additional summary.
+            warminit (solver state): starting point for the solver.
+            kwargs (optional): additional solver options to replace defaults. 
+        
+        Returns:
+            dict: dictionary with info about solution/solving process
+        """
 
-        self.opts.update(**kwargs)  # update solver options
+        self.opts.update(**kwargs) # update solver options
 
         if report:
             print('>solver options', self.opts)

@@ -18,8 +18,17 @@ import pandas as pd
 
 
 def load_data_from_csv(filename: str, drop=(), names=None, verb: bool = False):
-    """read data from csv file <filename> into a panda dataframe
-    return the data frame"""
+    """read data from csv file into a panda dataframe
+    
+    Args:
+        filename (str): filename.
+        drop (tuple): column names to exclude from loading.
+        names (iterable, optional): names for the loaded columns.
+        verb (bool): whether to print stats.
+        
+    Returns:
+        pd.dataframe: data.
+    """
     tic = time.time()
 
     # following f returns true if colname shall not be dropped
@@ -46,20 +55,22 @@ def get_meta_data(data,
                   coded_colnames: bool = False,
                   detectindexcols: bool = True,
                   **kwargs):
-    """ extracts and returns dictionary of meta data for <data>
-    particularly, detect categorical/numerical columns
-
-    data ...        panda dataframe
-    catuniques ...  either dictionary with levels of discrete variable
+    """Extracts and returns dictionary of meta data for provided data.
+    
+    Args:
+        data (pd.dataframe): data
+        catuniques: either dictionary with levels of discrete variable
                     (this might be useful if certain discrete labels are
                     unobserved)
-                    or list of levels, if the same for all discrete variables
-    categoricals ... optional list of column names for discrete variables
-
-    coded_colnames...  if True, recognize categorical variables by prefix 'X' in
-                    column name
-    detectindexcols ... if True, look for columns with elements in {0,..., k}
-                        and interpret such a columns as a discrete variable
+                    or list of levels, if the same for all discrete variables.
+        categoricals: optional list of column names for discrete variables.
+        coded_colnames (bool): if True, recognize categorical variables by 
+            prefix 'X' in column name.
+        detectindexcols (bool): if True, look for columns with elements 
+            in {0,..., k} and interpret such a columns as a discrete variable.
+    
+    Returns:
+        dict: dictionary with meta information.
     """
     tic = time.time()
 
@@ -191,8 +202,19 @@ def load_prepare_data(datasource,
                       shuffleseed: int = 10,
                       **kwargs):
     """
-    datasource ... either filename of csv-file (load data!) or panda data frame
-    drop       ... (optional) if loading data, specifies columns not to load
+    
+    Args:
+        datasource: either filename of csv-file (load data!) or panda data frame.
+        drop: (optional) if loading data, specifies columns not to load.
+        standardize (bool): whether to standardize continuous data.
+        cattype (str): encoding of the discrete variables (dummy).
+        names: optional list of column names.
+        shuffle (bool): whether to shuffle rows before loading.
+        shuffleseed (int): seed for shuffling.
+        
+    Returns:
+        tuple: cat_data (np.array), cont_data (np.array),
+        meta information about the data (dict).
     """
     t1 = time.time()
     if isinstance(datasource, str):  # filename
@@ -250,19 +272,19 @@ def load_prepare_split_data(filename: str,
                             verb: bool = True,
                             **kwargs):
     """
-    load data from specified filename
+    Load data from specified filename.
 
-    drop ... list of columns to be dropped
+    Args:
+        drop: optional list of columns to be dropped.
+        splittingfactor (int): ratio to split between training and test data.
+        standardize (bool): if True standardize continuous data:
+                    useful to avoid exp-overflow in certain data sets.
 
-    splittingfactor ... ratio to split between training and test data
-
-    standardize ... if True standardize continuous data:
-                    useful to avoid exp-overflow in certain data sets
-
-    returns: tuple (Dtrain, cont_datatrain, Dtest, cont_datatest, meta) where
-    D denotes discrete data (dummy encoded) and cont_data continuous data
-    with corresponding suffixes for training and test data,
-    and meta is a dictionary containing information about the data.
+    Returns: 
+        tuple: (Dtrain, cont_datatrain, Dtest, cont_datatest, meta), where
+        D denotes discrete data (dummy encoded) and cont_data continuous data
+        with corresponding suffixes for training and test data,
+        and meta is a dictionary containing information about the data.
     """
     ##### ** load and prepare cts and cat data **
     shuffle = (splittingfactor < 1)
@@ -313,7 +335,15 @@ def load_prepare_split_data(filename: str,
 
 
 def split_traintest(filename: str, splittingfactor, **kwargs):
-    """wrapper for  load_prepare_split_data, writes split data to csv"""
+    """wrapper for load_prepare_split_data, writes split data to csv.
+    
+    Args:
+        filenames (str): filename.
+        splittingfactor (int): train/test split ration in [0,1].
+    
+    Returns:
+        dict: dictionary of meta information about the data.
+    """
     _, _, _, _, meta = \
       load_prepare_split_data(filename, splittingfactor=splittingfactor,
                               write_csv=True, cattype='index', **kwargs)
@@ -323,7 +353,13 @@ def split_traintest(filename: str, splittingfactor, **kwargs):
 
 
 def load_traintest_datasets(filename_trunk: str, verb: bool = True, **kwargs):
-    """load train and test data from csv files filename_trunk%s.csv, where %s is _train or _test """
+    """load train/ test data from csv files, compare load_prepare_split_data.
+    
+    Note:
+        Filenames must be of form 
+        filename_trunk%s.csv, where %s is _train or _test
+        
+    """
     filename_train = filename_trunk + '_train.csv'
     filename_test = filename_trunk + '_test.csv'
     name = filename_trunk.split('/')[-1]
@@ -354,10 +390,16 @@ def load_traintest_datasets(filename_trunk: str, verb: bool = True, **kwargs):
 
 def dummy_from_cat_data(cat_data, meta: dict, red: bool = False):
     """
-    convert discrete data cat_data into dummy coded version
-    meta ... dictionary of meta data for data cat_data, must contain attribute cat_glims
+    Convert discrete data cat_data into dummy-coded version.
+    
+    Args:
+        meta (dict): dictionary of meta data for data cat_data,
+            must contain attribute cat_glims
             (cumulative levels/delimiters for concatenated indicator variables)
-    red ... if True, leave out indicator variable for first level
+        red (bool): if True, leave out indicator variable for first level
+        
+    Returns:
+        np.array: categorical data
     """
     n_data, n_cat = cat_data.shape
     cat_glims = meta['cat_glims']
@@ -384,19 +426,25 @@ def prepare_cat_data(data,
                      verb: bool = False,
                      cattype: str = 'dummy'):
     """
-    preprocess discrete/categorical data
-    input:
-    data  ... panda data frame
-    meta ...  meta information for panda data frame (such as number of dicrete/continuous cols)
-    cattype ...
-      'dummy' ... store discrete data as dummy encoded variables
-      'dummy_red' ... store discrete data as dummy (leave out first col)
-      'index' ... store discrete data as index vectors
-      'index+1' ... store discrete data as index vectors, index shifted by one
-      'flat'  ... store flattened (linear) index of discrete data (required for MAP-estimators)
+    Preprocess discrete/categorical data.
+    
+    Args:
+        data (pd.dataframe): data.
+        meta (dict):  meta information for panda data frame
+        (such as number of dicrete/continuous cols).
+        cattype (str): encoding of discrete data, can be
+            'dummy' ... store discrete data as dummy encoded variables
+            'dummy_red' ... store discrete data as dummy (leave out first col)
+            'index' ... store discrete data as index vectors
+            'index+1' ... store discrete data as index vectors, index shifted by one
+            'flat'  ... store flattened (linear) index of discrete data
+            (required for MAP-estimators).
+        verb (bool): whether to prints stats.
 
-    output:
-    D  ... matrix of discrete data (dummy encoded indicator vectors, or indices)"""
+    Returns:
+        np.array: matrix of discrete data
+        (dummy encoded indicator vectors, or indices)
+    """
     tic = time.time()
     n_data, n_cat = data.shape
 
@@ -466,8 +514,16 @@ def prepare_cat_data(data,
 
 
 def standardize_continuous_data(cont_data, meanssigmas=None):
-    """standardize the continous data in cont_data
-    return means and standard deviations """
+    """Standardize continous data.
+    
+    Args: 
+        cont_data (np.array): continuous data.
+        meanssigmas (optional): if provided, standardize with these means
+            and sigmas instead of empirical quantities from the dataset.
+    
+    Returns:
+        tuple: means and standard deviations
+    """
     n_data, n_cg = cont_data.shape
     if meanssigmas is None:
         means = cont_data.sum(axis=0) / n_data
@@ -492,30 +548,24 @@ def write_to_csv(filename: str,
                  meta: dict,
                  method: str = 'rpl_numericalcats',
                  prefix: str = 'val'):
-    """
-    formatlab:  if true leave out column names in first row of csv file
-                and store only numerical values for categorical variables
+    """Write data to file.
 
-    filename:   name for csv where data is stored
-
-    method:     is in {rpl_numericalcats} where
-
-      rpl_numericalcats replaces any integer value <d> of a categorical
-          variable by dummy string val<d>
-      for_matlab produces a file that can be read from MATLAB
-
-    meta:       dictionary containing meta information as usual
-
-    required options in meta are
-      n_cat          # of discrete variables
-      n_cg          # of Gaussian variables
-
-    optional options in meta are
-      n_latent:   if >0, then the last dl Gaussian columns are dropped,
-                  in particular they are eliminated permanently from
-                  the continuous data cont_data
-      gaussnames: column names for Gaussian variables
-      categoricals:   column names for Gaussian variables
+    Args:    
+        filename (str): name for csv where to store data.
+        cat_data (np.array): categorical data.
+        cont_data (np.array): continuous data.
+        meta (dict): meta information about the data
+            required options in meta are n_cat (# of discrete variables),
+            n_cg (# of Gaussian variables), optional options in meta are
+            n_latent (if >0, then the last dl Gaussian columns are dropped,
+                  they are eliminated permanently from
+                  the continuous data cont_data), 
+            gaussnames (column names for Gaussian variables), 
+            categoricals (column names for Gaussian variables),
+        method (str): method for storing discrete data, can be
+            rpl_numericalcats (replaces any integer value <d> of a categorical
+            variable by dummy string val<d>) or for_matlab 
+            (produces a file that can be read from MATLAB).
     """
     ## column names
     n_cat = meta['n_cat']

@@ -22,8 +22,17 @@ FLAT = 'flat'
 
 
 def set_sparsity_weights(meta, cat_data, cont_data):
-    """  use adjusted weights for all groups as suggested by LST2015
-    (may be essential for "good", "consistent" results)"""
+    """Calculate weights for all groups as suggested by LST2015
+    (may be essential for "good", "consistent" results)
+    
+    Args:
+        meta (dict): dictionary of meta data
+        cat_data: categorical data
+        cont_data: continuous data
+    
+    Returns:
+        np.array: weights
+    """
     n_data = meta['n_data']
     n_cg = meta['n_cg']
     n_cat = meta['n_cat']
@@ -64,9 +73,15 @@ def set_sparsity_weights(meta, cat_data, cont_data):
 
 class BaseCGSolver(abc.ABC):
     """
-    base class for all CG model solver
-    provides external interface to drop data along with meta information
-    about this data
+    A base class for all CG model solvers.
+    
+    Attributes:
+        cat_data (np.array): discrete data.
+        cont_data (np.array): continuous data.
+        cat_format_required (str): format of the discrete data.
+        meta (dict): dictionary with meta info about the data - attributes: n_data (number of data points), n_cg (number of continuous variables), n_cat (number of discrete variables), sizes (list of #levels per discrete variable), glims (group delimiter for discrete variables).
+        name (str): solver name.
+        opts (dict): dictionary of solver options.
     """
 
     def __init__(self):
@@ -92,12 +107,19 @@ class BaseCGSolver(abc.ABC):
         # no pass because function has doc string
 
     def drop_data(self, data, meta: dict) -> None:
-        """drop data, derived classes may perform additional computations
+        """Drop data and augment info in meta about the data.
+        
+        Arguments:
+            data: tuple of discrete and continuous data,
+            or np.array for purely continuous/discrete model
+            (which is inferred from attributes 'n_cg' and 'n_cat' in meta).
+            meta (dict): dictionairy with meta information about the data.
 
-        uses and augments information contained in meta about the data
+        Note:
+            Discrete data must be provided in dummy-encoded form 
+            (leaving out 0-th levels if required by the solver).
 
-        categorical data must be provided in dummy-encoded form
-        (leaving out 0-th levels if required by the solver)"""
+        """
 
         # process argument data
         if isinstance(data, tuple):
@@ -196,13 +218,22 @@ class BaseCGSolver(abc.ABC):
         self._postsetup_data()
 
     def get_name(self):
-        """return model name"""
+        """Return name of the model.
+        
+        Returns:
+            string: name of the model"""
         return self.name
 
 
 class BaseSparseSolver(BaseCGSolver):
     """
-    base class that contains proximal operators
+    Base class that contains proximal operators.
+    
+    Attributes:
+        opts (dict): solver options.
+        useweights (bool): whether to use weights.
+        weights (np.array): weights for weighted l_12-norm regularization.
+        name (string): class name.
     """
     def __init__(self, useweights=False):
         super().__init__()
@@ -227,7 +258,16 @@ class BaseSparseSolver(BaseCGSolver):
             self.weights = None
 
     def shrink(self, mat_s, tau):
-        """return (group)- soft shrink of matrix mat_s with tau """
+        """Calculate (group)- soft shrink of matrix mat_s with tau.
+        
+        Args:
+            mat_s (np.array): parameter matrix.
+            tau (float): non-negative thresholding parameter.
+        
+        Returns:
+            np.array: shrunken matrix.
+            float: shrunken l_12 norm.
+        """
         # TODO (franknu): add support for weighted group norm
         if self.meta['nonbinary']:
             return grp_soft_shrink(mat_s, tau,
@@ -240,7 +280,14 @@ class BaseSparseSolver(BaseCGSolver):
                                off=self.opts['off'])
 
     def sparse_norm(self, mat_s):
-        """return l21/ l1-norm of mat_s"""
+        """return l12/ l1-norm of mat_s
+        
+        Args:
+            mat_s (np.array): parameter matrix.
+        
+        Returns:
+            float: l12-norm.
+        """
         if self.meta['nonbinary']:
             return l21norm(mat_s,
                            self.meta['n_cat'] + self.meta['n_cg'],
@@ -252,12 +299,10 @@ class BaseSparseSolver(BaseCGSolver):
 
 class BaseGradSolver(abc.ABC):
     """
-    Base solver for iterative (scipy L-BFGS-B) solvers
-    provides with methods to pack/unpack parameters into vector
+    Base solver for iterative (scipy L-BFGS-B) solvers.
     """
 
     def __init__(self):
-        #        print('Init BaseCGSolver')
         super().__init__()
 
         self.shapes = None
@@ -332,7 +377,10 @@ class BaseGradSolver(abc.ABC):
 
 class BaseSolverSL(BaseSparseSolver):
     """
-    base class for S+L model solvers
+    A base class for sparse + low-rank model solvers.
+    
+    Attributes:
+        problem_vars: currently stored parameters.
     """
 
     def __init__(self, *args, **kwargs):
@@ -354,7 +402,9 @@ class BaseSolverSL(BaseSparseSolver):
     def get_canonicalparams(self):
         """Retrieves the PW S+L CG model parameters from flat parameter vector.
 
-        output: Model_PWSL instance"""
+        Returns:
+            Model_PWSL instance
+        """
 
         mat_s, mat_l, alpha = self.problem_vars
 
@@ -416,9 +466,12 @@ class BaseSolverSL(BaseSparseSolver):
                                   ptype: str = 'std') -> None:
         """set regularization parameters
 
-        hyperparams ... pair of regularization parameters
-
-        ptype ... if 'std',
+        Args:
+            hyperparams: pair of regularization parameters.
+            scales: if None, use standard scaling sqrt(log(n_cg)/n), 
+                   else scales must be a two-tuple, and lambda and rho are
+                   scaled according to the elements of this two-tuple
+            ptype (str): if 'std', then
                 set lambda, rho = hyperparams * scaling(n, nvars), where
                 the parameters are for the problem
                     min l(S-L) + lambda * ||S||_1 + rho * tr(L)
@@ -431,14 +484,7 @@ class BaseSolverSL(BaseSparseSolver):
               alpha, beta are weights in [0,1] and the problem is
                min (1-alpha-beta) * l(S-L) + alpha * ||S||_1 + beta * tr(L)
                s.t. S-L>0, L>=0
-
-        In addition to the specified regularization parameters,
-        the regularization parameters can be scaled by a fixed value (depending
-        on the number of data points and variables):
-
-        scales ... if None, use standard scaling np.sqrt(log(dg)/n)
-                   else  scales must be a two-tuple, and lambda and rho are
-                   scaled according to the elements of this two-tuple
+        
         """
         assert len(hyperparams) == 2
         assert hyperparams[0] >= 0 and hyperparams[1] >= 0
@@ -484,7 +530,11 @@ class BaseSolverSL(BaseSparseSolver):
 
 class BaseSolverPW(BaseSparseSolver):
     """
-    base class for sparse graphical model solvers
+    A base class for sparse graphical model solvers.
+    
+    Attributes:
+        problem_vars: currently stored parameters.
+        lbda (float): regularization parameter
     """
 
     def __init__(self, *args, **kwargs):
@@ -505,7 +555,9 @@ class BaseSolverPW(BaseSparseSolver):
     def get_canonicalparams(self):
         """Retrieves the PW CG model parameters from flat parameter vector.
 
-        output: Model_PW instance"""
+        Returns:
+            Model_PW instance
+        """
 
         mat_s, alpha = self.problem_vars
 
@@ -561,25 +613,20 @@ class BaseSolverPW(BaseSparseSolver):
 
     def set_regularization_params(self, regparam, set_direct=False,
                                   scale=None, ptype='std'):
-        """set regularization parameters for
-        min l(S) + la*||S||_{2/1}
+        """set regularization parameters for the graphical lasso.
 
-        hyperparams ... pair of regularization parameters
+        Args:
+            hyperparams: pair of regularization parameters
 
-        ptype ... if 'std',
+            ptype: if 'std',
                 set lambda = regparam * scaling(n, nvars), where
                 Here, scaling(n, nvars) is a scaling suggested by
                 consistency results
                 Argument <scales> is not used in this case!
               if 'direct', directly set lambda = regparam
               if 'convex' assume that alpha = regparam and
-                min_S (1-alpha) * l(S) + alpha * ||S||_ {2,1}
-
-        In addition to the specified regularization parameter,
-        the regularization parameters can be scaled by a fixed value (depending
-        on the number of data points and variables):
-
-        scales ... if None, use standard scaling np.sqrt(log(dg)/n)
+                min_S (1-alpha) * l(S) + alpha * ||S||_ {1,2}
+            scale: if None, use standard scaling np.sqrt(log(n_cg)/n)
                    else  scales must be a nonnegative number with which lambda
                    is scaled
         """
