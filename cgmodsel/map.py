@@ -16,8 +16,11 @@ from cgmodsel.base_solver import BaseCGSolver
 
 class MAP(BaseCGSolver):
     """
-    this class can be used to estimate maximum a-posteriori models
-    for CG distributions that are parametrized using mean parameters
+    A class for estimating MAP models for CG distributions (mean parameters).
+    
+    Attributes:
+        cat_format_required (str): specifier for format - constant.
+        name: name of the class.
     """
 
     def __init__(self):
@@ -27,21 +30,26 @@ class MAP(BaseCGSolver):
         self.name = 'MAP'
         self.cat_format_required = 'flat'
 
-    def _fit_gaussian(self, mat_v_inv, deg_freedom: int, vec_mu0,
+    def _fit_gaussian(self,
+                      mat_v_inv, 
+                      deg_freedom: int,
+                      vec_mu0,
                       n_art_cg: int):
         """ fit Gaussian MAP-estimate
 
         Wishart prior for precision matrix
-        deg_freedom    ... degrees of freedom (=nu)
-        mat_v_inv  ... inverse of V for the prior W(Lambda| V, nu)
+        Args:
+            mat_v_inv: inverse of V for the prior W(Lambda| V, nu).
+            deg_freedom: degrees of freedom (=nu).
+            vec_mu0: mean of Gaussian prior N(mu | mu0, (n_art_cg * Lambda)^{-1})
+            n_art_cg: number of artificial observations for Gaussian prior.
+        
 
-        Gaussian prior for mean
-        n_art_cg    ... number of artificial observations
-        vec_mu0   ... mean of prior N(mu | mu0, (n_art_cg * Lambda)^{-1})
+        Note:
+            Setting n_art_cg=0 (and nu = #Gaussians) produces ML estimate.
 
-        Note: setting n_art_cg=0 (and nu = #Gaussians) produces ML estimate
-
-        returns MAP estimates (vec_mu, mat_sigma)
+        Returns:
+            tuple: MAP estimates (vec_mu, mat_sigma)
         """
         assert self.meta['n_cat'] == 0, 'use for continuous variables only'
         assert self.meta['n_cg'] > 0
@@ -68,29 +76,33 @@ class MAP(BaseCGSolver):
                              deg_freedom: int = None,
                              vec_mu0=None,
                              mat_sigma0=None):
-        """fit MAP-CG model with a unique single covariance matrix and
-        individual means for all conditional gaussians.
+        """fit MAP model with single covariance matrix + individual CG means.
 
-        ** components of the Dirichlet-Normal-Wishart prior **
-        Dirichlet prior parameters (prior for discrete distribution)
-        n_art_cat     ... Laplacian smoothing parameter
+        Warning:
+            This method of model estimation uses
+            sums over the whole discrete state space.
+
+        Args:
+            n_art_cat (int): Laplacian smoothing parameter
                 = artificial observations per discrete variable
-                (this is alpha in the doc)
+                Dirichlet prior parameters (prior for discrete distribution).
 
-        Gaussian prior parameters (prior for means of conditional Gaussians)
-        n_art_cg    ... number of 'artificial' data points per CG
-                  (this is kpa in the doc)
-        mu0   ... value of artificial data points
+            n_art_cg (int): number of 'artificial' data points per CG
+                (prior parameter for means of conditional Gaussians).
+                
+            vec_mu0: the value of artificial CG data points.
+            
+            deg_freedom (int): degrees of freedom 
+                (prior parameter for Wishart prior 
+                for the shared precision matrix of CG distributions).
+            mat_sigma0: initial guess for the covariance matrix.
+        
+        Note:
+            Complete prior is a Dirichlet-Normal-Wishart prior.
 
-        params Wishart prior (for shared precision matrix of CG distributions)
-        deg_freedom     .. degrees of freedom (=nu)
-        mat_sigma0 .. initial guess for the covariance matrix
-
-        returns MAP-estimate (p(x)_x, mu(x)_x, mat_sigma),
-                where x are the discrete outcomes
-
-        A (computational) warning: This method of model estimation uses
-        sums over the whole discrete state space.
+        Returns:
+            tuple: MAP-estimate (p(x)_x, mu(x)_x, mat_sigma), where x
+            are the discrete outcomes.
         """
         # TODO(franknu): publish doc
         # future ideas(franknu):
@@ -174,29 +186,33 @@ class MAP(BaseCGSolver):
                                 deg_freedom: int = None,
                                 vec_mu0=None,
                                 mat_sigma0=None):
-        """fit MAP-CG model with  individual covariance matrices
-        and means for all conditional gaussians.
+        """fit MAP model with individual covariance matrices and means.
 
-        ** Components of the Dirichlet-Normal-Wishart Prior **
-        Dirichlet prior parameters (prior for discrete distribution)
-        k     ... Laplacian smoothing parameter
-                  = 'artificial' observations per discrete variable
-                  (this is alpha in the doc)
+        Warning:
+            This method of model estimation uses
+            sums over the whole discrete state space.
 
-        Gaussian prior parameters (prior for means of conditional Gaussians)
-        n_art_cg    ... # 'artificial' data points per conditional Gaussian
-                  (this is kpa in the doc)
-        mu0   ... value of artificial data points
+        Args:
+            n_art_cat (int): Laplacian smoothing parameter
+                = artificial observations per discrete variable
+                Dirichlet prior parameters (prior for discrete distribution).
 
-        params Wishart prior (for shared precision matrix of CG distributions)
-        deg_freedom     .. degrees of freedom (=nu)
-        mat_sigma0 .. initial guess for the covariance matrices mat_sigma(x)
+            n_art_cg (int): number of 'artificial' data points per CG
+                (prior parameter for means of conditional Gaussians).
+                
+            vec_mu0: the value of artificial CG data points.
+            
+            deg_freedom (int): degrees of freedom 
+                (prior parameter for Wishart prior 
+                for the shared precision matrix of CG distributions).
+            mat_sigma0: initial guess for the covariance matrices.
+        
+        Note:
+            Complete prior is a Dirichlet-Normal-Wishart prior.
 
-        returns MAP-estimate (p(x)_x, mu(x)_x, mat_sigma(x)_x),
-                where x are the discrete outcomes
-
-        A (computational) warning: This method of model estimation uses
-        sums over the whole discrete state space.
+        Returns:
+            tuple: MAP-estimate (p(x)_x, mu(x)_x, mat_sigma_x), where x
+            are the discrete outcomes.
         """
         # TODO(franknu): publish doc
         assert self.meta['n_data'] > 0, 'No data loaded.. use method dropdata'
@@ -269,19 +285,34 @@ class MAP(BaseCGSolver):
         return probs_cat, mus, sigmas
 
     def get_plhvalue(self, mean_params):
-        """ returns pseudo-likelihood value of current data set """
+        """Wrapper for crossvalidate method.
+        
+        Args:
+            mean_params: tuple (p, mus, sigmas).
+        
+        Returns:
+            pseudo-likelihood value of current data set
+        """
         _, _, lval = self.crossvalidate(mean_params)
         return lval
 
     def crossvalidate(self, mean_params):
-        """
-        perform crossvalidation
-        mean_params ... tuple (p, mus, sigmas)
-        p:      has shape sizes
-        mus:    has shape sizes +(dg)
-        sigmas: has shape (dg,dg) if independent of discrete variables x
-                else has shape sizes + (dg, dg) if dependent on x
+        """Perform crossvalidation by node-wise predictions.
+        
+        Note:
+            This uses the current data that has been dropped using method
+            drop_data.
+        
+        Args:
+            mean_params: tuple (p, mus, sigmas), where
+            p has shape sizes, mus has shape sizes + (n_cg),
+            sigmas has shape (n_cg, n_cg) if independent of discrete vars x,
+            else has shape sizes + (n_cg, n_cg) if dependent on x.
 
+        Returns:
+            tuple: prediction errors for discrete variables (np.array),
+                MSE errors for continuous variables (np.array),
+                pseudo-likelihood value (float)
         """
         n_cat = self.meta['n_cat']
         n_cg = self.meta['n_cg']

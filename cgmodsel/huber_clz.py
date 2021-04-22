@@ -24,7 +24,8 @@ class HuberCLZ(HuberBase, BaseCGSolver):
     A class that provides with methods (model selection, crossvalidation)
     associated with CLZ CG models
 
-    code in this class is experimental
+    Note:
+        code in this class is experimental
     """
 
     def __init__(self, useweights=True):
@@ -78,10 +79,13 @@ class HuberCLZ(HuberBase, BaseCGSolver):
 
     def set_regularization_params(self, regparam):
         """set regularization parameters
-        kS is a scaling parameter for the lambda for the group-sparsity norm
+        
+        Args:
+            regparam: scaling parameter for lambda in the group-sparsity norm
 
-        min l(Theta) + kS*la* (sum_g ||Theta_g||_{2}),
-        where the sum is over the groups
+        Note:
+            Problem is min l(Theta) + regparam*la* (sum_g ||Theta_g||_{2}),
+            where the sum is over the groups.
         """
         self.lbda = regparam * self.meta['reg_fac']
 
@@ -164,7 +168,10 @@ class HuberCLZ(HuberBase, BaseCGSolver):
 
     def get_canonicalparams(self, x, verb=False):  # overwritten from base class
         """retrieves the CLZ-CG model parameters from flat parameter vector.
-        output: CLZ params class"""
+        
+        Returns:
+            CLZ params class
+        """
         mat_q, vec_u, mat_r, lambda0, beta0, lambdas, beta, alpha = \
             self.preprocess(x)
         # return copy (since unpack does)
@@ -226,8 +233,12 @@ class HuberCLZ(HuberBase, BaseCGSolver):
                           smooth=True,
                           verb='-'):
         """calculate function value f and gradient g of CLZ model
-        x    vector of parameters
-        increases self.fcalls by 1, no other class variables are modified"""
+        Args:
+            x: vector of parameters
+        
+        Note:
+            increases self.fcalls by 1, no other class variables are modified
+        """
         glims = self.meta['cat_glims']
         sizes = self.meta['sizes']
         ltot = self.meta['ltot']
