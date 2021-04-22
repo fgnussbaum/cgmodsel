@@ -170,9 +170,9 @@ class ModelPWSL(BaseModelPW):
             and get_groupnorm_theta methods.
 
         Returns: 
-            tuple: plus_edges (additional edges in model self), 
-                minus_edges (missing edges from model other), 
-                diff_rank = rank(L_self) - rank(L_other)
+            tuple: plus_edges (additional edges in model self), minus_edges
+            (missing edges from model other), diff_rank
+            = rank(L_self) - rank(L_other)
         """
         ## S
         self_normmat = self.get_group_mat(**kwargs)
@@ -325,12 +325,14 @@ class ModelPWSL(BaseModelPW):
         return np.sum(mat_s)
 
     def get_theta(self, padded=False):
-        """
-        padded: if true, return 0-padded parameter matrices
+        """get marginal interaction parameters.
+        
+        Args:
+            padded (bool): if true, return 0-padded parameter matrices.
 
-        returns (Theta = S + L, u)
-        where discrete block diagonal of Theta is set to zero
-        and discrete univariate effects are in u
+        Returns:
+            tuple: (Theta = S + L, u), where discrete block diagonal of Theta
+            is set to zero and discrete univariate effects are in u
         """
         mat_s, mat_l, vec_u, _ = self.get_params_sl(padded=padded, clean_l=True)
 
@@ -340,13 +342,19 @@ class ModelPWSL(BaseModelPW):
 
     def get_params_sl(self, padded=False, clean_l=False):
         """
-        returns (S, L, u, alpha) from the pw CG density
-            p(x,y) ~ exp(1/2 (C_x, y)^T (S+L) (C_x y) + u^T C_x + alpha^T y)
-
-        cleanL: if set to true, discrete effects on diagonal of d are trans-
-                ferred to u, and discrete block diagonal of L is set to zero
-
-        padded: if true, return 0-padded parameter matrices
+        
+        Args:
+            padded (bool): whether to return padded parameter values.
+            clean_l: if set to true, discrete effects on diagonal of d are
+                transferred to u, and discrete block diagonal of L is set
+                to zero
+        
+        Returns:
+            tuple: (S, L, u, alpha)
+            
+        Note:
+            Density then is
+            p(x,y) ~ exp(1/2 (C_x, y)^T (S+L) (C_x y) + u^T C_x + alpha^T y).
         """
         glims = self.meta['cat_glims']
         sizes = self.meta['sizes']
@@ -371,13 +379,18 @@ class ModelPWSL(BaseModelPW):
 
     def get_params(self):
         """return a list of the class parameters"""
-        return self.vec_u, self.mat_q, self.mat_r, self.alpha, \
-                self.mat_lbda, self.mat_l
+        return (self.vec_u, self.mat_q, self.mat_r, self.alpha, 
+                self.mat_lbda, self.mat_l)
 
     def get_meanparams(self):
         """
         wrapper for _get_meanparams from base class
-        Q, R, Lambda are obtained from the compound matrix Theta = S + L
+        
+        Note:
+            Q, R, Lambda are obtained from the compound matrix Theta = S + L.
+        
+        Returns:
+            tuple: mean parameters (p, mus, Sigmas).
         """
         theta, vec_u = self.get_theta(padded=True)
         mat_q, mat_r, mat_lbda = _split_theta(theta, self.meta['ltot'])
@@ -420,10 +433,11 @@ class ModelPWSL(BaseModelPW):
                 save=False,
                 cbarscale=1.0,
                 plottype='bw'):
-        """
-        plot S+L decomposition
-        several options are available to make the plots look nice
-        experimental code
+        """Plot S+L decomposition.
+        
+        Note:
+            several options are available to make the plots look nice.
+            Experimental code.
         """
         cmap = cm.seismic
         plus = True
@@ -564,9 +578,10 @@ class ModelPWSL(BaseModelPW):
                        save=False,
                        norm=False,
                        printspec=False):
-        """
-        another plotting function for the model
-        experimental code
+        """another plotting function for the model
+        
+        Note:
+            This is experimental code.
         """
         if not norm:
             #            cmap = cm.coolwarm
@@ -669,8 +684,17 @@ class ModelPWSL(BaseModelPW):
             print('spec(>.1):', np.around(self_spec[self_spec > .01], 2))
 
     def sample(self, n: int, gibbs_iter: int = 10):
-        """ A Gibbs sampler for pairwise models
-        n       ...  number of datapoints to be produced
-        k       ... steps the Markov Chain should do until accepting the outcome
+        """Sample from the model.
+        
+        Note:
+            Calls the Gibbs samples from Model_PW,
+            hence the interace is the same.
+
+        Args:
+            n (int): number of samples to be generated. 
+            gibbs_iter (int): steps of the Markov Chain.
+        
+        Returns:
+            tuple: cat_data (np.array), cont_data (np.array).
         """
         return self.to_pwmodel().sample(n, gibbs_iter=gibbs_iter)
