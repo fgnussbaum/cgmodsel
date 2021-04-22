@@ -52,10 +52,12 @@ class LikelihoodProx(BaseGradSolver):
         self.n_params = sum([np.prod(shape[1]) for shape in self.shapes])
 
 
-    def clean_theta(self, theta):
+    def _clean_theta(self, theta):
         """
         make pairwise parameter matrix feasible for likelihood prox solver
-        -> modifies Theta
+        
+        Note:
+            This modifies matrix theta.
         """
         # copies upper triangle of Theta to lower triangle to symmetrize
         # Furthermore, all elements on the block-diagonal of the discrete
@@ -68,22 +70,26 @@ class LikelihoodProx(BaseGradSolver):
 # Solver for Pseudo-likelihood Prox operator
 ###############################################################################
 
-    def callback_plh(self, optvars, handle_fg):
+    def _callback_plh(self, optvars, handle_fg):
         """callback to check for potential bugs"""
         fnew = handle_fg(optvars)[0]
         if not fnew <= self._fold:
             string = 'Potential scipy bug, fvalue increased in last iteration'
-            print('Warning(CG_base_ADMM.callback_plh): %s' % (string))
+            print('Warning(CG_base_ADMM._callback_plh): %s' % (string))
         self._fold = fnew
 
     def solve(self, mat_z, prox_param, old_thetaalpha):
-        """ solve proximal mapping of negative pseudo loglikelihood
+        """solve proximal mapping of negative pseudo loglikelihood
         min_{Theta, alpha} l_p(Theta, alpha) + 1 / (2mu) * ||Theta-Z||_F^2
+        
+        Note:
+            This method should usually not be called from users.
 
-        known issue with ADMM:
-        not doing warm starts may cause problems if solution is to inexact
-        generally ADMM convergence requires very exact solutions
-        -> use ftol to control tolerancy, or refine to control #restarts
+        Waring:
+            known issue with ADMM:
+            not doing warm starts may cause problems if solution is to inexact
+            generally ADMM convergence requires very exact solutions
+            -> use ftol to control tolerancy, or refine to control #restarts
         """
         # split Z (since in determining the prox objective
         # the split components are used)
@@ -101,11 +107,11 @@ class LikelihoodProx(BaseGradSolver):
         components_z = zmat_q, zvec_u, zmat_r, zmat_b, zbeta
 
         handle_fg = lambda optvars: \
-            self.get_fval_and_grad(optvars, components_z, prox_param)
+            self._get_fval_and_grad(optvars, components_z, prox_param)
 
         ## solve proximal mapping
 
-        #        x0 = self.get_rand_startingpoint()
+        #        x0 = self._get_rand_startingpoint()
         x_init = self._theta_to_x(*old_thetaalpha)
         # starting point as vector, save for input parameters
         f_init = handle_fg(x_init)[0]
@@ -125,7 +131,7 @@ class LikelihoodProx(BaseGradSolver):
         # TODO(franknu): use zerobounds for block diagonal of Q?
 
         ## further solver properties
-        callback = lambda optvars: self.callback_plh(optvars, handle_fg)
+        callback = lambda optvars: self._callback_plh(optvars, handle_fg)
 
         correctionpairs = min(len(bnds) - 1, 10)
 
@@ -153,9 +159,12 @@ class LikelihoodProx(BaseGradSolver):
 
         return theta, alpha
 
-    def preprocess(self, optvars):
-        """ unpack parameters from vector x and preprocess
-        this modifies x (x not save for reuse)"""
+    def _preprocess(self, optvars):
+        """unpack parameters from vector x and preprocess.
+        
+        Note:
+            This modifies x (x not save for reuse).
+        """
 
         glims = self.meta['cat_glims']
         sizes = self.meta['sizes']
@@ -170,7 +179,7 @@ class LikelihoodProx(BaseGradSolver):
 
         return mat_q, vec_u, mat_r, fac_lambda, alpha
 
-    def get_fval_and_grad(self, optvars, components_z, prox_param, eps=1e-15):
+    def _get_fval_and_grad(self, optvars, components_z, prox_param, eps=1e-15):
         """calculate function value f and gradient g of
         plh(Theta, alpha) + 1 / (2prox_param) ||Theta - Z||_F^2,
         where Theta, alpha are contained in the vector x of parameters
@@ -184,7 +193,7 @@ class LikelihoodProx(BaseGradSolver):
 
         ## unpack parameters from vector optvars
         mat_q, vec_u, mat_r, fac_lambda, alpha = \
-            self.preprocess(optvars)
+            self._preprocess(optvars)
 
         mat_b, beta = self._faclambda_to_bbeta(fac_lambda)
         beta += eps * np.ones(beta.shape)  # increase numerical instability
@@ -302,14 +311,14 @@ class LikelihoodProx(BaseGradSolver):
 
         return fval, grad.reshape(-1)
 
-    def callback(self, optvars, component_z, prox_param, approxgrad=1):
+    def _callback(self, optvars, component_z, prox_param, approxgrad=1):
         """a callback function that serves primarily for debugging"""
-        fval, grad = self.get_fval_and_grad(optvars, component_z, prox_param)
+        fval, grad = self._get_fval_and_grad(optvars, component_z, prox_param)
 
         print('f=', fval)
         if approxgrad:  # gradient check
             func_handle_f = lambda optvars: \
-                self.get_fval_and_grad(optvars, component_z, prox_param)[0]
+                self._get_fval_and_grad(optvars, component_z, prox_param)[0]
             eps = np.sqrt(np.finfo(float).eps)  # ~1.49E-08 at my machine
             gprox = approx_fprime(optvars, func_handle_f, eps)
 
@@ -324,15 +333,16 @@ class LikelihoodProx(BaseGradSolver):
             print('graddev=', np.linalg.norm(diff))
 
     def _faclambda_to_bbeta(self, fac_lambda):
-        """ construct precision matrix, then extract diagonal """
+        """Construct precision matrix, then extract diagonal """
         mat_b = np.dot(fac_lambda, fac_lambda.T)  # PSD precision matrix
         beta = np.diag(mat_b).copy().reshape((self.meta['n_cg'], 1))  # diagonal
         mat_b -= np.diag(np.diag(mat_b))  # off-diagonal elements
         return mat_b, beta
 
     def _theta_to_tuple(self, theta):
-        """ split Theta into its components
-        (save: returns copies from data in Theta, Theta is not modified)"""
+        """Split Theta into its components
+        (save: returns copies from data in Theta, Theta is not modified)
+        """
         ltot = self.meta['ltot']
         glims = self.meta['cat_glims']
         sizes = self.meta['sizes']
@@ -399,16 +409,26 @@ class LikelihoodProx(BaseGradSolver):
 
         return theta, alpha
 
-    def get_rand_startingpoint(self):
-        """ not needed if using warm starts """
+    def _get_rand_startingpoint(self):
+        """not needed if using warm starts """
         n_cg = self.meta['n_cg']
         x_init = np.random.random(self.n_params)
         x_init[self.n_params - n_cg:] = np.ones(n_cg)
         return x_init
 
     def plh(self, theta, alpha, cval=False):
-        """ return negative pseudo-log-likelihood function value
-        cval .. if True, calculate (node-wise) cross validation error"""
+        """Calculate negative pseudo-log-likelihood value.
+        
+        Args:
+            theta (np.array): matrix of pairwise parameters.
+            alpha (np.array): univariate CG parameters.
+            cval (bool): if True, calculate (node-wise) cross validation error.
+        
+        Returns:
+            float/tuple: negative pseudo-log-likelihood function value
+            (if cval=False), else tuple (discrete crossvalidation errors,
+            continuous crossvalidation errors, pseudo-likelihood value)
+        """
         n_cg = self.meta['n_cg']
         n_cat = self.meta['n_cat']
         n_data = self.meta['n_data']
@@ -469,7 +489,21 @@ class LikelihoodProx(BaseGradSolver):
         return fval
 
     def crossvalidate(self, theta, alpha):
-        """perform cross validation (drop test data) """
+        """Perform cross validation.
+
+        Note:
+            This uses the current data that has been dropped using method
+            drop_data.
+        
+        Args:
+            theta (np.array): matrix of pairwise parameters.
+            alpha (np.array): univariate CG parameters.
+        
+        Returns:
+            tuple: prediction errors for discrete variables (np.array),
+                MSE errors for continuous variables (np.array),
+                pseudo-likelihood value (float)
+        """
         n_cg = self.meta['n_cg']
         n_cat = self.meta['n_cat']
         n_data = self.meta['n_data']

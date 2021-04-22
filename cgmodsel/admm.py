@@ -213,7 +213,7 @@ class AdmmCGaussianSL(BaseSolverSL, BaseAdmm):
         mat_theta[ltot:, ltot:] *= -1
         # since lower right block needs to be negative definite
         # make Theta feasible/cleaned for plh
-        mat_theta = self.prox.clean_theta(mat_theta)
+        mat_theta = self.prox._clean_theta(mat_theta)
 
         alpha = np.zeros((self.meta['n_cg'], 1))
         mat_s = mat_theta.copy()
@@ -387,7 +387,7 @@ class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
         mat_theta = np.eye(dim)
         #        mat_theta *= -1 # lower right block must be neg definite
         # TODO: make Theta feasible/cleaned for plh
-        #        mat_theta = self.prox.clean_theta(mat_theta)
+        #        mat_theta = self.prox._clean_theta(mat_theta)
 
         alpha = np.zeros((self.meta['n_cg'], 1))
         mat_s = mat_theta.copy()
@@ -561,7 +561,7 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
         mat_theta[ltot:, ltot:] *= -1
         # since lower right block needs to be negative definite
         # make Theta feasible/cleaned for plh
-        mat_theta = self.prox.clean_theta(mat_theta)
+        mat_theta = self.prox._clean_theta(mat_theta)
 
         alpha = np.zeros((self.meta['n_cg'], 1))
         mat_s = mat_theta.copy()
