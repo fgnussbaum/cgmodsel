@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2019 Frank Nussbaum (frank.nussbaum@uni-jena.de)
+# Copyright (c) 2017-2021 Frank Nussbaum (frank.nussbaum@uni-jena.de)
 """
 @author: Frank Nussbaum
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: Frank Nussbaum (frank.nussbaum@uni-jena.de), 2019
+@author: Frank Nussbaum (frank.nussbaum@uni-jena.de), 2019-2021
 
 """
 import pickle
@@ -308,7 +308,7 @@ class ModelPWSL(BaseModelPW):
         
         Args:
             addu: set to 1.0 if univariate effects (diagonal)
-            shall be included in calculation, set to 0 otherwise
+                shall be included in calculation, set to 0 otherwise
         
         Returns:
             float: l_{1,2}-norm.

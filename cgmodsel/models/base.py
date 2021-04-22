@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: Frank Nussbaum (frank.nussbaum@uni-jena.de), 2019
+@author: Frank Nussbaum (frank.nussbaum@uni-jena.de), 2019-2021
 
 """
 import abc
