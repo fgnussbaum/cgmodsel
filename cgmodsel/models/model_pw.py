@@ -15,34 +15,37 @@ from cgmodsel.models.base import BaseModelPW
 ##################################
 class ModelPW(BaseModelPW):
     """
-    class for parameters of distribution
-    p(x,y) ~ exp(1/2 (C_x, y)^T Theta (C_x y) + u^T C_x + alpha^T y)
+    A class for pairwise CG models.
+    
+    Note:
+        Model to store parameters of pairwise CG model with density
+        
+        p(x,y) ~ exp(1/2 (C_x, y)^T Theta (C_x y) + u^T C_x + alpha^T y).
 
-    this class uses padded parameters (that is, parameters for 0-th levels are
-    included, however, one might want them to be constrained to 0 for
-    identifiability reasons)
-
-    here:
-    [C_x .. dummy representation of x]
-    u .. univariate discrete parameters
-    alpha .. univariate cont. parameters
-    Theta ... pairwise interaction parameter matrix given by
+        Here, C_x is a dummy representation of x,
+        u are univariate discrete parameters,
+        alpha are univariate cont. parameters,
+        Theta is the pairwise interaction parameter matrix given by
         Theta = (Q & R^T \\ R & -Lambda)
-    with
-    Q .. discrete-discrete interactions
-    R .. discrete-cont. interactions
-    Lambda .. cont.-cont. interactions
+        with
+        discrete-discrete interactions Q,
+        discrete-cont. interactions R,
+        and cont.-cont. interactions Lambda.
 
-    initialize with tuple pw = (u, Q, R, alpha, Lambda)
-    or dictionary that has (optional) keys pw_mat (alpha, u), for details see
-    base class constructor
+        This class uses padded parameters (that is,
+        parameters for 0-th levels are included, however,
+        one might want them to be constrained to 0 for identifiability reasons)
 
-    Attention to the special case of only Gaussians observed variables:
-    uses as above
+    Warning:
+        Attention to the special case of only Gaussians observed variables,
+        uses as above
+        
         p(y) ~ exp(1/2  y^T Theta y + alpha^T y),
-    i.e. Theta has inverted sign compared to the regular precision matrix.
-    The density parametrized by the precision matrix would read as
-        p(y) ~ exp(-1/2 y^T precisionmatrix y + alpha^T y)
+        
+        i.e. pairwise parameters (Theta) have inverted sign
+        compared to the regular precision matrix.
+        The density parametrized by the precision matrix would read as
+        p(y) ~ exp(-1/2 y^T precisionmatrix y + alpha^T y).
     """
 
     name = 'PW'
@@ -53,7 +56,18 @@ class ModelPW(BaseModelPW):
                  infile: str = None,
                  annotations: dict = {},
                  **kwargs):
-
+        """
+        Args:
+            pw_params: parameters, either as dictionary, or tuple/list.
+                As tuple/list use form (u, Q, R, alpha, Lambda),
+                as dictionary provide keys pw_mat (alpha, u).
+            meta (dict): dictionary of meta info (similar to meta dictionary
+                 from loading data).
+            infile (str): filename of a PW model file. Loading model from file
+                 has the highest priority.
+            annotations (dict, optional): pass annotations to the model.
+            in_padded (bool): whether parameters are padded
+        """
 
         if not infile is None:
             # load model from file
@@ -91,16 +105,23 @@ class ModelPW(BaseModelPW):
                       disscale=.3,
                       ctsscale=.2,
                       marginalize=True):
-        """
-        augment n_latent latent variables to given pairwise model pwmodel
+        """Augment model with latent variables.
+        
+        Args:
+            n_latent (int): number of latent variables to add.
+            connectionprob (float): probability of interaction
+                between latent variables.
+            marginalize (bool): if True, return S+L model (class Model_PWSL)
+                        with the latent variables marginalized out.
 
-        connectionprob ... probability of interaction between latent var
-
-        marginalize ... if True, return S+L model (class Model_PWSL)
-                        with the latent variables marginalized out
-
-        experimental code,
-        various other parameters to determine interactions strengths etc.
+        Warning:
+            Experimental code with various other parameters
+            to determine interactions strengths etc.
+            Ensures that the model remains normalizable.
+        
+        Returns:
+            Model_PWSL: marginalized model (only if marginalize=True,
+            return None else)
         """
         if seed != -1:
             print('Model_PW.add_latent_CG: Set seed to %d' % (seed))
@@ -192,14 +213,25 @@ class ModelPW(BaseModelPW):
     def get_meanparams(self):
         """
         wrapper for _get_meanparams from base class Model_PW_Base
+        
+        Returns:
+            tuple: mean parameters (p, mus, Sigmas)
         """
         pwparams = self.vec_u, self.mat_q, self.mat_r, self.alpha, self.mat_lbda
 
         return self._get_meanparams(pwparams)
 
     def get_no_edges(self, threshold=1e-2, **kwargs):
-        """"return number of edges of S
-        threshold ... cutoff for edges and principal components
+        """Calculate number of edges.
+        
+        Note:
+            kwargs are forwarded to get_graph method from base class.
+        
+        Args:
+            threshold (float): cutoff for edges.
+            
+        Returns:
+            int: number of edges.
         """
 
         graph = self.get_graph(threshold=threshold, **kwargs)
@@ -209,11 +241,22 @@ class ModelPW(BaseModelPW):
         return no_edges
     
     def get_params(self):
-        """return model parameters """
+        """Get model parameters.
+        
+        Returns:
+            tuple: (u, Q, R, alpha, Lambda)
+        """
         return self.vec_u, self.mat_q, self.mat_r, self.alpha, self.mat_lbda
     
     def get_pairwiseparams(self, padded=True):
-        """return pairwise parameter matrix Theta, u, alpha"""
+        """Get pairwise parameter matrix Theta, u, alpha
+        
+        Args:
+            padded (bool): whether return padded version of parameters
+            
+        Returns:
+            tuple: Theta, u, alpha.
+        """
         theta = self.get_group_mat(aggr=False)
         if not padded:
             sizes = self.meta['sizes']
@@ -222,15 +265,18 @@ class ModelPW(BaseModelPW):
         return theta, self.vec_u, self.alpha
 
     def marginalize(self, drop_idx: (tuple, list), verb: bool = False):
-        """ marginalize out CG variables
+        """Marginalize out CG variables.
+        
+        Args:
+            drop_idx: indices of CG to be marginalized out.
+            verb (bool): controls verbose mode.
 
-        drop_idx ... indices of (conditional) Gaussians to be marginalized out
+        Returns:
+            Model_PWSL: sparse + low-rank instance
 
-        returns Model_PWSL instance
-
-        marginalization follows a Schur-complement formula given in the Dissertation script
-        (see section marginalization of pairwise CG distributions)
-        the decomposition is of the form S + L
+        Note:
+            marginalization follows a Schur-complement formula, see
+            the dissertation - the decomposition is of the form S + L.
         """
         # import here to avoid files for both classes importing each other
         from cgmodsel.models.model_pwsl import ModelPWSL
@@ -300,12 +346,20 @@ class ModelPW(BaseModelPW):
 #        raise NotImplementedError
 
     def sample(self, n: int, gibbs_iter: int = 10):
-        """implements a naive Gibbs sampler for pairwise models
-        each sample is sampled after reinitialization followed by gibbs_iter
-        steps of the Markov chain
-
-        n       ...  number of datapoints to be sampled
-        gibbs_iter       ...  steps of the Markov Chain until outcome is taken
+        """Sample from the model.
+        
+        Note:
+            This implements a naive Gibbs sampler for pairwise models.
+            Each sample is sampled after reinitialization,
+            followed by gibbs_iter steps of the Markov chain.
+            Code is not optimized.
+        
+        Args:
+            n (int): number of samples to be generated. 
+            gibbs_iter (int): steps of the Markov Chain.
+        
+        Returns:
+            tuple: cat_data (np.array), cont_data (np.array).
         """
         # TODO(franknu): speed up sampling if n is large
         # by not reinitializing and recording states after, e.g., every 5 steps

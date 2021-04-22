@@ -20,33 +20,40 @@ from cgmodsel.models.base import unpad, pad, _split_theta
 ##################################
 class ModelPWSL(BaseModelPW):
     """
-    class for parameters of distribution
-    p(x,y) ~ exp(1/2 (C_x, y)^T (S+L) (C_x y) + u^T C_x + alpha^T y)
+    A class for parameters of sparse + low-rank models
+    
+    Note:
+        Model to store parameters of pairwise CG model,
+        where some of the CG variables have been marginalized out.
+        Density is given by
+        
+        p(x,y) ~ exp(1/2 (C_x, y)^T (S+L) (C_x y) + u^T C_x + alpha^T y)
 
-    this class uses padded parameters (that is, parameters for 0-th levels are
-    included, however, one might want them to be constrained to 0 for
-    identifiability reasons)
+        Here, C_x is a dummy representation of x,
+        u are univariate discrete parameters,
+        alpha are univariate cont. parameters,
+        L>=0 describes indirect interactions,
+        S describes direct pairwise interactions given by
+        S= (Q & R^T \\ R & -Lambda)
+        with
+        discrete-discrete interactions Q,
+        discrete-cont. interactions R,
+        and cont.-cont. interactions Lambda.
 
-    here:
-    [C_x .. dummy representation of x]
-    u .. univariate discrete parameters
-    alpha .. univariate cont. parameters
-    L >= 0 .. indirect interactions
-    S .. direct interaction given by
-        S = (Q & R^T \\ R & -Lambda)
-    with
-    Q .. discrete-discrete interactions
-    R .. discrete-cont. interactions
-    Lambda .. cont-cont interactions
+        This class uses padded parameters (that is,
+        parameters for 0-th levels are included, however,
+        one might want them to be constrained to 0 for identifiability reasons)
 
-    initialize with tuple sl = (u, Q, R, alpha, Lambda, L)
-
-    Attention to the special case of only Gaussians observed variables:
-    uses as above
+    Warning:
+        Attention to the special case of only Gaussians observed variables,
+        uses as above
+        
         p(y) ~ exp(1/2  y^T (S+L) y + alpha^T y),
-    i.e. S has inverted sign
-    instead of the representation in Chandrasekaran et al. (2011)
-        p(y) ~ exp( -1/2 y^T (S-L) y + alpha^T y)
+        
+        i.e., the pairwise parameters S have inverted sign
+        compared to the regular precision matrix 
+        as used in Chandrasekaran et al. (2011):
+        p(y) ~ exp(-1/2 y^T (S-L) y + alpha^T y).
     """
     
     name = 'SL'  # model name
@@ -57,6 +64,16 @@ class ModelPWSL(BaseModelPW):
                  infile: str = None,
                  annotations: dict = {},
                  in_padded: bool = True):
+        """
+        Args:
+            sl_params (tuple): parameters (u, Q, R, alpha, Lambda, L).
+            meta (dict): dictionary of meta info (similar to meta dictionary
+                 from loading data).
+            infile (str): filename of a PW model file. Loading model from file
+                 has the highest priority.
+            annotations (dict, optional): pass annotations to the model.
+            in_padded (bool): whether parameters are padded
+        """
 
         if not infile is None:
             # load model from file
@@ -92,8 +109,13 @@ class ModelPWSL(BaseModelPW):
         return string
 
     def get_stats(self, threshold=1e-2, **kwargs):
-        """"return number of edges of S and rank of L
-        threshold ... cutoff for edges and principal components
+        """Calculate number of edges of S and rank of L.
+        
+        Args:
+            threshold (float): cutoff for edges and principal components.
+            
+        Returns:
+            tuple: number of edges (int), rank (int)
         """
         spec = np.linalg.eigvals(self.mat_l)
         rank = len(*np.where(spec > threshold))
@@ -107,7 +129,15 @@ class ModelPWSL(BaseModelPW):
         return no_edges, rank
 
     def get_groupnorm_theta(self, diagonal=True, norm=True):
-        """ return group norms of Theta (observed pw interactions)"""
+        """return group norms of Theta (observed pw interactions)
+        
+        Args:
+            diagonal (bool): whether to include diagonal.
+            norm (bool): if True, aggregate groups using Euclidean norm.
+            
+        Returns:
+            np.array: matrix with aggregated groups.
+        """
         theta_marg, unew = self.get_theta(padded=True)
         # theta_marg has 0 discrete block diagonal
 
@@ -126,22 +156,22 @@ class ModelPWSL(BaseModelPW):
                                    norm=norm)
 
     def compare(self, other, disp=False, threshold=1e-2, **kwargs):
-        """
-        compare this model with other S+L model (of the same class)
+        """Compare this model with another S+L model.
 
-        other ... other model to which self model shall be compared
-                    (typically some 'true' model)
+        Args:
+            other: another Model_PSWL model instance 
+                to which this model is to be compared 
+                (typically some 'true' model).
+            threshold: threshold for counting edges, non-zero singular values.
+            disp (bool): whether to plot differences.
 
-        threshold ... threshold: when does an edge count as an edge/
-                        the same threshold is used for singular values
+        Note:
+            kwargs are passed to _get_group_mat 
+            and get_groupnorm_theta methods.
 
-        disp ... whether to plot differences
-
-        kwargs are passed to _get_group_mat and get_groupnorm_theta methods
-                (diagonal = True/False)
-
-        output: plus_edges (additional edges in model self)
-                minus_edges (missing edges from model other)
+        Returns: 
+            tuple: plus_edges (additional edges in model self), 
+                minus_edges (missing edges from model other), 
                 diff_rank = rank(L_self) - rank(L_other)
         """
         ## S
@@ -243,9 +273,14 @@ class ModelPWSL(BaseModelPW):
         return plus_edges, minus_edges, diff_rank
 
     def get_incoherence(self):
-        """
-        calculate incoherence coh(L) = max_i ||P_{U(L)} e_i||_2,
-        where P_{U(L)} projects onto the row/column space U(L) of L
+        """Calculate incoherence.
+        
+        Note:
+            coh(L) = max_i ||P_{U(L)} e_i||_2,
+            where P_{U(L)} projects onto the row/column space U(L) of L
+        
+        Returns:
+            float: incoherence value.
         """
         lambdas, mat_u = np.linalg.eigh(self.mat_l)
         threshold = 1e-5  # only use eigvals that differ significantly from 0
@@ -269,9 +304,15 @@ class ModelPWSL(BaseModelPW):
         return np.max(spec)
 
     def get_grpnorm_s(self, addu=0):
-        """return group l21-norm of sparse component S
-        addu ... set to 1.0 if univariate effects (diagonal) shall be included
-        in calculation, set to 0 otherwise"""
+        """return group l12-norm of sparse component S
+        
+        Args:
+            addu: set to 1.0 if univariate effects (diagonal)
+            shall be included in calculation, set to 0 otherwise
+        
+        Returns:
+            float: l_{1,2}-norm.
+        """
         mat_q = self.mat_q.copy()
         if addu:
             mat_q += 2 * addu * np.diag(self.vec_u)

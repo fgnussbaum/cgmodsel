@@ -26,7 +26,14 @@ CG = 'CG'
 
 
 def get_modeltype(meta):
-    """derive modeltype from variable specifications"""
+    """derive modeltype from variable specifications.
+    
+    Args:
+        meta (dict): dictionary of meta info about a dataset.
+        
+    Returns:
+        str: modeltype.
+    """
     if meta['n_cat'] == 0:
         modeltype = GAUSSIAN
     elif meta['n_cg'] == 0:
@@ -44,7 +51,14 @@ def get_modeltype(meta):
 
 
 def _invert_indices(arr, range_max):
-    """return all indices from range(range_max) that are not in arr as a list"""
+    """calculate all indices from range(range_max) that are not in arr
+    
+    Args:
+        arr (list-like): array.
+    
+    Returns:
+        list: list of complementary indices.
+    """
     inv = []
     for j in range(range_max):
         if j not in arr:
@@ -54,7 +68,8 @@ def _invert_indices(arr, range_max):
 
 def _schur_complement(mat, keep_idx=None, drop_idx=None):
     """Returns S and L from upper Schur complement S-L of array_like M
-    where the 'upper block' is indexed by keep_idx and the lower block by drop_idx
+    where the 'upper block' is indexed by keep_idx
+    and the lower block by drop_idx
     (only one list should be given).
     """
     ## derive index lists
@@ -104,13 +119,21 @@ def _theta_from_components(mat_q, mat_r, mat_lbda):
 
 
 def pad(arr, sizes, rowsonly=False):
-    """ padding for pairwise parameter matrix or univariate parameter vector u
-    (adds rows/columns of zeros for the 0-th levels,
-    they correspond to interactions parameters set to 0 for identifiability
-    reasons)
-
-    sizes ... list of number of levels for each discrete variable
-    rowsonly ... if True, pad only rows"""
+    """padding for pairwise parameter matrix or univariate parameter vectors.
+    
+    Note:
+        This adds rows/columns of zeros for the 0-th levels,
+        they correspond to interactions parameters set to 0 for identifiability
+        reasons)
+    
+    Args:
+        arr (np.array): array to pad.
+        sizes (list): number of levels for each discrete variable.
+        rowsonly (bool): whether to pad only rows.
+        
+    Returns:
+        np.array: padded array
+    """
     ltot = sum(sizes)
     n_cat = len([n_levels for n_levels in sizes if n_levels > 0])
     sizes_cum = np.cumsum([0] + sizes)
@@ -140,8 +163,15 @@ def pad(arr, sizes, rowsonly=False):
 
 
 def unpad(theta, sizes):
-    """unpad pairwise parameter matrix
-    sizes ... list of number of levels for each discrete variable"""
+    """unpad pairwise parameter matrix.
+    
+    Args:
+        theta (np.array): pairwise parameter matrix.
+        sizes: list of number of levels for each discrete variable.
+    
+    Returns:
+        np.array: unpadded parameter matrix
+    """
     sizes_cum = np.cumsum([0] + sizes)
 
     if len(theta.shape) == 2:
@@ -154,13 +184,29 @@ def unpad(theta, sizes):
 ###############################################################################
 def mean_to_canonparams(meanparams: (tuple, list)):
     """
-    convert mean parameters to canonical parameters
+    Convert mean parameters to canonical parameters.
+    
+    Note:
+        Conversion formulas are given by
+        
+        p(x) ~ (2pi)^{n/2}|La^{-1}|^{1/2}exp(q(x) + 1/2 nu(x)^T La^{-1} nu(x))
+        
+        mu(x) = La^{-1}nu(x)
+        
+        Sigma = La^{-1}, 
+        
+        where nu(x) = alpha + R D_x and q(x) = u^T D_x + 1/2 D_x^T Q D_x.
+        Here, D_x is the dummy representation of the categorical values in x.
 
-    meanparameters is a tupe (p, mus, sigmas),
-    where sigmas is the covariance for all conditional distributions p(y|x)
-    for pairwise model -> 2D array, and sigmas is a 3D array if the covariances
-    are different for p(y|x), in this case sigmas(x, :, :) is the covariance of
-    p(y|x)
+    Args:
+        meanparams (tuple): (p, mus, sigmas), 
+            where for fixed-covariance models sigmas is the fixed covariance for
+            all CG distributions p(y|x) of the model (a 2D array),
+            and sigmas=sigmas(x, :, :) is a 3D array
+            if the covariance matrices depend on x in p(y|x).
+    
+    Returns:
+        tuple: canonical parameters (q, nus, lambdas).
     """
     p, mus, sigmas = meanparams
 
@@ -221,15 +267,18 @@ def mean_to_canonparams(meanparams: (tuple, list)):
 
 
 def canon_to_meanparams(canparams: (tuple, list)):
-    """
-    convert canonical parameters to mean parameters
+    """Convert canonical parameters to mean parameters.
 
-    canparams is a tupe (q, nus, lambdas),
-    where lambdas is the precision for all conditional distributions p(y|x)
-    for pairwise model -> 2D array,
-    and lambdas is a 3D array if the precision matrices
-    are different for p(y|x), in this case lambdas(x, :, :) is the precision of
-    p(y|x)
+    Args:
+        canparams (tuple): (q, nus, lambdas), 
+            where for fixed-covariance/precision models lambdas
+            is the fixed precision for 
+            all CG distributions p(y|x) of the model (a 2D array),
+            and lambdas=lambdas(x, :, :) is a 3D array
+            if the precision matrices depend on x in p(y|x).
+        
+    Returns:
+        tuple: meanparams (p, mus, sigmas)
     """
     q, nus, lambdas = canparams
 
@@ -304,7 +353,13 @@ def canon_to_meanparams(canparams: (tuple, list)):
 
 class BaseModel(abc.ABC):
     """
-    base class for all models
+    A base class for all models.
+    
+    Attributes:
+        n_latent (int): number of latent variables in the model.
+        annotations (dict): contains model annotations.
+        meta (dict): contains meta information about the distribution.
+        name (str): model name.
     """
     
     name = 'base'
@@ -317,17 +372,24 @@ class BaseModel(abc.ABC):
         self.meta = {}
 
     def get_numberofedges(self, threshold=10E-2):
-        """ return number of edges in the graph"""
+        """Calculate the number of edges in the conditional independence graph.
+        
+        Args:
+            threshold (float): threshold parameter for the edges.
+        
+        returns:
+            int: number of edges
+        """
         graph = self.get_graph(threshold=threshold)
         return int(np.sum(graph) / 2)
 
     @abc.abstractmethod
     def get_group_mat(self, diagonal=False, norm=True):
-        """return matrix of group norms """
+        """return matrix of group norms."""
         raise NotImplementedError  # Implement in derived class
 
     def get_meta(self):
-        """get dictionary of meta data"""
+        """get dictionary of meta data."""
         return self.meta
 
 #    @abc.abstractmethod
@@ -337,7 +399,7 @@ class BaseModel(abc.ABC):
 
     @abc.abstractmethod
     def get_graph(self, threshold=1e-2):
-        """ return graph of the model"""
+        """return graph of the model"""
         raise NotImplementedError  # Implement in derived class
 
     def repr_graphical(self,
@@ -348,10 +410,12 @@ class BaseModel(abc.ABC):
                        norm=True,
                        save=False,
                        vmax=None):
-        """ a graphical representation of the groupnorm for PW and CLZ models
-        (this method is overwritten by the Model_PWSL model class)
-
-        experimental code"""
+        """Plot a graphical representation of the model.
+        
+        Note: 
+            This method is overwritten by the Model_PWSL model class.
+            Code for visualization is experimental.
+        """
         grpnormat = self.get_group_mat(diagonal=diagonal, norm=norm)
         vmin = np.min(grpnormat)
         if vmax is None:
@@ -410,8 +474,11 @@ class BaseModel(abc.ABC):
 
 class BaseModelPW(BaseModel):
     """
-    this class specializes to standard PW model and S+L model,
-    see the classes ModelPW and ModelPWSL
+    A base class for pairwise models.
+    It specializes to standard PW models and S+L (sparse + low-rank) models.
+    
+    Attributes: 
+        modeltype (str): inferred model type.
     """
 
     def __init__(self,
@@ -419,6 +486,14 @@ class BaseModelPW(BaseModel):
                  meta: dict,
                  annotations: dict = None,
                  in_padded: bool = True):
+        """
+        Args:
+            pw_params: parameters, either as dictionary, or tuple/list.
+            meta (dict): dictionary of meta info (similar to meta dictionary
+                 from loading data).
+            annotations (dict, optional): pass annotations to the model.
+            in_padded (bool): whether parameters are padded
+        """
         BaseModel.__init__(self)
 
         if not annotations is None:
@@ -491,15 +566,20 @@ class BaseModelPW(BaseModel):
                        diagonal: bool = False,
                        aggr: bool = True,
                        norm: bool = True):
-        """
-        calculate group aggregations, e.g., the l_2 norms of all groups
-
-        diagonal ... if False and aggr=True, then exclude groups
-                     of univariate parameters (that are on the diagonal)
-
-        aggr ... if True, aggregate values of group into single value
-
-        norm ... if True, use np.linalg.norm for aggregation, else use np.sum
+        """Calculate group aggregations.
+        
+        Args:
+            mat_q: discrete interactions.
+            mat_r: continuous-discrete interactions.
+            mat_lbda: continuous-continuous interactions.
+            diagonal (bool): if False and aggr=True, then exclude groups
+            of univariate parameters (that are on the diagonal).
+            aggr (bool): if True, aggregate values of group into single value.
+            norm (bool): if True, use np.linalg.norm for aggregation,
+            else use np.sum.
+        
+        Returns:
+            np.array: matrix obtained from group aggregations.
         """
         if not aggr:  # do not use an aggregation functions for the groups
             return _theta_from_components(mat_q, mat_r, mat_lbda)
@@ -532,15 +612,33 @@ class BaseModelPW(BaseModel):
         return aggrmat
 
     def get_group_mat(self, **kwargs):
-        """ returns matrix of group norms of the direct interactions"""
+        """Calculate matrix of group norms of the direct interactions."
+ 
+        Args:
+            diagonal (bool): if False and aggr=True, then exclude groups
+            of univariate parameters (that are on the diagonal).
+            aggr (bool): if True, aggregate values of group into single value.
+            norm (bool): if True, use np.linalg.norm for aggregation,
+            else use np.sum.
+        
+        Returns:
+            np.array: matrix obtained from group aggregations.
+        """
         return self._get_group_mat(self.mat_q, self.mat_r, self.mat_lbda,
                                    **kwargs)
 
     def get_graph(self, threshold=1e-1):
-        """ calculate group norms of the parameters associated with
-        each edge and threshold
-
-        plot graph if disp is True"""
+        """Calculate graph.
+        
+        Note: 
+            This calculate group norms of the parameters associated with 
+            each edge and applies threshold.
+        
+        Args:
+            threshold (float): threshold to use.
+        
+        Returns:
+            np.array: graph"""
         # perhaps do variable threshold for different group types
         grpnormmat = self._get_group_mat(self.mat_q,
                                          self.mat_r,
@@ -555,15 +653,7 @@ class BaseModelPW(BaseModel):
         return graph
 
     def _get_meanparams(self, pwparams: (tuple, list)):
-        """
-        convert pairwise parameters to mean parameters
-        p(x) ~ (2pi)^{n/2}|La^{-1}|^{1/2}exp(q(x) + 1/2 nu(x)^T La^{-1} nu(x) )
-        mu(x) = La^{-1}nu(x)
-        Sigma = La^{-1}
-
-        with nu(x) = alpha + R D_x and q(x) = u^T D_x + 1/2 D_x^T Q D_x.
-        Here D_x is the dummy representation of the categorical values in x.
-        """
+        """Convert pairwise parameters to mean parameters"""
         vec_u, mat_q, mat_r, alpha, mat_lbda = pwparams
         assert vec_u.shape == (self.meta['ltot'],)
         assert alpha.shape == (self.meta['n_cg'],)
@@ -642,8 +732,18 @@ class BaseModelPW(BaseModel):
         self.annotations.update(kwargs)
 
     def save(self, outfile=None, foldername="savedmodels", trial=None):
-        """save model to file <outfile> (if provided),
-        else save in folder <foldername> and try to infer a filename"""
+        """save model.
+        
+        Args:
+            outfile (str, optional): path/filename for model, 
+                if not provided, a filename is generated.
+            foldername (str): folder in which file is saved
+                (only used for generating filename).
+            trial (int): used for generating filename (aka trial number).
+        
+        Returns:
+            str: filename of saved model.
+        """
         params = {
                 'params': self.get_params(),
                 'meta': self.meta,

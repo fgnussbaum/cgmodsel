@@ -58,6 +58,10 @@ except Exception as e:
             glims: group delimiters (cumulative sizes of groups).
             n_groups: # groups per row/column (if this is given,
                 perform group soft shrink instead of soft shrink).
+            weights (optional): weights for weighted l_{1,2} norm/shrinkage.
+        
+        Returns:
+            tuple: shrunken matrix, (group) l_{1,2}-norm of shrunken matrix.
     
         Note:
             this code could be made much faster
@@ -108,10 +112,19 @@ except Exception as e:
 
 def l21norm(mat, n_groups=None, glims=None, off=False, weights=None):
     """
-    calculate l_{2,1}-norm or l_1-norm of mat
-    l_1-norm if no n_groups is given
-    else must provide with n_groups (# groups per row/column) and
-    cumulative sizes of groups (glims)
+    calculate l_{1,2}-norm.
+
+    Args:
+        mat (np.array): matrix.
+        off (bool): if True, do not shrink diagonal entries.
+        
+        glims: group delimiters (cumulative sizes of groups).
+        n_groups: # groups per row/column (if this is given,
+            perform group soft shrink instead of soft shrink).
+        weights (optional): weights for weighted l_{1,2} norm. 
+    
+    Returns:
+        float: (group) l_{1,2}-norm.
     """
     if n_groups is None:
         # calculate regular l1-norm
@@ -170,7 +183,16 @@ def _exp_shiftedmax(array, axis=None):
 
 def logsumexp(array, axis=None, keepdims=True):
     """Compute the log of the sum of exponentials of input elements.
-    this is an adaptation of logsumexp in scipy.special (v1.1.0)
+    
+    Args:
+        array (np.array): array on which to compute logsumexp.
+        axis (int): axis along which to compute logsupexp.
+        keepdims (bool): passed to np.sum.
+    
+    Returns:
+        np.array: logsumexp
+    Note:
+        This is an adaptation of logsumexp in scipy.special (v1.1.0)
     """
 
     exp_shifted, a_max = _exp_shiftedmax(array, axis=axis)
@@ -338,7 +360,7 @@ def strlistfrom(array, rnd=2):
 
 
 def tomatlabmatrix(mat):
-    """print numpy matrix in a way that can be pasted into MATLAB code """
+    """print numpy matrix in a way that can be pasted into MATLAB code."""
     nrows, ncols = mat.shape
     string = "["
     for i in range(nrows):
@@ -351,7 +373,7 @@ def tomatlabmatrix(mat):
 
 
 def frange(start, stop, step):
-    """ a float range function"""
+    """a float range function"""
     i = start
     while i < stop:
         yield i
