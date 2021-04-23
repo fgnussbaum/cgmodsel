@@ -18,7 +18,6 @@ import numpy as np
 try:
 #    import os
 #    os.system('python cgmodsel/setup.py build_ext --inplace')
-    f=1/0
     from cyshrink.shrink.shrink import grp as grp_soft_shrink # requires setup
 #    from shrink.shrink import grp_weighted as grp_soft_shrink_weighted
     print('successfully imported shrink.shrink')

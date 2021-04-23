@@ -1751,11 +1751,11 @@ static const char __pyx_k_i[] = "i";
 static const char __pyx_k_j[] = "j";
 static const char __pyx_k_k[] = "k";
 static const char __pyx_k_l[] = "l";
-static const char __pyx_k_z[] = "z";
 static const char __pyx_k_id[] = "id";
 static const char __pyx_k_np[] = "np";
 static const char __pyx_k_fac[] = "fac";
 static const char __pyx_k_grp[] = "grp";
+static const char __pyx_k_mat[] = "mat";
 static const char __pyx_k_new[] = "__new__";
 static const char __pyx_k_num[] = "num";
 static const char __pyx_k_obj[] = "obj";
@@ -1763,7 +1763,6 @@ static const char __pyx_k_off[] = "off";
 static const char __pyx_k_tau[] = "tau";
 static const char __pyx_k_base[] = "base";
 static const char __pyx_k_dict[] = "__dict__";
-static const char __pyx_k_glim[] = "glim";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_mode[] = "mode";
 static const char __pyx_k_name[] = "name";
@@ -1777,6 +1776,7 @@ static const char __pyx_k_ASCII[] = "ASCII";
 static const char __pyx_k_class[] = "__class__";
 static const char __pyx_k_error[] = "error";
 static const char __pyx_k_flags[] = "flags";
+static const char __pyx_k_glims[] = "glims";
 static const char __pyx_k_gnorm[] = "gnorm";
 static const char __pyx_k_numpy[] = "numpy";
 static const char __pyx_k_range[] = "range";
@@ -1892,7 +1892,7 @@ static PyObject *__pyx_n_s_format;
 static PyObject *__pyx_n_s_fortran;
 static PyObject *__pyx_n_u_fortran;
 static PyObject *__pyx_n_s_getstate;
-static PyObject *__pyx_n_s_glim;
+static PyObject *__pyx_n_s_glims;
 static PyObject *__pyx_n_s_gnorm;
 static PyObject *__pyx_kp_s_got_differing_extents_in_dimensi;
 static PyObject *__pyx_n_s_grp;
@@ -1905,6 +1905,7 @@ static PyObject *__pyx_n_s_j;
 static PyObject *__pyx_n_s_k;
 static PyObject *__pyx_n_s_l;
 static PyObject *__pyx_n_s_main;
+static PyObject *__pyx_n_s_mat;
 static PyObject *__pyx_n_s_memview;
 static PyObject *__pyx_n_s_mode;
 static PyObject *__pyx_n_s_n_threads;
@@ -1954,8 +1955,7 @@ static PyObject *__pyx_kp_s_unable_to_allocate_array_data;
 static PyObject *__pyx_kp_s_unable_to_allocate_shape_and_str;
 static PyObject *__pyx_n_s_unpack;
 static PyObject *__pyx_n_s_update;
-static PyObject *__pyx_n_s_z;
-static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_z, double __pyx_v_tau, __Pyx_memviewslice __pyx_v_glim, int __pyx_v_off, CYTHON_UNUSED long __pyx_v_n_threads); /* proto */
+static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_mat, double __pyx_v_tau, __Pyx_memviewslice __pyx_v_glims, int __pyx_v_off, CYTHON_UNUSED long __pyx_v_n_threads); /* proto */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array___cinit__(struct __pyx_array_obj *__pyx_v_self, PyObject *__pyx_v_shape, Py_ssize_t __pyx_v_itemsize, PyObject *__pyx_v_format, PyObject *__pyx_v_mode, int __pyx_v_allocate_buffer); /* proto */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array_2__getbuffer__(struct __pyx_array_obj *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_array___pyx_pf_15View_dot_MemoryView_5array_4__dealloc__(struct __pyx_array_obj *__pyx_v_self); /* proto */
@@ -2038,26 +2038,26 @@ static PyObject *__pyx_codeobj__27;
 /* "shrink/shrink.pyx":14
  * 
  * 
- * def grp(double[:,::1] z,             # <<<<<<<<<<<<<<
+ * def grp(double[:,::1] mat,             # <<<<<<<<<<<<<<
  *         double tau,
- *         long[:] glim,
+ *         long[:] glims,
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_6shrink_6shrink_1grp(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_6shrink_6shrink_grp[] = "grp(double[:, ::1] z, double tau, long[:] glim, int off=0, long n_threads=4)\n This function computes the group shrinkage operation on z ";
+static char __pyx_doc_6shrink_6shrink_grp[] = "grp(double[:, ::1] mat, double tau, long[:] glims, int off=0, long n_threads=4)\n This function computes the group shrinkage operation on z ";
 static PyMethodDef __pyx_mdef_6shrink_6shrink_1grp = {"grp", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_6shrink_6shrink_1grp, METH_VARARGS|METH_KEYWORDS, __pyx_doc_6shrink_6shrink_grp};
 static PyObject *__pyx_pw_6shrink_6shrink_1grp(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  __Pyx_memviewslice __pyx_v_z = { 0, 0, { 0 }, { 0 }, { 0 } };
+  __Pyx_memviewslice __pyx_v_mat = { 0, 0, { 0 }, { 0 }, { 0 } };
   double __pyx_v_tau;
-  __Pyx_memviewslice __pyx_v_glim = { 0, 0, { 0 }, { 0 }, { 0 } };
+  __Pyx_memviewslice __pyx_v_glims = { 0, 0, { 0 }, { 0 }, { 0 } };
   int __pyx_v_off;
   CYTHON_UNUSED long __pyx_v_n_threads;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("grp (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_z,&__pyx_n_s_tau,&__pyx_n_s_glim,&__pyx_n_s_off,&__pyx_n_s_n_threads,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_mat,&__pyx_n_s_tau,&__pyx_n_s_glims,&__pyx_n_s_off,&__pyx_n_s_n_threads,0};
     PyObject* values[5] = {0,0,0,0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
@@ -2079,7 +2079,7 @@ static PyObject *__pyx_pw_6shrink_6shrink_1grp(PyObject *__pyx_self, PyObject *_
       kw_args = PyDict_Size(__pyx_kwds);
       switch (pos_args) {
         case  0:
-        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_z)) != 0)) kw_args--;
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_mat)) != 0)) kw_args--;
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
@@ -2089,7 +2089,7 @@ static PyObject *__pyx_pw_6shrink_6shrink_1grp(PyObject *__pyx_self, PyObject *_
         }
         CYTHON_FALLTHROUGH;
         case  2:
-        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_glim)) != 0)) kw_args--;
+        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_glims)) != 0)) kw_args--;
         else {
           __Pyx_RaiseArgtupleInvalid("grp", 0, 3, 5, 2); __PYX_ERR(0, 14, __pyx_L3_error)
         }
@@ -2122,9 +2122,9 @@ static PyObject *__pyx_pw_6shrink_6shrink_1grp(PyObject *__pyx_self, PyObject *_
         default: goto __pyx_L5_argtuple_error;
       }
     }
-    __pyx_v_z = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_z.memview)) __PYX_ERR(0, 14, __pyx_L3_error)
+    __pyx_v_mat = __Pyx_PyObject_to_MemoryviewSlice_d_dc_double(values[0], PyBUF_WRITABLE); if (unlikely(!__pyx_v_mat.memview)) __PYX_ERR(0, 14, __pyx_L3_error)
     __pyx_v_tau = __pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_tau == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 15, __pyx_L3_error)
-    __pyx_v_glim = __Pyx_PyObject_to_MemoryviewSlice_ds_long(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_glim.memview)) __PYX_ERR(0, 16, __pyx_L3_error)
+    __pyx_v_glims = __Pyx_PyObject_to_MemoryviewSlice_ds_long(values[2], PyBUF_WRITABLE); if (unlikely(!__pyx_v_glims.memview)) __PYX_ERR(0, 16, __pyx_L3_error)
     if (values[3]) {
       __pyx_v_off = __Pyx_PyInt_As_int(values[3]); if (unlikely((__pyx_v_off == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 17, __pyx_L3_error)
     } else {
@@ -2144,14 +2144,14 @@ static PyObject *__pyx_pw_6shrink_6shrink_1grp(PyObject *__pyx_self, PyObject *_
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_6shrink_6shrink_grp(__pyx_self, __pyx_v_z, __pyx_v_tau, __pyx_v_glim, __pyx_v_off, __pyx_v_n_threads);
+  __pyx_r = __pyx_pf_6shrink_6shrink_grp(__pyx_self, __pyx_v_mat, __pyx_v_tau, __pyx_v_glims, __pyx_v_off, __pyx_v_n_threads);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_z, double __pyx_v_tau, __Pyx_memviewslice __pyx_v_glim, int __pyx_v_off, CYTHON_UNUSED long __pyx_v_n_threads) {
+static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_mat, double __pyx_v_tau, __Pyx_memviewslice __pyx_v_glims, int __pyx_v_off, CYTHON_UNUSED long __pyx_v_n_threads) {
   double __pyx_v_shrinkednorm;
   double __pyx_v_gnorm;
   double __pyx_v_fac;
@@ -2206,25 +2206,25 @@ static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self
  *     """ This function computes the group shrinkage operation on z """
  *     cdef double shrinkednorm = 0.0, gnorm, num, fac             # <<<<<<<<<<<<<<
  *     cdef int i, j, k, l;
- *     cdef int ngroups = glim.shape[0] - 1;
+ *     cdef int ngroups = glims.shape[0] - 1;
  */
   __pyx_v_shrinkednorm = 0.0;
 
   /* "shrink/shrink.pyx":22
  *     cdef double shrinkednorm = 0.0, gnorm, num, fac
  *     cdef int i, j, k, l;
- *     cdef int ngroups = glim.shape[0] - 1;             # <<<<<<<<<<<<<<
+ *     cdef int ngroups = glims.shape[0] - 1;             # <<<<<<<<<<<<<<
  * 
- *     for i in prange(glim.shape[0] - 1, nogil=True, schedule='static', num_threads=n_threads):
+ *     for i in prange(glims.shape[0] - 1, nogil=True,
  */
-  __pyx_v_ngroups = ((__pyx_v_glim.shape[0]) - 1);
+  __pyx_v_ngroups = ((__pyx_v_glims.shape[0]) - 1);
 
   /* "shrink/shrink.pyx":24
- *     cdef int ngroups = glim.shape[0] - 1;
+ *     cdef int ngroups = glims.shape[0] - 1;
  * 
- *     for i in prange(glim.shape[0] - 1, nogil=True, schedule='static', num_threads=n_threads):             # <<<<<<<<<<<<<<
+ *     for i in prange(glims.shape[0] - 1, nogil=True,             # <<<<<<<<<<<<<<
+ *                     schedule='static', num_threads=n_threads):
  * #    for i in range(ngroups):
- *         for l in range(ngroups):
  */
   {
       #ifdef WITH_THREAD
@@ -2233,8 +2233,8 @@ static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self
       __Pyx_FastGIL_Remember();
       #endif
       /*try:*/ {
-        if (unlikely(!__pyx_v_glim.memview)) { __Pyx_RaiseUnboundMemoryviewSliceNogil("glim"); __PYX_ERR(0, 24, __pyx_L4_error) }
-        __pyx_t_1 = ((__pyx_v_glim.shape[0]) - 1);
+        if (unlikely(!__pyx_v_glims.memview)) { __Pyx_RaiseUnboundMemoryviewSliceNogil("glims"); __PYX_ERR(0, 24, __pyx_L4_error) }
+        __pyx_t_1 = ((__pyx_v_glims.shape[0]) - 1);
         if (1 == 0) abort();
         {
             #if ((defined(__APPLE__) || defined(__OSX__)) && (defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && (__GNUC_MINOR__ > 95)))))
@@ -2263,59 +2263,59 @@ static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self
                             __pyx_v_k = ((int)0xbad0bad0);
                             __pyx_v_l = ((int)0xbad0bad0);
 
-                            /* "shrink/shrink.pyx":26
- *     for i in prange(glim.shape[0] - 1, nogil=True, schedule='static', num_threads=n_threads):
+                            /* "shrink/shrink.pyx":27
+ *                     schedule='static', num_threads=n_threads):
  * #    for i in range(ngroups):
  *         for l in range(ngroups):             # <<<<<<<<<<<<<<
  *             gnorm = 0.0
- *             for k in range(glim[i], glim[i + 1]):
+ *             for k in range(glims[i], glims[i + 1]):
  */
                             __pyx_t_4 = __pyx_v_ngroups;
                             __pyx_t_5 = __pyx_t_4;
                             for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
                               __pyx_v_l = __pyx_t_6;
 
-                              /* "shrink/shrink.pyx":27
+                              /* "shrink/shrink.pyx":28
  * #    for i in range(ngroups):
  *         for l in range(ngroups):
  *             gnorm = 0.0             # <<<<<<<<<<<<<<
- *             for k in range(glim[i], glim[i + 1]):
- *                 for j in range(glim[l], glim[l + 1]):
+ *             for k in range(glims[i], glims[i + 1]):
+ *                 for j in range(glims[l], glims[l + 1]):
  */
                               __pyx_v_gnorm = 0.0;
 
-                              /* "shrink/shrink.pyx":28
+                              /* "shrink/shrink.pyx":29
  *         for l in range(ngroups):
  *             gnorm = 0.0
- *             for k in range(glim[i], glim[i + 1]):             # <<<<<<<<<<<<<<
- *                 for j in range(glim[l], glim[l + 1]):
- *                     gnorm += z[k, j] * z[k, j]
+ *             for k in range(glims[i], glims[i + 1]):             # <<<<<<<<<<<<<<
+ *                 for j in range(glims[l], glims[l + 1]):
+ *                     gnorm += mat[k, j] * mat[k, j]
  */
                               __pyx_t_7 = (__pyx_v_i + 1);
-                              __pyx_t_8 = (*((long *) ( /* dim=0 */ (__pyx_v_glim.data + __pyx_t_7 * __pyx_v_glim.strides[0]) )));
+                              __pyx_t_8 = (*((long *) ( /* dim=0 */ (__pyx_v_glims.data + __pyx_t_7 * __pyx_v_glims.strides[0]) )));
                               __pyx_t_9 = __pyx_v_i;
                               __pyx_t_10 = __pyx_t_8;
-                              for (__pyx_t_11 = (*((long *) ( /* dim=0 */ (__pyx_v_glim.data + __pyx_t_9 * __pyx_v_glim.strides[0]) ))); __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
+                              for (__pyx_t_11 = (*((long *) ( /* dim=0 */ (__pyx_v_glims.data + __pyx_t_9 * __pyx_v_glims.strides[0]) ))); __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
                                 __pyx_v_k = __pyx_t_11;
 
-                                /* "shrink/shrink.pyx":29
+                                /* "shrink/shrink.pyx":30
  *             gnorm = 0.0
- *             for k in range(glim[i], glim[i + 1]):
- *                 for j in range(glim[l], glim[l + 1]):             # <<<<<<<<<<<<<<
- *                     gnorm += z[k, j] * z[k, j]
+ *             for k in range(glims[i], glims[i + 1]):
+ *                 for j in range(glims[l], glims[l + 1]):             # <<<<<<<<<<<<<<
+ *                     gnorm += mat[k, j] * mat[k, j]
  *             if i == l and off:
  */
                                 __pyx_t_12 = (__pyx_v_l + 1);
-                                __pyx_t_13 = (*((long *) ( /* dim=0 */ (__pyx_v_glim.data + __pyx_t_12 * __pyx_v_glim.strides[0]) )));
+                                __pyx_t_13 = (*((long *) ( /* dim=0 */ (__pyx_v_glims.data + __pyx_t_12 * __pyx_v_glims.strides[0]) )));
                                 __pyx_t_14 = __pyx_v_l;
                                 __pyx_t_15 = __pyx_t_13;
-                                for (__pyx_t_16 = (*((long *) ( /* dim=0 */ (__pyx_v_glim.data + __pyx_t_14 * __pyx_v_glim.strides[0]) ))); __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
+                                for (__pyx_t_16 = (*((long *) ( /* dim=0 */ (__pyx_v_glims.data + __pyx_t_14 * __pyx_v_glims.strides[0]) ))); __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
                                   __pyx_v_j = __pyx_t_16;
 
-                                  /* "shrink/shrink.pyx":30
- *             for k in range(glim[i], glim[i + 1]):
- *                 for j in range(glim[l], glim[l + 1]):
- *                     gnorm += z[k, j] * z[k, j]             # <<<<<<<<<<<<<<
+                                  /* "shrink/shrink.pyx":31
+ *             for k in range(glims[i], glims[i + 1]):
+ *                 for j in range(glims[l], glims[l + 1]):
+ *                     gnorm += mat[k, j] * mat[k, j]             # <<<<<<<<<<<<<<
  *             if i == l and off:
  *                 continue
  */
@@ -2323,13 +2323,13 @@ static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self
                                   __pyx_t_18 = __pyx_v_j;
                                   __pyx_t_19 = __pyx_v_k;
                                   __pyx_t_20 = __pyx_v_j;
-                                  __pyx_v_gnorm = (__pyx_v_gnorm + ((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_z.data + __pyx_t_17 * __pyx_v_z.strides[0]) )) + __pyx_t_18)) ))) * (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_z.data + __pyx_t_19 * __pyx_v_z.strides[0]) )) + __pyx_t_20)) )))));
+                                  __pyx_v_gnorm = (__pyx_v_gnorm + ((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_17 * __pyx_v_mat.strides[0]) )) + __pyx_t_18)) ))) * (*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_19 * __pyx_v_mat.strides[0]) )) + __pyx_t_20)) )))));
                                 }
                               }
 
-                              /* "shrink/shrink.pyx":31
- *                 for j in range(glim[l], glim[l + 1]):
- *                     gnorm += z[k, j] * z[k, j]
+                              /* "shrink/shrink.pyx":32
+ *                 for j in range(glims[l], glims[l + 1]):
+ *                     gnorm += mat[k, j] * mat[k, j]
  *             if i == l and off:             # <<<<<<<<<<<<<<
  *                 continue
  *             if gnorm > 0.0:
@@ -2345,8 +2345,8 @@ static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self
                               __pyx_L17_bool_binop_done:;
                               if (__pyx_t_21) {
 
-                                /* "shrink/shrink.pyx":32
- *                     gnorm += z[k, j] * z[k, j]
+                                /* "shrink/shrink.pyx":33
+ *                     gnorm += mat[k, j] * mat[k, j]
  *             if i == l and off:
  *                 continue             # <<<<<<<<<<<<<<
  *             if gnorm > 0.0:
@@ -2354,16 +2354,16 @@ static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self
  */
                                 goto __pyx_L10_continue;
 
-                                /* "shrink/shrink.pyx":31
- *                 for j in range(glim[l], glim[l + 1]):
- *                     gnorm += z[k, j] * z[k, j]
+                                /* "shrink/shrink.pyx":32
+ *                 for j in range(glims[l], glims[l + 1]):
+ *                     gnorm += mat[k, j] * mat[k, j]
  *             if i == l and off:             # <<<<<<<<<<<<<<
  *                 continue
  *             if gnorm > 0.0:
  */
                               }
 
-                              /* "shrink/shrink.pyx":33
+                              /* "shrink/shrink.pyx":34
  *             if i == l and off:
  *                 continue
  *             if gnorm > 0.0:             # <<<<<<<<<<<<<<
@@ -2373,21 +2373,21 @@ static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self
                               __pyx_t_21 = ((__pyx_v_gnorm > 0.0) != 0);
                               if (__pyx_t_21) {
 
-                                /* "shrink/shrink.pyx":34
+                                /* "shrink/shrink.pyx":35
  *                 continue
  *             if gnorm > 0.0:
  *                 gnorm = gnorm ** 0.5             # <<<<<<<<<<<<<<
  *                 fac = max(0.0, (1.0 - tau / gnorm))
- *                 for k in range(glim[i], glim[i + 1]):
+ *                 for k in range(glims[i], glims[i + 1]):
  */
                                 __pyx_v_gnorm = pow(__pyx_v_gnorm, 0.5);
 
-                                /* "shrink/shrink.pyx":35
+                                /* "shrink/shrink.pyx":36
  *             if gnorm > 0.0:
  *                 gnorm = gnorm ** 0.5
  *                 fac = max(0.0, (1.0 - tau / gnorm))             # <<<<<<<<<<<<<<
- *                 for k in range(glim[i], glim[i + 1]):
- *                     for j in range(glim[l], glim[l + 1]):
+ *                 for k in range(glims[i], glims[i + 1]):
+ *                     for j in range(glims[l], glims[l + 1]):
  */
                                 __pyx_t_23 = (1.0 - (__pyx_v_tau / __pyx_v_gnorm));
                                 __pyx_t_24 = 0.0;
@@ -2398,38 +2398,38 @@ static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self
                                 }
                                 __pyx_v_fac = __pyx_t_25;
 
-                                /* "shrink/shrink.pyx":36
+                                /* "shrink/shrink.pyx":37
  *                 gnorm = gnorm ** 0.5
  *                 fac = max(0.0, (1.0 - tau / gnorm))
- *                 for k in range(glim[i], glim[i + 1]):             # <<<<<<<<<<<<<<
- *                     for j in range(glim[l], glim[l + 1]):
- *                         z[k, j] = z[k, j] *  fac
+ *                 for k in range(glims[i], glims[i + 1]):             # <<<<<<<<<<<<<<
+ *                     for j in range(glims[l], glims[l + 1]):
+ *                         mat[k, j] = mat[k, j] *  fac
  */
                                 __pyx_t_26 = (__pyx_v_i + 1);
-                                __pyx_t_8 = (*((long *) ( /* dim=0 */ (__pyx_v_glim.data + __pyx_t_26 * __pyx_v_glim.strides[0]) )));
+                                __pyx_t_8 = (*((long *) ( /* dim=0 */ (__pyx_v_glims.data + __pyx_t_26 * __pyx_v_glims.strides[0]) )));
                                 __pyx_t_27 = __pyx_v_i;
                                 __pyx_t_10 = __pyx_t_8;
-                                for (__pyx_t_11 = (*((long *) ( /* dim=0 */ (__pyx_v_glim.data + __pyx_t_27 * __pyx_v_glim.strides[0]) ))); __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
+                                for (__pyx_t_11 = (*((long *) ( /* dim=0 */ (__pyx_v_glims.data + __pyx_t_27 * __pyx_v_glims.strides[0]) ))); __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
                                   __pyx_v_k = __pyx_t_11;
 
-                                  /* "shrink/shrink.pyx":37
+                                  /* "shrink/shrink.pyx":38
  *                 fac = max(0.0, (1.0 - tau / gnorm))
- *                 for k in range(glim[i], glim[i + 1]):
- *                     for j in range(glim[l], glim[l + 1]):             # <<<<<<<<<<<<<<
- *                         z[k, j] = z[k, j] *  fac
+ *                 for k in range(glims[i], glims[i + 1]):
+ *                     for j in range(glims[l], glims[l + 1]):             # <<<<<<<<<<<<<<
+ *                         mat[k, j] = mat[k, j] *  fac
  *                 shrinkednorm += fac * gnorm
  */
                                   __pyx_t_28 = (__pyx_v_l + 1);
-                                  __pyx_t_13 = (*((long *) ( /* dim=0 */ (__pyx_v_glim.data + __pyx_t_28 * __pyx_v_glim.strides[0]) )));
+                                  __pyx_t_13 = (*((long *) ( /* dim=0 */ (__pyx_v_glims.data + __pyx_t_28 * __pyx_v_glims.strides[0]) )));
                                   __pyx_t_29 = __pyx_v_l;
                                   __pyx_t_15 = __pyx_t_13;
-                                  for (__pyx_t_16 = (*((long *) ( /* dim=0 */ (__pyx_v_glim.data + __pyx_t_29 * __pyx_v_glim.strides[0]) ))); __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
+                                  for (__pyx_t_16 = (*((long *) ( /* dim=0 */ (__pyx_v_glims.data + __pyx_t_29 * __pyx_v_glims.strides[0]) ))); __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
                                     __pyx_v_j = __pyx_t_16;
 
-                                    /* "shrink/shrink.pyx":38
- *                 for k in range(glim[i], glim[i + 1]):
- *                     for j in range(glim[l], glim[l + 1]):
- *                         z[k, j] = z[k, j] *  fac             # <<<<<<<<<<<<<<
+                                    /* "shrink/shrink.pyx":39
+ *                 for k in range(glims[i], glims[i + 1]):
+ *                     for j in range(glims[l], glims[l + 1]):
+ *                         mat[k, j] = mat[k, j] *  fac             # <<<<<<<<<<<<<<
  *                 shrinkednorm += fac * gnorm
  * 
  */
@@ -2437,20 +2437,20 @@ static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self
                                     __pyx_t_31 = __pyx_v_j;
                                     __pyx_t_32 = __pyx_v_k;
                                     __pyx_t_33 = __pyx_v_j;
-                                    *((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_z.data + __pyx_t_32 * __pyx_v_z.strides[0]) )) + __pyx_t_33)) )) = ((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_z.data + __pyx_t_30 * __pyx_v_z.strides[0]) )) + __pyx_t_31)) ))) * __pyx_v_fac);
+                                    *((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_32 * __pyx_v_mat.strides[0]) )) + __pyx_t_33)) )) = ((*((double *) ( /* dim=1 */ ((char *) (((double *) ( /* dim=0 */ (__pyx_v_mat.data + __pyx_t_30 * __pyx_v_mat.strides[0]) )) + __pyx_t_31)) ))) * __pyx_v_fac);
                                   }
                                 }
 
-                                /* "shrink/shrink.pyx":39
- *                     for j in range(glim[l], glim[l + 1]):
- *                         z[k, j] = z[k, j] *  fac
+                                /* "shrink/shrink.pyx":40
+ *                     for j in range(glims[l], glims[l + 1]):
+ *                         mat[k, j] = mat[k, j] *  fac
  *                 shrinkednorm += fac * gnorm             # <<<<<<<<<<<<<<
  * 
- *     return np.asarray(z), shrinkednorm
+ *     return np.asarray(mat), shrinkednorm
  */
                                 __pyx_v_shrinkednorm = (__pyx_v_shrinkednorm + (__pyx_v_fac * __pyx_v_gnorm));
 
-                                /* "shrink/shrink.pyx":33
+                                /* "shrink/shrink.pyx":34
  *             if i == l and off:
  *                 continue
  *             if gnorm > 0.0:             # <<<<<<<<<<<<<<
@@ -2474,11 +2474,11 @@ static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self
       }
 
       /* "shrink/shrink.pyx":24
- *     cdef int ngroups = glim.shape[0] - 1;
+ *     cdef int ngroups = glims.shape[0] - 1;
  * 
- *     for i in prange(glim.shape[0] - 1, nogil=True, schedule='static', num_threads=n_threads):             # <<<<<<<<<<<<<<
+ *     for i in prange(glims.shape[0] - 1, nogil=True,             # <<<<<<<<<<<<<<
+ *                     schedule='static', num_threads=n_threads):
  * #    for i in range(ngroups):
- *         for l in range(ngroups):
  */
       /*finally:*/ {
         /*normal exit:*/{
@@ -2499,20 +2499,20 @@ static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self
       }
   }
 
-  /* "shrink/shrink.pyx":41
+  /* "shrink/shrink.pyx":42
  *                 shrinkednorm += fac * gnorm
  * 
- *     return np.asarray(z), shrinkednorm             # <<<<<<<<<<<<<<
+ *     return np.asarray(mat), shrinkednorm             # <<<<<<<<<<<<<<
  * 
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_GetModuleGlobalName(__pyx_t_35, __pyx_n_s_np); if (unlikely(!__pyx_t_35)) __PYX_ERR(0, 41, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_35, __pyx_n_s_np); if (unlikely(!__pyx_t_35)) __PYX_ERR(0, 42, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_35);
-  __pyx_t_36 = __Pyx_PyObject_GetAttrStr(__pyx_t_35, __pyx_n_s_asarray); if (unlikely(!__pyx_t_36)) __PYX_ERR(0, 41, __pyx_L1_error)
+  __pyx_t_36 = __Pyx_PyObject_GetAttrStr(__pyx_t_35, __pyx_n_s_asarray); if (unlikely(!__pyx_t_36)) __PYX_ERR(0, 42, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_36);
   __Pyx_DECREF(__pyx_t_35); __pyx_t_35 = 0;
-  __pyx_t_35 = __pyx_memoryview_fromslice(__pyx_v_z, 2, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_35)) __PYX_ERR(0, 41, __pyx_L1_error)
+  __pyx_t_35 = __pyx_memoryview_fromslice(__pyx_v_mat, 2, (PyObject *(*)(char *)) __pyx_memview_get_double, (int (*)(char *, PyObject *)) __pyx_memview_set_double, 0);; if (unlikely(!__pyx_t_35)) __PYX_ERR(0, 42, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_35);
   __pyx_t_37 = NULL;
   if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_36))) {
@@ -2527,12 +2527,12 @@ static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self
   __pyx_t_34 = (__pyx_t_37) ? __Pyx_PyObject_Call2Args(__pyx_t_36, __pyx_t_37, __pyx_t_35) : __Pyx_PyObject_CallOneArg(__pyx_t_36, __pyx_t_35);
   __Pyx_XDECREF(__pyx_t_37); __pyx_t_37 = 0;
   __Pyx_DECREF(__pyx_t_35); __pyx_t_35 = 0;
-  if (unlikely(!__pyx_t_34)) __PYX_ERR(0, 41, __pyx_L1_error)
+  if (unlikely(!__pyx_t_34)) __PYX_ERR(0, 42, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_34);
   __Pyx_DECREF(__pyx_t_36); __pyx_t_36 = 0;
-  __pyx_t_36 = PyFloat_FromDouble(__pyx_v_shrinkednorm); if (unlikely(!__pyx_t_36)) __PYX_ERR(0, 41, __pyx_L1_error)
+  __pyx_t_36 = PyFloat_FromDouble(__pyx_v_shrinkednorm); if (unlikely(!__pyx_t_36)) __PYX_ERR(0, 42, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_36);
-  __pyx_t_35 = PyTuple_New(2); if (unlikely(!__pyx_t_35)) __PYX_ERR(0, 41, __pyx_L1_error)
+  __pyx_t_35 = PyTuple_New(2); if (unlikely(!__pyx_t_35)) __PYX_ERR(0, 42, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_35);
   __Pyx_GIVEREF(__pyx_t_34);
   PyTuple_SET_ITEM(__pyx_t_35, 0, __pyx_t_34);
@@ -2547,9 +2547,9 @@ static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self
   /* "shrink/shrink.pyx":14
  * 
  * 
- * def grp(double[:,::1] z,             # <<<<<<<<<<<<<<
+ * def grp(double[:,::1] mat,             # <<<<<<<<<<<<<<
  *         double tau,
- *         long[:] glim,
+ *         long[:] glims,
  */
 
   /* function exit code */
@@ -2561,8 +2561,8 @@ static PyObject *__pyx_pf_6shrink_6shrink_grp(CYTHON_UNUSED PyObject *__pyx_self
   __Pyx_AddTraceback("shrink.shrink.grp", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
-  __PYX_XDEC_MEMVIEW(&__pyx_v_z, 1);
-  __PYX_XDEC_MEMVIEW(&__pyx_v_glim, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_v_mat, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_v_glims, 1);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
@@ -16102,7 +16102,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_fortran, __pyx_k_fortran, sizeof(__pyx_k_fortran), 0, 0, 1, 1},
   {&__pyx_n_u_fortran, __pyx_k_fortran, sizeof(__pyx_k_fortran), 0, 1, 0, 1},
   {&__pyx_n_s_getstate, __pyx_k_getstate, sizeof(__pyx_k_getstate), 0, 0, 1, 1},
-  {&__pyx_n_s_glim, __pyx_k_glim, sizeof(__pyx_k_glim), 0, 0, 1, 1},
+  {&__pyx_n_s_glims, __pyx_k_glims, sizeof(__pyx_k_glims), 0, 0, 1, 1},
   {&__pyx_n_s_gnorm, __pyx_k_gnorm, sizeof(__pyx_k_gnorm), 0, 0, 1, 1},
   {&__pyx_kp_s_got_differing_extents_in_dimensi, __pyx_k_got_differing_extents_in_dimensi, sizeof(__pyx_k_got_differing_extents_in_dimensi), 0, 0, 1, 0},
   {&__pyx_n_s_grp, __pyx_k_grp, sizeof(__pyx_k_grp), 0, 0, 1, 1},
@@ -16115,6 +16115,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_k, __pyx_k_k, sizeof(__pyx_k_k), 0, 0, 1, 1},
   {&__pyx_n_s_l, __pyx_k_l, sizeof(__pyx_k_l), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
+  {&__pyx_n_s_mat, __pyx_k_mat, sizeof(__pyx_k_mat), 0, 0, 1, 1},
   {&__pyx_n_s_memview, __pyx_k_memview, sizeof(__pyx_k_memview), 0, 0, 1, 1},
   {&__pyx_n_s_mode, __pyx_k_mode, sizeof(__pyx_k_mode), 0, 0, 1, 1},
   {&__pyx_n_s_n_threads, __pyx_k_n_threads, sizeof(__pyx_k_n_threads), 0, 0, 1, 1},
@@ -16164,11 +16165,10 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_unable_to_allocate_shape_and_str, __pyx_k_unable_to_allocate_shape_and_str, sizeof(__pyx_k_unable_to_allocate_shape_and_str), 0, 0, 1, 0},
   {&__pyx_n_s_unpack, __pyx_k_unpack, sizeof(__pyx_k_unpack), 0, 0, 1, 1},
   {&__pyx_n_s_update, __pyx_k_update, sizeof(__pyx_k_update), 0, 0, 1, 1},
-  {&__pyx_n_s_z, __pyx_k_z, sizeof(__pyx_k_z), 0, 0, 1, 1},
   {0, 0, 0, 0, 0, 0, 0}
 };
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 26, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 27, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(1, 133, __pyx_L1_error)
   __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(1, 148, __pyx_L1_error)
   __pyx_builtin_enumerate = __Pyx_GetBuiltinName(__pyx_n_s_enumerate); if (!__pyx_builtin_enumerate) __PYX_ERR(1, 151, __pyx_L1_error)
@@ -16380,11 +16380,11 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   /* "shrink/shrink.pyx":14
  * 
  * 
- * def grp(double[:,::1] z,             # <<<<<<<<<<<<<<
+ * def grp(double[:,::1] mat,             # <<<<<<<<<<<<<<
  *         double tau,
- *         long[:] glim,
+ *         long[:] glims,
  */
-  __pyx_tuple__19 = PyTuple_Pack(14, __pyx_n_s_z, __pyx_n_s_tau, __pyx_n_s_glim, __pyx_n_s_off, __pyx_n_s_n_threads, __pyx_n_s_shrinkednorm, __pyx_n_s_gnorm, __pyx_n_s_num, __pyx_n_s_fac, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_l, __pyx_n_s_ngroups); if (unlikely(!__pyx_tuple__19)) __PYX_ERR(0, 14, __pyx_L1_error)
+  __pyx_tuple__19 = PyTuple_Pack(14, __pyx_n_s_mat, __pyx_n_s_tau, __pyx_n_s_glims, __pyx_n_s_off, __pyx_n_s_n_threads, __pyx_n_s_shrinkednorm, __pyx_n_s_gnorm, __pyx_n_s_num, __pyx_n_s_fac, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_k, __pyx_n_s_l, __pyx_n_s_ngroups); if (unlikely(!__pyx_tuple__19)) __PYX_ERR(0, 14, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__19);
   __Pyx_GIVEREF(__pyx_tuple__19);
   __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(5, 0, 14, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_shrink_shrink_pyx, __pyx_n_s_grp, 14, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) __PYX_ERR(0, 14, __pyx_L1_error)
@@ -16807,9 +16807,9 @@ if (!__Pyx_RefNanny) {
   /* "shrink/shrink.pyx":14
  * 
  * 
- * def grp(double[:,::1] z,             # <<<<<<<<<<<<<<
+ * def grp(double[:,::1] mat,             # <<<<<<<<<<<<<<
  *         double tau,
- *         long[:] glim,
+ *         long[:] glims,
  */
   __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_6shrink_6shrink_1grp, NULL, __pyx_n_s_shrink_shrink); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 14, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);

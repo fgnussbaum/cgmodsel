@@ -19,7 +19,7 @@ def grp(double[:,::1] mat,
     """ This function computes the group shrinkage operation on z """
     cdef double shrinkednorm = 0.0, gnorm, num, fac
     cdef int i, j, k, l;
-    cdef int ngroups = glim.shape[0] - 1;
+    cdef int ngroups = glims.shape[0] - 1;
 
     for i in prange(glims.shape[0] - 1, nogil=True,
                     schedule='static', num_threads=n_threads):
