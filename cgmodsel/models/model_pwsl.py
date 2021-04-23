@@ -56,7 +56,7 @@ class ModelPWSL(BaseModelPW):
         p(y) ~ exp(-1/2 y^T (S-L) y + alpha^T y).
     """
     
-    name = 'SL'  # model name
+    name = 'SL' # model name
 
     def __init__(self,
                  sl_params: tuple = None,
