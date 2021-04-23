@@ -2,7 +2,7 @@
 
 cgmodsel - a Python3 package to estimate conditional Gaussian (CG) distributions from data
 
-Version 1.0, 5.3.2020
+Version 1.1, 23.4.2021
 
 ### Content ###
 
@@ -19,6 +19,8 @@ For normal usage:
 
 You can also use the code without doing the third step from inside the folder. For a quick start, execute the file `quick_cgmod.py` from the main folder.
 
+Note that some solvers use a group-soft shrinkage operation. It works with a naive slow Python implementation, however, can be sped up using Cython code (credit goes to my colleague Mark Mihajlovic Blacher, thanks!). Install it by typing `python setup.py build_ext --inplace` in the root directory.
+
 ### Usage ###
 
 If you use this software, please consider citing:
@@ -31,4 +33,4 @@ If you have questions, comments, bug reports, feature requests, etc. please cont
 
 ### Copyright ###
 
-© 2021 Frank Nussbaum (frank.nussbaum@uni-jena.de). All Rights Reserved.
+© 2017 - 2021 Frank Nussbaum (frank.nussbaum@uni-jena.de). All Rights Reserved.
