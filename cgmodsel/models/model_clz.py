@@ -16,28 +16,44 @@ from cgmodsel.models.base import BaseModel, canon_to_meanparams
 
 class ModelCLZ(BaseModel):
     """
-    class for parameters of distribution
-    p(x,y) ~ exp(1/2 C_x Q C_x +  y^T R C_x -1/2 y^T[La0 + Las C_x]y
-                  + u^T C_x + alpha^T y)
+    A class for parameters of CLZ (Cheng, Li, Levina, Zhu) models.
+    
+    Note:
+        Density is given by
+        
+        p(x,y) ~ exp(1/2 C_x Q C_x +  y^T R C_x -1/2 y^T[La0 + Las C_x]y
+        + u^T C_x + alpha^T y)
 
-    this class uses padded parameters (that is, parameters for 0-th levels are
-    included, however, one might want them to be constrained to 0 for
-    identifiability reasons)
+        Here, C_x is a dummy representation of x,
+        u are univariate discrete parameters,
+        alpha are univariate cont. parameters,
+        discrete-discrete interactions Q,
+        discrete-cont. interactions R,
+        cont.-cont. interactions La0, and
+        cont-cont-discrete interaction parameters Las (n_cg x n_cg x ltot).
 
-    here:
-    [C_x .. dummy representation of x]
-    u .. univariate discrete parameters
-    alpha .. univariate cont. parameters
-    with
-    Q .. discrete-discrete interactions
-    R .. discrete-cont. interactions
-    La0 .. cont-cont interaction parameters
-    Las .. cont-cont-discrete interaction parameters (n_cg x n_cg x ltot)
+        This class uses padded parameters (that is,
+        parameters for 0-th levels are included, however,
+        one might want them to be constrained to 0 for identifiability reasons)
 
-    initialize with tuple (u, Q, R, alpha, La0, Las)
     """
+    
+    name = 'CLZ'
 
     def __init__(self, clz_params: (tuple, list), meta: dict):
+        """
+        Args:
+            sl_params (tuple): parameters (u, Q, R, alpha, La0, Las).
+            meta (dict): dictionary of meta info (similar to meta dictionary
+                 from loading data).
+        
+        Note:
+            The following Args are (not yet) implemented:
+            infile (str): filename of a CLZ model file. 
+            annotations (dict, optional): pass annotations to the model.
+            in_padded (bool): whether parameters are padded
+            Generally, code in this class is less tested and more experimental.
+        """
         # meta must provided with n_cg, n_cat
         BaseModel.__init__(self)
         self.meta['n_cg'] = meta['n_cg']
@@ -66,8 +82,14 @@ class ModelCLZ(BaseModel):
         return string
 
     def get_graph(self, threshold=1e-1):
-        """ calculate group norms of the parameters associated with each edge and threshold
-        plot graph if disp is True"""
+        """Calculate group norms for edges and threshold
+        
+        Args:
+            threshold (float): threshold parameter.
+            
+        Returns:
+            np.array: graph
+        """
         # perhaps do variable threshold for different group types
         grpnormmat = self.get_group_mat(diagonal=False, norm=True)
         graph = grpnormmat > threshold
@@ -78,6 +100,20 @@ class ModelCLZ(BaseModel):
         return graph
 
     def get_group_mat(self, diagonal=False, norm=True, aggr=True):
+        """Perform group aggregations
+        
+        Args:
+            diagonal (bool): if False, set aggregation
+                values for diagonal to zero.
+            norm (bool): aggregate using Euclidean/ l2 norm.
+            aggr (bool): argument just for compatibility. 
+        
+        Warning:
+            Experimental code.
+                
+        Returns:
+            np.array: matrix with values of group aggregations.
+        """
         # calibration? optional class param?
 
         assert aggr, "only implemented for doing aggregation"
@@ -138,19 +174,26 @@ class ModelCLZ(BaseModel):
         return self.vec_u, self.mat_q, self.mat_r, self.alpha, self.mat_lbda0, self.mat_lbdas
 
     def get_meanparams(self):
-        """convert CLZ parameters into mean parameter representation
-           (p(x)_x, mu(x)_x, Sigma(x)_x)
-        Note: Some arrays might be empty
-              (if not both discrete and continuous variables are present)
+        """convert CLZ parameters into mean parameter representation.
+        
+        Note:
+            Conversion formulas to mean parameters:
+                
+            p(x) ~ (2pi)^{n/2}|La(x)^{-1}|^{1/2}exp(q(x) + 1/2 nu(x)^T La(x)^{-1} nu(x))
 
-        ** conversion formulas to mean parameters **
-        p(x) ~ (2pi)^{n/2}|La(x)^{-1}|^{1/2}exp(q(x) + 1/2 nu(x)^T La(x)^{-1} nu(x))
-        mu(x) = La(x)^{-1}nu(x)
-        Sigma(x) = La(x)^{-1}
+            mu(x) = La(x)^{-1}nu(x)
 
-        with nu(x) = alpha + R D_x and q(x) = u^T D_x + 1/2 D_x^T Q D_x
-        and La(x) = Lambda0 + sum_r Lambda_r D_{x_r} = Lambda0 + Lambdas*D_x.
-        Here D_x is the dummy representation of the categorical values in x.
+            Sigma(x) = La(x)^{-1}
+
+            with nu(x) = alpha + R D_x and q(x) = u^T D_x + 1/2 D_x^T Q D_x
+            and La(x) = Lambda0 + sum_r Lambda_r D_{x_r} = Lambda0 + Lambdas*D_x.
+            Here D_x is the dummy representation of the categorical values in x.
+
+            Note that some arrays might be empty
+            (if not both discrete and continuous variables are present).
+        
+        Returns:
+            tuple: mean parameters (p(x)_x, mu(x)_x, Sigma(x)_x)
         """
         assert self.meta['n_cat'] + self.meta['n_cg'] > 0
 
@@ -207,8 +250,9 @@ class ModelCLZ(BaseModel):
         return canon_to_meanparams(canparams)
 
     def is_valid(self) -> bool:
-        """check if model represents a valid distribution, that is,
-        check that all precision matrices are positive definite"""
+        """Check if model represents a valid distribution, that is,
+        check that all precision matrices are positive definite.
+        """
         sizes = self.meta['sizes']
         n_discrete_states = np.prod(sizes)
         valid = True
