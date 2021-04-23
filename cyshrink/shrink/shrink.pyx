@@ -11,9 +11,9 @@ import numpy as np
 from cython.parallel cimport prange
 
 
-def grp(double[:,::1] z,
+def grp(double[:,::1] mat,
         double tau,
-        long[:] glim, 
+        long[:] glims, 
         int off = 0,
         long n_threads = 4):
     """ This function computes the group shrinkage operation on z """
@@ -21,24 +21,25 @@ def grp(double[:,::1] z,
     cdef int i, j, k, l;
     cdef int ngroups = glim.shape[0] - 1;
 
-    for i in prange(glim.shape[0] - 1, nogil=True, schedule='static', num_threads=n_threads):
+    for i in prange(glims.shape[0] - 1, nogil=True,
+                    schedule='static', num_threads=n_threads):
 #    for i in range(ngroups):
         for l in range(ngroups):
             gnorm = 0.0
-            for k in range(glim[i], glim[i + 1]):
-                for j in range(glim[l], glim[l + 1]):
-                    gnorm += z[k, j] * z[k, j]
+            for k in range(glims[i], glims[i + 1]):
+                for j in range(glims[l], glims[l + 1]):
+                    gnorm += mat[k, j] * mat[k, j]
             if i == l and off:
                 continue
             if gnorm > 0.0:
                 gnorm = gnorm ** 0.5
                 fac = max(0.0, (1.0 - tau / gnorm))
-                for k in range(glim[i], glim[i + 1]):
-                    for j in range(glim[l], glim[l + 1]):
-                        z[k, j] = z[k, j] *  fac
+                for k in range(glims[i], glims[i + 1]):
+                    for j in range(glims[l], glims[l + 1]):
+                        mat[k, j] = mat[k, j] *  fac
                 shrinkednorm += fac * gnorm
 
-    return np.asarray(z), shrinkednorm
+    return np.asarray(mat), shrinkednorm
 
 
 

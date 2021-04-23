@@ -18,6 +18,7 @@ import numpy as np
 try:
 #    import os
 #    os.system('python cgmodsel/setup.py build_ext --inplace')
+    f=1/0
     from cyshrink.shrink.shrink import grp as grp_soft_shrink # requires setup
 #    from shrink.shrink import grp_weighted as grp_soft_shrink_weighted
     print('successfully imported shrink.shrink')
@@ -41,11 +42,11 @@ except Exception as e:
 #                    shrinkednorm += fac * gnorm
 #    
 #        return mat, shrinkednorm
+    
     def grp_soft_shrink(mat,
                         tau,
                         glims=None,
                         off=False,
-                        n_groups=None,
                         weights=None):
         """
         calculate (group-)soft-shrinkage.
@@ -68,7 +69,7 @@ except Exception as e:
             (by parallizing loops, efficient storage access).
         """
         shrinkednorm = 0
-        if n_groups is None:
+        if glims is None:
             tmp = np.abs(mat)
             if not weights is None: # weighted l1-norm
     #            tmp = np.multiply(tmp, weights).flatten
@@ -88,6 +89,7 @@ except Exception as e:
         # group soft shrink
         if weights is None:
             weights = np.ones(mat.shape) # TODO(franknu): improve style
+        n_groups = len(glims) - 1
         tmp = np.empty(mat.shape)
         for i in range(n_groups):
             for j in range(n_groups):
@@ -96,7 +98,6 @@ except Exception as e:
                 if (i == j) and off:
                     tmp[glims[i]:glims[i + 1], glims[i]:glims[i + 1]] = group
                     continue
-    
                 gnorm = np.linalg.norm(group, 'fro')
                 w_ij = tau * weights[i,j]
                 if gnorm <= w_ij:
@@ -106,7 +107,7 @@ except Exception as e:
                     tmp[glims[i]:glims[i+1], glims[j]:glims[j+1]] = \
                         group * (1 - w_ij / gnorm)
                     shrinkednorm += (1 - w_ij / gnorm) * gnorm
-    
+
         return tmp, shrinkednorm
 
 

@@ -270,10 +270,9 @@ class BaseSparseSolver(BaseCGSolver):
         """
         # TODO (franknu): add support for weighted group norm
         if self.meta['nonbinary']:
-            return grp_soft_shrink(mat_s, tau,
-#                                   self.meta['n_cat'] + self.meta['n_cg'],
-                                   self.meta['glims'],
-                                   self.opts['off'])
+            res = grp_soft_shrink(mat_s, tau, self.meta['glims'],
+                                  self.opts['off'])
+            return res
         return grp_soft_shrink(mat_s,
                                tau,
                                self.meta['glims'], # 
