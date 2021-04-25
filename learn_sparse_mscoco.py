@@ -120,24 +120,33 @@ def learn_sparse_model(logger, opts,
     
     return best_model
 
+def load_pkl(filename):
+    file = open(filename, "rb")
+    return pickle.load(file)
+
+def load_npy(filename):
+    return np.load(filename)
+
 def parse_mscoco(meanssigmas=None):
     import pickle, csv
 #    print(len(labels))
     
     mode = 'valid'
 #    mode = 'train'
+    mode = '1000'
+    filetype = 'npy'
+    load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
+    
     prefix = 'data/mscoco/'
-    R_train = open(prefix+'R_%s.pkl'%mode, "rb")
-    cont_data = pickle.load(R_train)
+    cont_data = load_func(prefix+'R_%s.%s'%(mode, filetype))
     meanssigmas = standardize_continuous_data(cont_data,
                                               meanssigmas=meanssigmas)
-    print(meanssigmas)
+#    print(meanssigmas)
     m, n = cont_data.shape
 #    print(m, n)
 #    return meanssigmas
     cat_data = np.zeros((m, 100), dtype=np.int64)
-    y_train = open(prefix+'Y_%s.pkl'%mode, "rb")
-    y_train = pickle.load(y_train)
+    y_train = load_func(prefix+'Y_%s.%s'%(mode, filetype))
     for i in range(m):
         for j in range(100):
             label = y_train[i, j] - 1
@@ -146,7 +155,7 @@ def parse_mscoco(meanssigmas=None):
                 cat_data[i, label] = 1
 #        print(y_train[i, :])
 #        return
-    print(y_train[:1, :], y_train.shape)
+    print(y_train[5, :], y_train.shape)
             
     with open('data/mscoco.%s.csv'%mode, 'w', newline='') as outcsv: # newline='' for WINDOWS
 
@@ -162,7 +171,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
     dataname = 'mscoco'
     # ********************************* #
-#    ms = parse_mscoco()
+    ms = parse_mscoco()
 #    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
 
@@ -177,6 +186,6 @@ if __name__ == '__main__':
     frac = 1000
     srange = end, steps, frac
     opts = {'maxiter':1200}
-    model = learn_sparse_model(logger, opts, solver_verb=100)
+#    model = learn_sparse_model(logger, opts, solver_verb=100)
     
 
