@@ -531,6 +531,10 @@ def standardize_continuous_data(cont_data, meanssigmas=None):
     else:
         means, sigmas = meanssigmas
     for s in range(n_cg):
+        if sigmas[s] == 0:
+            print('Warning(standardize_continuous_data):',
+                  'Variable %d seems to have zero variance, skipping'%s)
+            continue
         cont_data[:, s] = (cont_data[:, s] -
                            means[s] * np.ones(n_data)) / sigmas[s]
 
