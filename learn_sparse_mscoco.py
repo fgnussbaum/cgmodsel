@@ -40,8 +40,9 @@ LABELS = [
 
 def learn_sparse_model(logger, opts, 
                         verb=False, 
-                        solver_verb = False):
-    file_train = 'data/mscoco.train.csv'
+                        solver_verb=True):
+#    file_train = 'data/mscoco.train.csv'
+    file_train = 'data/mscoco.1000.csv'
     dataname = 'mscoco'
 
     catuniques = {}
@@ -171,7 +172,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
     dataname = 'mscoco'
     # ********************************* #
-    ms = parse_mscoco()
+#    ms = parse_mscoco()
 #    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
 
@@ -186,6 +187,6 @@ if __name__ == '__main__':
     frac = 1000
     srange = end, steps, frac
     opts = {'maxiter':1200}
-#    model = learn_sparse_model(logger, opts, solver_verb=100)
+    model = learn_sparse_model(logger, opts, solver_verb=1)
     
 
