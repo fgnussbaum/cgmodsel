@@ -42,9 +42,10 @@ def learn_sparse_model(logger, opts,
                         verb=False, 
                         solver_verb=True):
 #    file_train = 'data/mscoco.train.csv'
-    file_train = 'data/mscoco.1000.csv'
-    dataname = 'mscoco'
-
+    
+    dataname = 'mscoco.1000'
+    file_train = 'data/%s.csv'%dataname
+    
     catuniques = {}
     for label in LABELS:
         catuniques[label] = [0,1]
@@ -99,7 +100,8 @@ def learn_sparse_model(logger, opts,
                                  gamma=gamma,
                                  iter =out['iter'])
         print(model.annotations)
-        model.save("%s/N%s%.2f.pw"%(MODELFOLDER, dataname, gamma))
+#        model.save("%s/N%s%.2f.pw"%(MODELFOLDER, dataname, gamma))
+        model.save("%s/%s_ga%.2f.pw"%(MODELFOLDER, dataname, gamma))
         
 #        theta, u, alpha = model.get_pairwiseparams(padded=False)
 #        print(theta, u, alpha)
