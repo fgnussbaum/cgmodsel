@@ -198,12 +198,12 @@ class BaseCGSolver(abc.ABC):
             # calculate cumulative # of levels/ group delimiters
             self.meta['cat_glims'] = np.cumsum([0] + self.meta['sizes'])
 
-            self.meta['glims'] = np.cumsum([0] + self.meta['sizes']
-            + self.meta['n_cg'] * [1,])
-            # TODO(franknu): self.meta['glims'] for sparse reg only
-
             self.meta['nonbinary'] = (self.meta['ltot'] > self.meta['n_cat'] *
                                       (2 - self.meta['red_levels']))
+
+        self.meta['glims'] = np.cumsum([0] + self.meta['sizes']
+        + self.meta['n_cg'] * [1,])
+        # TODO(franknu): self.meta['glims'] for sparse reg only
 
         self.meta['n_catcg'] = self.meta['n_cat'] + self.meta['n_cg']
 
@@ -218,7 +218,7 @@ class BaseCGSolver(abc.ABC):
         self._postsetup_data()
 
     def get_name(self):
-        """Return name of the model.
+        """Get name of the model.
         
         Returns:
             string: name of the model"""
@@ -269,13 +269,16 @@ class BaseSparseSolver(BaseCGSolver):
             float: shrunken l_12 norm.
         """
         # TODO (franknu): add support for weighted group norm
+#        print(self.meta['glims'], self.meta['nonbinary'])
         if self.meta['nonbinary']:
-            res = grp_soft_shrink(mat_s, tau, self.meta['glims'],
+            res = grp_soft_shrink(mat_s,
+                                  tau,
+                                  self.meta['glims'],
                                   self.opts['off'])
             return res
         return grp_soft_shrink(mat_s,
                                tau,
-                               self.meta['glims'], # 
+                               self.meta['glims'],
                                off=self.opts['off'])
 
     def sparse_norm(self, mat_s):
@@ -288,12 +291,15 @@ class BaseSparseSolver(BaseCGSolver):
             float: l12-norm.
         """
         if self.meta['nonbinary']:
+#            print('nonbinary')
             return l21norm(mat_s,
-                           self.meta['n_cat'] + self.meta['n_cg'],
                            self.meta['glims'],
                            self.opts['off'],
                            weights=self.weights)
-        return l21norm(mat_s, off=self.opts['off'], weights=self.weights)
+#        print(1)
+        return l21norm(mat_s, 
+                       glims=None,
+                       off=self.opts['off'], weights=self.weights)
 
 
 class BaseGradSolver(abc.ABC):

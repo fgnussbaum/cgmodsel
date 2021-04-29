@@ -68,7 +68,9 @@ except Exception as e:
             (by parallizing loops, efficient storage access).
         """
         shrinkednorm = 0
-        if glims is None:
+#        if glims is None:
+        n_groups = len(glims) - 1
+        if glims[-1] == n_groups: # each group has size 1
             tmp = np.abs(mat)
             if not weights is None: # weighted l1-norm
     #            tmp = np.multiply(tmp, weights).flatten
@@ -88,7 +90,6 @@ except Exception as e:
         # group soft shrink
         if weights is None:
             weights = np.ones(mat.shape) # TODO(franknu): improve style
-        n_groups = len(glims) - 1
         tmp = np.empty(mat.shape)
         for i in range(n_groups):
             for j in range(n_groups):
@@ -110,7 +111,7 @@ except Exception as e:
         return tmp, shrinkednorm
 
 
-def l21norm(mat, n_groups=None, glims=None, off=False, weights=None):
+def l21norm(mat, glims=None, off=False, weights=None):
     """
     calculate l_{1,2}-norm.
 
@@ -126,7 +127,7 @@ def l21norm(mat, n_groups=None, glims=None, off=False, weights=None):
     Returns:
         float: (group) l_{1,2}-norm.
     """
-    if n_groups is None:
+    if glims is None:
         # calculate regular l1-norm
         tmp = np.abs(mat) # tmp is copy, can do this inplace by specifying out
         if not weights is None: # weighted l1-norm
@@ -135,7 +136,7 @@ def l21norm(mat, n_groups=None, glims=None, off=False, weights=None):
         if off:
             tmp -= np.sum(np.diag(np.abs(mat)))
         return tmp
-        
+    n_groups = len(glims) - 1
     l21sum = 0
     if weights is None:
         for i in range(n_groups):
