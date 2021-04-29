@@ -20,7 +20,7 @@ For normal usage:
 
 You can also use the code without doing the third step from inside the folder. For a quick start, execute the file `quick_cgmod.py` from the main folder.
 
-Note that some solvers use a group-soft shrinkage operation. It works with a naive slow Python implementation, however, can be sped up using Cython code (credit goes to my colleague Mark Mihajlovic Blacher, thanks!). Install it by typing `python setup.py build_ext --inplace` in the root directory.
+Note that some solvers use a group-soft shrinkage operation. It works with a naive (but slow) Python implementation, however, can be sped up using Cython code (credit goes to my colleague Mark Mihajlovic Blacher, thanks!). Install it by typing `python setup.py build_ext --inplace` in the cyshrink/ directory.
 
 ### Usage ###
 
