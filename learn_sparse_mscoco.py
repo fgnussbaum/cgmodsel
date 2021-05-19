@@ -43,7 +43,7 @@ def learn_sparse_model(logger, opts,
                         solver_verb=True):
 #    file_train = 'data/mscoco.train.csv'
     
-    dataname = 'mscoco.1000'
+    dataname = 'mscoco.5000'
     file_train = 'data/%s.csv'%dataname
     
     catuniques = {}
@@ -136,7 +136,7 @@ def parse_mscoco(meanssigmas=None):
     
     mode = 'valid'
 #    mode = 'train'
-    mode = '1000'
+    mode = '5000'
     filetype = 'npy'
     load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
     
