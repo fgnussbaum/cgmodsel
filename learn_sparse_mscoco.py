@@ -134,9 +134,9 @@ def parse_mscoco(meanssigmas=None):
     import pickle, csv
 #    print(len(labels))
     
-    mode = 'valid'
-#    mode = 'train'
-    mode = '5000'
+    mode = 'valid2'
+    mode = 'train2'
+#    mode = '5000'
     filetype = 'npy'
     load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
     
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
     dataname = 'mscoco'
     # ********************************* #
-#    ms = parse_mscoco()
+    ms = parse_mscoco()
 #    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
 
@@ -189,6 +189,6 @@ if __name__ == '__main__':
     frac = 1000
     srange = end, steps, frac
     opts = {'maxiter':1200}
-    model = learn_sparse_model(logger, opts, solver_verb=1)
+#    model = learn_sparse_model(logger, opts, solver_verb=1)
     
 
