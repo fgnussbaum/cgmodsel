@@ -43,7 +43,7 @@ def learn_sparse_model(logger, opts,
                         solver_verb=True):
 #    file_train = 'data/mscoco.train.csv'
     
-    dataname = 'mscoco.5000'
+    dataname = 'mscoco.1000'
     file_train = 'data/%s.csv'%dataname
     
     catuniques = {}
