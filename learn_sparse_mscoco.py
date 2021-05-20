@@ -135,7 +135,7 @@ def parse_mscoco(meanssigmas=None):
 #    print(len(labels))
     
     mode = 'valid2'
-    mode = 'train2'
+#    mode = 'train2'
 #    mode = '5000'
     filetype = 'npy'
     load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
