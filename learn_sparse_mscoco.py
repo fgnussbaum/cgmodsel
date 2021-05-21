@@ -16,6 +16,11 @@ from cgmodsel.admm import AdmmCGaussianPW
 from cgmodsel.dataops import load_prepare_data  # function to read data
 from cgmodsel.dataops import standardize_continuous_data
 
+
+sys.path.append("../")
+from send_mail import send_mail
+
+
 DATAFOLDER = 'data/datasets/'
 MODELFOLDER = 'savedmodels/'
 
@@ -101,7 +106,10 @@ def learn_sparse_model(logger, opts,
                                  iter =out['iter'])
         print(model.annotations)
 #        model.save("%s/N%s%.2f.pw"%(MODELFOLDER, dataname, gamma))
-        model.save("%s/%s_ga%.2f.pw"%(MODELFOLDER, dataname, gamma))
+        modelfilename = "%s/%s_ga%.2f.pw"%(MODELFOLDER, dataname, gamma)
+        model.save(modelfilename)
+        
+        send_mail("learned ms coco model\\filename: %s"%modelfilename)
         
 #        theta, u, alpha = model.get_pairwiseparams(padded=False)
 #        print(theta, u, alpha)
@@ -136,7 +144,7 @@ def parse_mscoco(meanssigmas=None):
     
     mode = 'valid2'
 #    mode = 'train2'
-#    mode = '5000'
+    mode = '5000'
     filetype = 'npy'
     load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
     
@@ -166,6 +174,7 @@ def parse_mscoco(meanssigmas=None):
         writer.writerow(["Y%d"%(i) for i in range(256)] + LABELS)
         for i in range(m):
             writer.writerow(list(cont_data[i, :]) + list(cat_data[i, :]))
+#    send_mail("parsed")
     
 
 if __name__ == '__main__':
@@ -174,7 +183,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
     dataname = 'mscoco'
     # ********************************* #
-    ms = parse_mscoco()
+#    ms = parse_mscoco()
 #    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
 
@@ -189,6 +198,6 @@ if __name__ == '__main__':
     frac = 1000
     srange = end, steps, frac
     opts = {'maxiter':1200}
-#    model = learn_sparse_model(logger, opts, solver_verb=1)
+    model = learn_sparse_model(logger, opts, solver_verb=1)
     
 
