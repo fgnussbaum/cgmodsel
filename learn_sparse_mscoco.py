@@ -49,6 +49,7 @@ def learn_sparse_model(logger, opts,
 #    file_train = 'data/mscoco.train.csv'
     
     dataname = 'mscoco.1000'
+    dataname = 'mscoco.train2' # Barlow-Twin Features
     file_train = 'data/%s.csv'%dataname
     
     catuniques = {}
@@ -88,7 +89,7 @@ def learn_sparse_model(logger, opts,
 #        if alpha == 0:
 #            alpha += 1e-3
 #        gamma = alpha / (1 - alpha)
-        gamma = 10
+        gamma = 20
         t1 = time.time()
         solver.set_regularization_params(gamma)
         out = solver.solve(verb=solver_verb, 
