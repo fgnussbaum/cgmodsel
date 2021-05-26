@@ -148,7 +148,9 @@ if __name__ == '__main__':
 
     # ********************************* #
 
-    ## set regularization parameters ##
+    ## set regularization parameters for sparse + low-rank model ##
+    # for an introduction to the models, please see:
+    # https://github.com/franknu/cgmodsel/wiki 
     # you may try different values, any pair of positive reals will do
     # e.g., regparams = (.1, 1)
     model = learn_sl_model(data, regparams=data['regparams'])

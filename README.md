@@ -8,7 +8,7 @@ Version 1.1, 23.4.2021
 
 This package contains solvers (mostly ADMM-based) for estimating various types of CG models (sparse pairwise, sparse + low-rank pairwise, mean parameters).
 Documentation is available under [cgmodsel-pages](https://franknu.github.io/cgmodsel-pages/source/cgmodsel.html).
-Please see also the [Wiki](https://github.com/franknu/cgmodsel/wiki) for additional information.
+Please see also the [Wiki](https://github.com/franknu/cgmodsel/wiki) for additional information and an introduction about some models.
 
 ### Setup cgmodsel ###
 
