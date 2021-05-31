@@ -50,14 +50,20 @@ def learn_sparse_model(logger, opts,
     
     dataname = 'mscoco.1000'
     dataname = 'mscoco.train2' # Barlow-Twin Features
+    dataname = 'cifar10.50000'
     file_train = 'data/%s.csv'%dataname
     
-    catuniques = {}
-    for label in LABELS:
-        catuniques[label] = [0,1]
+    if dataname.startswith('mscoco'):
+        catuniques = {}
+        for label in LABELS:
+            catuniques[label] = [0,1]
+        labels = LABELS
+    else:
+        catuniques = None
+        labels = None
     cat_data, cont_data, meta = load_prepare_data(file_train,
                                                   verb=True,
-                                                  categoricals=LABELS,
+                                                  categoricals=labels,
 #                                                  names=names,
                                                   catuniques=catuniques,
                                                   cattype='dummy_red',
@@ -110,7 +116,8 @@ def learn_sparse_model(logger, opts,
         modelfilename = "%s/%s_ga%.2f.pw"%(MODELFOLDER, dataname, gamma)
         model.save(modelfilename)
         
-        send_mail("learned ms coco model\nfilename: %s"%modelfilename)
+        send_mail("learned model from data [%s]\nfilename: %s"%(
+                dataname, modelfilename))
         
 #        theta, u, alpha = model.get_pairwiseparams(padded=False)
 #        print(theta, u, alpha)
@@ -193,28 +200,29 @@ def parse_cifar10(meanssigmas=None,
     cont_data = load_func(prefix+'R_%s.%s'%(mode, filetype))
     meanssigmas = standardize_continuous_data(cont_data,
                                               meanssigmas=meanssigmas)
+    means, sigmas = meanssigmas
+    nonzero_idx = np.where(sigmas != 0)
 #    print(meanssigmas)
     m, n = cont_data.shape
-#    print(m, n)
+    cont_data = cont_data[:, nonzero_idx].squeeze()
+    print(m, n, cont_data.shape, len(nonzero_idx[0]))
 #    return meanssigmas
-    cat_data = np.zeros((m, 100), dtype=np.int64)
+
     y_train = load_func(prefix+'Y_%s.%s'%(mode, filetype))
+    cat_data = np.zeros((m, 10), dtype=np.int64)
+    
     for i in range(m):
-        for j in range(100):
-            label = y_train[i, j] - 1
-#            print(label)
-            if label != -1:
-                cat_data[i, label] = 1
-#        print(y_train[i, :])
-#        return
-    print(y_train[5, :], y_train.shape)
-            
-    with open('data/mscoco.%s.csv'%mode, 'w', newline='') as outcsv: # newline='' for WINDOWS
+        cat_data[i,y_train[i]] = 1
+#    print(y_train[:100])
+   
+    CLABELS = ["X%d"%i for i in range(10)]
+    with open('data/cifar10.%s.csv'%mode, 'w', newline='') as outcsv: # newline='' for WINDOWS
 
         writer = csv.writer(outcsv)
-        writer.writerow(["Y%d"%(i) for i in range(n)] + LABELS)
+        writer.writerow(["Y%d"%(i) for i in nonzero_idx[0]] + CLABELS)
         for i in range(m):
             writer.writerow(list(cont_data[i, :]) + list(cat_data[i, :]))
+            # class label between 0 and 9
 #    send_mail("parsed")
     
 
@@ -222,9 +230,10 @@ if __name__ == '__main__':
 
     # ********************************* #
     # comment out all but one line here #
-    dataname = 'mscoco'
+#    dataname = 'mscoco'
     # ********************************* #
-    ms = parse_mscoco()
+#    ms = parse_mscoco()
+#    parse_cifar10()
 #    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
 
@@ -239,6 +248,6 @@ if __name__ == '__main__':
     frac = 1000
     srange = end, steps, frac
     opts = {'maxiter':1200}
-#    model = learn_sparse_model(logger, opts, solver_verb=1)
+    model = learn_sparse_model(logger, opts, solver_verb=1)
     
 
