@@ -43,14 +43,18 @@ LABELS = [
             "clock", "vase", "scissors", "teddy bear",
             "hair drier", "toothbrush", "hair brush"]
 
+cifar10_labels = ['plane', 'car', 'bird', 'cat','deer', 'dog', 'frog',
+                      'horse', 'ship', 'truck']
+
 def learn_sparse_model(logger, opts, 
                         verb=False, 
-                        solver_verb=True):
+                        solver_verb=True,
+                        gamma = 20):
 #    file_train = 'data/mscoco.train.csv'
     
-    dataname = 'mscoco.1000'
-    dataname = 'mscoco.train2' # Barlow-Twin Features
-    dataname = 'cifar10.50000'
+    dataname = 'mscoco.5000'
+#    dataname = 'mscoco.train2' # Barlow-Twin Features
+#    dataname = 'cifar10.50000'
     file_train = 'data/%s.csv'%dataname
     
     if dataname.startswith('mscoco'):
@@ -60,7 +64,7 @@ def learn_sparse_model(logger, opts,
         labels = LABELS
     else:
         catuniques = None
-        labels = None
+        labels = cifar10_labels
     cat_data, cont_data, meta = load_prepare_data(file_train,
                                                   verb=True,
                                                   categoricals=labels,
@@ -95,7 +99,6 @@ def learn_sparse_model(logger, opts,
 #        if alpha == 0:
 #            alpha += 1e-3
 #        gamma = alpha / (1 - alpha)
-        gamma = 20
         t1 = time.time()
         solver.set_regularization_params(gamma)
         out = solver.solve(verb=solver_verb, 
@@ -106,7 +109,7 @@ def learn_sparse_model(logger, opts,
         warminit = out['theta'], out['solution'][0], out['dual'], out['solution'][1]
 #        print(warminit)
         model = solver.get_canonicalparams()  # PW model instance
-        model.update_annotations(categoricals=LABELS,
+        model.update_annotations(categoricals=labels,
                                  numericals=['Y%d'%i for i in range(cont_data.shape[1])],
 #                                 alpha=alpha,
                                  gamma=gamma,
@@ -153,15 +156,21 @@ def parse_mscoco(meanssigmas=None,
     
     mode = 'valid2'
     mode = 'train2'
-#    mode = '5000'
+    mode = '5000'
     filetype = 'npy'
     load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
     
     
     cont_data = load_func(prefix+'R_%s.%s'%(mode, filetype))
+    meanssigmas = standardize_continuous_data(cont_data.copy(),
+                                              meanssigmas=meanssigmas)
+    means, sigmas = meanssigmas
+    sigmas *= 100
+    meanssigmas = means, sigmas
     meanssigmas = standardize_continuous_data(cont_data,
                                               meanssigmas=meanssigmas)
-#    print(meanssigmas)
+    
+    print(meanssigmas[1][:10])
     m, n = cont_data.shape
     print(m, n)
 #    return meanssigmas
