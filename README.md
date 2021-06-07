@@ -7,7 +7,8 @@ Version 1.1, 23.4.2021
 ### Content ###
 
 This package contains solvers (mostly ADMM-based) for estimating various types of CG models (sparse pairwise, sparse + low-rank pairwise, mean parameters).
-Please see the [Wiki](https://github.com/franknu/cgmodsel/wiki) for additional information.
+Documentation is available under [cgmodsel-pages](https://franknu.github.io/cgmodsel-pages/source/cgmodsel.html).
+Please see also the [Wiki](https://github.com/franknu/cgmodsel/wiki) for additional information and an introduction about some models.
 
 ### Setup cgmodsel ###
 
@@ -19,7 +20,7 @@ For normal usage:
 
 You can also use the code without doing the third step from inside the folder. For a quick start, execute the file `quick_cgmod.py` from the main folder.
 
-Note that some solvers use a group-soft shrinkage operation. It works with a naive slow Python implementation, however, can be sped up using Cython code (credit goes to my colleague Mark Mihajlovic Blacher, thanks!). Install it by typing `python setup.py build_ext --inplace` in the root directory.
+Note that some solvers use a group-soft shrinkage operation. It works with a naive (but slow) Python implementation, however, can be sped up using Cython code (credit goes to my colleague Mark Mihajlovic Blacher, thanks!). Install it by typing `python setup.py build_ext --inplace` in the cyshrink/ directory.
 
 ### Usage ###
 

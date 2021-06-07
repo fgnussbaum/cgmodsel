@@ -127,8 +127,7 @@ if __name__ == '__main__':
         'filename': "datasets/allbus2016_proc.csv",
         'regparams': (1, 2),
     }
-    
-    ADULT = {'filename':'datasets/adult_train.csv'}
+
     HELP = {
         'filename': "datasets/HELPmiss_proc.csv",
         'regparams': (.5, 2),
@@ -139,27 +138,25 @@ if __name__ == '__main__':
             'regparams': (.5, 2)
             }
     
-    MSCOCO = {
-            'filename': 'data/mscoco.train.csv',
-            'sparams': {'coded_colnames':True}
-            }
     ###### select and load data set
 
     # ********************************* #
     # comment out all but one line here #
-#    data = CFMT
-    data = LSVT
-    data = IRIS
-    data = ADULT
-    data = MSCOCO
+    data = CFMT
+#    data = LSVT
+#    data = IRIS
+
     # ********************************* #
 
-    ## set regularization parameters ##
+    ## set regularization parameters for sparse + low-rank model ##
+    # for an introduction to the models, please see:
+    # https://github.com/franknu/cgmodsel/wiki 
     # you may try different values, any pair of positive reals will do
     # e.g., regparams = (.1, 1)
-#    model = learn_sl_model(data, regparams=data['regparams'])
+    model = learn_sl_model(data, regparams=data['regparams'])
     
-    model = learn_sparse_model(data, regparam=5.0)
+    ## or learn a purely sparse graphical model wo. low-rank component
+#    model = learn_sparse_model(data, regparam=3.0)
     
     # model.get_params()
     # model.get_meanparams()
