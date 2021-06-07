@@ -45,6 +45,16 @@ LABELS = [
 
 cifar10_labels = ['plane', 'car', 'bird', 'cat','deer', 'dog', 'frog',
                       'horse', 'ship', 'truck']
+def set_weights(meta, wd, wm, wc):
+    import numpy as np
+    n_cg = meta['n_cg']
+    n_cat = meta['n_cat']
+    weights = np.zeros((n_cat + n_cg, n_cat + n_cg))
+    weights[:n_cat, :n_cat] = wd
+    weights[:n_cat, n_cat:] = wm
+    weights[n_cat:, :n_cat] = wm
+    weights[n_cat:, n_cat:] = wc
+    return weights
 
 def learn_sparse_model(logger, opts, 
                         verb=False, 
@@ -101,6 +111,11 @@ def learn_sparse_model(logger, opts,
 #        gamma = alpha / (1 - alpha)
         t1 = time.time()
         solver.set_regularization_params(gamma)
+        wc = 0.1
+        weights = set_weights(meta, 1, wc, 1)
+#        print(weights)
+        solver.set_weights(weights)
+
         out = solver.solve(verb=solver_verb, 
                            warminit=warminit,
                            use_u=0, off=0, **opts)
@@ -116,11 +131,12 @@ def learn_sparse_model(logger, opts,
                                  iter =out['iter'])
         print(model.annotations)
 #        model.save("%s/N%s%.2f.pw"%(MODELFOLDER, dataname, gamma))
-        modelfilename = "%s/%s_ga%.2f.pw"%(MODELFOLDER, dataname, gamma)
-        model.save(modelfilename)
-        
-        send_mail("learned model from data [%s]\nfilename: %s"%(
-                dataname, modelfilename))
+        modelfilename = "%%s_ga%.2f_wc%.2f.pw"%(dataname, gamma, wc)
+        model.save(MODELFOLDER + '/' + modelfilename)
+        scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s/%s %w"""%(
+                MODELFOLDER, modelfilename, modelfilename)
+        send_mail("learned model from data [%s]\n%s"%(
+                dataname, scp))
         
 #        theta, u, alpha = model.get_pairwiseparams(padded=False)
 #        print(theta, u, alpha)
