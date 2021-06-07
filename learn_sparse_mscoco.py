@@ -131,9 +131,9 @@ def learn_sparse_model(logger, opts,
                                  iter =out['iter'])
         print(model.annotations)
 #        model.save("%s/N%s%.2f.pw"%(MODELFOLDER, dataname, gamma))
-        modelfilename = "%%s_ga%.2f_wc%.2f.pw"%(dataname, gamma, wc)
+        modelfilename = "%s_ga%.2f_wc%.2f.pw"%(dataname, gamma, wc)
         model.save(MODELFOLDER + '/' + modelfilename)
-        scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s/%s %w"""%(
+        scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s/%s data/mscocomodels/%s"""%(
                 MODELFOLDER, modelfilename, modelfilename)
         send_mail("learned model from data [%s]\n%s"%(
                 dataname, scp))
