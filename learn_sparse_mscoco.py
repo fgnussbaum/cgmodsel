@@ -111,7 +111,7 @@ def learn_sparse_model(logger, opts,
 #        gamma = alpha / (1 - alpha)
         t1 = time.time()
         solver.set_regularization_params(gamma)
-        wc = 0.1
+        wc = 0.5
         weights = set_weights(meta, 1, wc, 1)
 #        print(weights)
         solver.set_weights(weights)
@@ -132,8 +132,8 @@ def learn_sparse_model(logger, opts,
         print(model.annotations)
 #        model.save("%s/N%s%.2f.pw"%(MODELFOLDER, dataname, gamma))
         modelfilename = "%s_ga%.2f_wc%.2f.pw"%(dataname, gamma, wc)
-        model.save(MODELFOLDER + '/' + modelfilename)
-        scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s/%s data/mscocomodels/%s"""%(
+        model.save(MODELFOLDER + modelfilename)
+        scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s%s data/mscocomodels/%s"""%(
                 MODELFOLDER, modelfilename, modelfilename)
         send_mail("learned model from data [%s]\n%s"%(
                 dataname, scp))
