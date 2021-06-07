@@ -14,7 +14,7 @@ from cython.parallel cimport prange
 def grp(double[:,::1] mat,
         double tau,
         long[:] glims, 
-        int off = 0,
+        int off,
         long n_threads = 4):
     """ This function computes the group shrinkage operation on z """
     cdef double shrinkednorm = 0.0, gnorm, num, fac
@@ -41,7 +41,36 @@ def grp(double[:,::1] mat,
 
     return np.asarray(mat), shrinkednorm
 
+def grp_weight(double[:,::1] mat, 
+                 double tau, 
+                 long[:] glims, 
+                 int off,
+                 double[:,::1] weights,
+                 long n_threads = 4):
+    """ This function computes the group shrinkage operation on z """
+    cdef double shrinkedweightednorm = 0.0, gnorm, num, fac
+    cdef int i, j, k, l;
+    cdef int ngroups = glims.shape[0] - 1;
+    
+    for i in prange(glims.shape[0] - 1, nogil=True,
+                    schedule='static', num_threads=n_threads):
+#    for i in range(ngroups):
+        for l in range(ngroups):
+            gnorm = 0.0
+            for k in range(glims[i], glims[i + 1]):
+                for j in range(glims[l], glims[l + 1]):
+                    gnorm += mat[k, j] * mat[k, j]
+            if i == l and off:
+                continue
+            if gnorm > 0.0:
+                gnorm = gnorm ** 0.5
+                fac = max(0.0, (1.0 - tau * weights[i, l]/ gnorm))
+                for k in range(glims[i], glims[i + 1]):
+                    for j in range(glims[l], glims[l + 1]):
+                        mat[k, j] = mat[k, j] *  fac
+                shrinkedweightednorm += weights[i, l] * fac * gnorm
 
+    return np.asarray(mat), shrinkedweightednorm
 
 #def grp_weighted(double[:,::1] z,
 #                 double[:] weights,

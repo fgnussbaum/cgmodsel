@@ -11,7 +11,8 @@ import numpy as np
 #from cgmodsel.models.model_base import get_modeltype
 from cgmodsel.models.model_pwsl import ModelPWSL
 from cgmodsel.models.model_pw import ModelPW
-from cgmodsel.utils import grp_soft_shrink, l21norm
+from cgmodsel.utils import grp_soft_shrink, grp_soft_shrink_weight, l21norm
+#from cgmodsel.utils import grp_soft_shrink_weight2
 # pylint: disable=W0511 # todos
 # pylint: disable=R0914 # too many locals
 
@@ -257,6 +258,19 @@ class BaseSparseSolver(BaseCGSolver):
         else:
             self.weights = None
 
+    def set_weights(self, weights):
+        """store a matrix of weights for weighted l_12 regularization
+        
+        Args:
+            weights (np.array): array of non-negative weights to be used for
+            l_{1,2}-norm regularization.
+        """
+        m, n = weights.shape
+        assert m == n
+        assert m == len(self.meta['glims']) - 1, "%d != %d"%(m,
+                       len(self.meta['glims']) - 1)
+        self.weights = weights
+
     def shrink(self, mat_s, tau):
         """Calculate (group)- soft shrink of matrix mat_s with tau.
         
@@ -268,13 +282,12 @@ class BaseSparseSolver(BaseCGSolver):
             np.array: shrunken matrix.
             float: shrunken l_12 norm.
         """
-        # TODO (franknu): add support for weighted group norm
-#        print(self.meta['glims'], self.meta['nonbinary'])
-        if self.meta['nonbinary']:
-            res = grp_soft_shrink(mat_s,
-                                  tau,
-                                  self.meta['glims'],
-                                  self.opts['off'])
+        if not self.weights is None:
+            res = grp_soft_shrink_weight(mat_s,
+                                         tau,
+                                         self.meta['glims'],
+                                         self.opts['off'],
+                                         weights=self.weights)
             return res
         return grp_soft_shrink(mat_s,
                                tau,
