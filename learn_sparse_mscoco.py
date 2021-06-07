@@ -52,7 +52,7 @@ def learn_sparse_model(logger, opts,
                         gamma = 20):
 #    file_train = 'data/mscoco.train.csv'
     
-    dataname = 'mscoco.5000'
+    dataname = 'mscoco.1000'
 #    dataname = 'mscoco.train2' # Barlow-Twin Features
 #    dataname = 'cifar10.50000'
     file_train = 'data/%s.csv'%dataname
