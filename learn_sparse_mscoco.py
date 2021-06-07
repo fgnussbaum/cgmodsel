@@ -156,7 +156,7 @@ def parse_mscoco(meanssigmas=None,
     
     mode = 'valid2'
     mode = 'train2'
-    mode = '5000'
+    mode = '1000'
     filetype = 'npy'
     load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
     
@@ -165,7 +165,7 @@ def parse_mscoco(meanssigmas=None,
     meanssigmas = standardize_continuous_data(cont_data.copy(),
                                               meanssigmas=meanssigmas)
     means, sigmas = meanssigmas
-    sigmas *= 100
+#    sigmas *= 100
     meanssigmas = means, sigmas
     meanssigmas = standardize_continuous_data(cont_data,
                                               meanssigmas=meanssigmas)
