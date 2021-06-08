@@ -59,7 +59,8 @@ def set_weights(meta, wd, wm, wc):
 def learn_sparse_model(logger, opts, 
                         verb=False, 
                         solver_verb=True,
-                        gamma = 20):
+                        gamma = 20, 
+                        wc = 1):
 #    file_train = 'data/mscoco.train.csv'
     
     dataname = 'mscoco.1000'
@@ -111,7 +112,7 @@ def learn_sparse_model(logger, opts,
 #        gamma = alpha / (1 - alpha)
         t1 = time.time()
         solver.set_regularization_params(gamma)
-        wc = 0.5
+#        wc = 0.5
         weights = set_weights(meta, 1, wc, 1)
 #        print(weights)
         solver.set_weights(weights)
@@ -274,6 +275,6 @@ if __name__ == '__main__':
     srange = end, steps, frac
     opts = {'maxiter':1200}
     model = learn_sparse_model(logger, opts, solver_verb=1,
-                               gamma=10)
+                               gamma=10, wc=.5)
     
 
