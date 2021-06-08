@@ -60,10 +60,11 @@ def learn_sparse_model(logger, opts,
                         verb=False, 
                         solver_verb=True,
                         gamma = 20, 
+                        dataname = 'mscoco.1000'
                         wc = 1):
 #    file_train = 'data/mscoco.train.csv'
     
-    dataname = 'mscoco.1000'
+    
 #    dataname = 'mscoco.train2' # Barlow-Twin Features
 #    dataname = 'cifar10.50000'
     file_train = 'data/%s.csv'%dataname
@@ -275,6 +276,7 @@ if __name__ == '__main__':
     srange = end, steps, frac
     opts = {'maxiter':1200}
     model = learn_sparse_model(logger, opts, solver_verb=1,
-                               gamma=5, wc=.2)
+                               gamma=5, wc=.25,
+                               dataname = 'mscoco.5000')
     
 
