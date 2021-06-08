@@ -60,7 +60,7 @@ def learn_sparse_model(logger, opts,
                         verb=False, 
                         solver_verb=True,
                         gamma = 20, 
-                        dataname = 'mscoco.1000'
+                        dataname = 'mscoco.1000',
                         wc = 1):
 #    file_train = 'data/mscoco.train.csv'
     
