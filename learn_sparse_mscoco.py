@@ -134,7 +134,7 @@ def learn_sparse_model(logger, opts,
 #        model.save("%s/N%s%.2f.pw"%(MODELFOLDER, dataname, gamma))
         modelfilename = "%s_ga%.2f_wc%.2f.pw"%(dataname, gamma, wc)
         model.save(MODELFOLDER + modelfilename)
-        scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s%s data/mscocomodels/%s"""%(
+        scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s%s data/mscocomodels/%s\n"""%(
                 MODELFOLDER, modelfilename, modelfilename)
         send_mail("learned model from data [%s]\n%s"%(
                 dataname, scp))
@@ -275,6 +275,6 @@ if __name__ == '__main__':
     srange = end, steps, frac
     opts = {'maxiter':1200}
     model = learn_sparse_model(logger, opts, solver_verb=1,
-                               gamma=5, wc=.5)
+                               gamma=5, wc=.2)
     
 
