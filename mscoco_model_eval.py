@@ -26,6 +26,7 @@ def model_structure():
     infile = "mscoco.1000_ga20.00.pw" # all zero
     infile = "mscoco.1000_ga10.00.pw" # all zero
     infile = "mscoco.1000_ga5.00.pw" # (370,0)
+    infile = "mscoco.1000_ga5.00_wc0.20.pw" # (0,519)@1e-2
 #    infile = "mscoco.train2_ga20.00.pw" # wrong data, (1053,0)@1e-2
 #    infile = "mscocomodels/cifar10.50000_ga20.00.pw"
     model = ModelPW(infile=MODELFOLDER + infile)
@@ -70,9 +71,9 @@ def model_structure():
         medges = np.sum(graph[:n_cat, n_cat:])
         print('Edges (eps=%.4f): dis-dis=%d, dis-cont=%d, cont-cont=%d'%(
                 threshold, dedges, medges, cedges))
-#        print("DD: edges=%d, norm=%.2f"%(dedges, dnorm))
-#        print("M/DC: edges=%d, norm=%.2f"%(medges, mnorm))
-#        print("CC: edges=%d, norm=%.2f"%(cedges, cnorm))
+        print('Norms (eps=%.4f): dis-dis=%.2f, dis-cont=%.2f, cont-cont=%.2f'%(
+                threshold, dnorm, mnorm, cnorm))
+
     print_norms(pw_mat2)
     
     ## thresholding
@@ -94,33 +95,30 @@ def model_structure():
                 d[(label1, label2)] = value
         for key in sorted(d.keys(), key=lambda x: d[x], reverse=True):
             print("%.4f: %s ~ %s"%(d[key], *key))
-        return
-        model.mat_q[np.abs(model.mat_q) < eps] = 0
-        pw_mat2[:n,:n] = discretepart
-        print_norms(pw_mat2)
-        print("Threshold eps=%.5f for k=%d"%(eps, k))
-    #    print(model.mat_q.shape, discretepart.shape)
-        model.save(outfile=infile[:-3]+"_"+str(k)+"edges.pw")
+
+#        model.mat_q[np.abs(model.mat_q) < eps] = 0
+#        pw_mat2[:n,:n] = discretepart
+#        print_norms(pw_mat2)
+#        print("Threshold eps=%.5f for k=%d"%(eps, k))
+#    #    print(model.mat_q.shape, discretepart.shape)
+#        model.save(outfile=infile[:-3]+"_"+str(k)+"edges.pw")
     
     if True:
-        discretepart = np.abs(pw_mat2[:n, n:])
-        xx, yy = (discretepart>threshold).nonzero()
-        print(xx, yy)
+        mixedpart = np.abs(pw_mat2[:n, n:])
+#        print(mixedpart.shape)
+        xx, yy = (mixedpart>threshold).nonzero()
+#        print(xx, yy)
         dc = {}
         for cvar in numericals:
             dc[cvar] = 0
-        for i in range(2 * k):
+        for i in range(len(xx)):
             label1 = categoricals[xx[i]]
             cvar = numericals[yy[i]]
-#            value = pw_mat2[xx[i], yy[i]]
-#            if not (label2, label1) in d:
-#                d[(label1, label2)] = value
             dc[cvar] += 1
         for key in sorted(dc.keys(), key=lambda x: dc[x], reverse=True):
             if dc[key] > 0:
-                print("%.4f: %s ~ %s"%(dc[key], *key))
-        return
-        model.mat_q[np.abs(model.mat_q) < eps] = 0
+                print("%s=%d"%(key, dc[key]), end=", ")
+
 
 
 if __name__ == "__main__":
