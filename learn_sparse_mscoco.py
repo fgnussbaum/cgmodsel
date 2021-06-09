@@ -111,9 +111,8 @@ def learn_sparse_model(logger, opts,
 #        wc = 0.5
         if not wc is None:
             weights = set_weights(meta, 1, wc, 1)
-            print(weights)
-            print(cont_data[:10, 502:506])
-            return
+#            print(weights)
+#            print(cont_data[:10, 502:506])
             solver.set_weights(weights)
 
         out = solver.solve(verb=solver_verb, 
@@ -284,7 +283,7 @@ if __name__ == '__main__':
     srange = end, steps, frac
     opts = {'maxiter':1200}
     model = learn_sparse_model(logger, opts, solver_verb=1,
-                               gamma=20, wc=None,
+                               gamma=10, wc=None,
                                dataname = 'mscoco.1000')
     
 
