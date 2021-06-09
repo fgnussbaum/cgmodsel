@@ -109,11 +109,12 @@ def learn_sparse_model(logger, opts,
         t1 = time.time()
         solver.set_regularization_params(gamma)
 #        wc = 0.5
-        weights = set_weights(meta, 1, wc, 1)
-        print(weights)
-        print(cont_data[:10, 502:506])
-        return
-        solver.set_weights(weights)
+        if not wc is None:
+            weights = set_weights(meta, 1, wc, 1)
+            print(weights)
+            print(cont_data[:10, 502:506])
+            return
+            solver.set_weights(weights)
 
         out = solver.solve(verb=solver_verb, 
                            warminit=warminit,
@@ -130,7 +131,10 @@ def learn_sparse_model(logger, opts,
                                  iter =out['iter'])
         print(model.annotations)
 #        model.save("%s/N%s%.2f.pw"%(MODELFOLDER, dataname, gamma))
-        modelfilename = "%s_ga%.2f_wc%.2f.pw"%(dataname, gamma, wc)
+        if not wc is None:
+            modelfilename = "%s_ga%.2f_wc%.2f.pw"%(dataname, gamma, wc)
+        else:
+            modelfilename = "%s_ga%.2f.pw"%(dataname, gamma)
         model.save(MODELFOLDER + modelfilename)
         scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s%s data/mscocomodels/%s\n"""%(
                 MODELFOLDER, modelfilename, modelfilename)
@@ -258,7 +262,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
 #    dataname = 'mscoco'
     # ********************************* #
-    ms = parse_mscoco()
+#    ms = parse_mscoco()
 #    parse_cifar10()
 #    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
@@ -279,8 +283,8 @@ if __name__ == '__main__':
     frac = 1000
     srange = end, steps, frac
     opts = {'maxiter':1200}
-#    model = learn_sparse_model(logger, opts, solver_verb=1,
-#                               gamma=20, wc=.2,
-#                               dataname = 'mscoco.1000')
+    model = learn_sparse_model(logger, opts, solver_verb=1,
+                               gamma=20, wc=None,
+                               dataname = 'mscoco.1000')
     
 
