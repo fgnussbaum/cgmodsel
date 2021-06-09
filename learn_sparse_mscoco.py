@@ -174,7 +174,7 @@ def parse_mscoco(meanssigmas=None,
     
     mode = 'valid2'
     mode = 'train2'
-#    mode = '5000'
+    mode = '5000'
     filetype = 'npy'
     load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
     
@@ -283,7 +283,7 @@ if __name__ == '__main__':
     srange = end, steps, frac
     opts = {'maxiter':1200}
     model = learn_sparse_model(logger, opts, solver_verb=1,
-                               gamma=5, wc=.5,
-                               dataname = 'mscoco.1000')
+                               gamma=10, wc=.2,
+                               dataname = 'mscoco.5000')
     
 
