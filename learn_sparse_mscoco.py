@@ -110,7 +110,9 @@ def learn_sparse_model(logger, opts,
         solver.set_regularization_params(gamma)
 #        wc = 0.5
         weights = set_weights(meta, 1, wc, 1)
-#        print(weights)
+        print(weights)
+        print(cont_data[:10, 502:506])
+        return
         solver.set_weights(weights)
 
         out = solver.solve(verb=solver_verb, 
@@ -169,7 +171,7 @@ def parse_mscoco(meanssigmas=None,
     
     mode = 'valid2'
     mode = 'train2'
-    mode = '1000'
+#    mode = '5000'
     filetype = 'npy'
     load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
     
@@ -177,17 +179,17 @@ def parse_mscoco(meanssigmas=None,
     cont_data = load_func(prefix+'R_%s.%s'%(mode, filetype))
     meanssigmas = standardize_continuous_data(cont_data.copy(),
                                               meanssigmas=meanssigmas)
-    means, sigmas = meanssigmas
+#    means, sigmas = meanssigmas
 #    sigmas *= 100
-    meanssigmas = means, sigmas
-    meanssigmas = standardize_continuous_data(cont_data,
-                                              meanssigmas=meanssigmas)
+#    meanssigmas = means, sigmas
+#    meanssigmas = standardize_continuous_data(cont_data,
+#                                              meanssigmas=meanssigmas)
     
     print(meanssigmas[1][:10])
     m, n = cont_data.shape
     print(m, n)
 #    return meanssigmas
-    cat_data = np.zeros((m, 100), dtype=np.int64)
+    cat_data = np.zeros((m, len(LABELS)), dtype=np.int64)
     y_train = load_func(prefix+'Y_%s.%s'%(mode, filetype))
     for i in range(m):
         for j in range(100):
@@ -198,7 +200,9 @@ def parse_mscoco(meanssigmas=None,
 #        print(y_train[i, :])
 #        return
     print(y_train[5, :], y_train.shape)
-            
+    print('cat_data shape', cat_data.shape)
+    
+    assert len(LABELS) == cat_data.shape[1]
     with open('data/mscoco.%s.csv'%mode, 'w', newline='') as outcsv: # newline='' for WINDOWS
 
         writer = csv.writer(outcsv)
@@ -254,7 +258,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
 #    dataname = 'mscoco'
     # ********************************* #
-#    ms = parse_mscoco()
+    ms = parse_mscoco()
 #    parse_cifar10()
 #    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
@@ -275,8 +279,8 @@ if __name__ == '__main__':
     frac = 1000
     srange = end, steps, frac
     opts = {'maxiter':1200}
-    model = learn_sparse_model(logger, opts, solver_verb=1,
-                               gamma=20, wc=.2,
-                               dataname = 'mscoco.train2')
+#    model = learn_sparse_model(logger, opts, solver_verb=1,
+#                               gamma=20, wc=.2,
+#                               dataname = 'mscoco.1000')
     
 
