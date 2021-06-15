@@ -227,8 +227,8 @@ def parse_cifar10(meanssigmas=None,
     
     
     cont_data = load_func(prefix+'R_%s.%s'%(mode, filetype))
-    meanssigmas = standardize_continuous_data(cont_data,
-                                              meanssigmas=meanssigmas)
+    meanssigmas = standardize_continuous_data(cont_data)
+#                                              meanssigmas=meanssigmas)
     means, sigmas = meanssigmas
     nonzero_idx = np.where(sigmas != 0)
 #    print(meanssigmas)
@@ -261,7 +261,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
 #    dataname = 'mscoco'
     # ********************************* #
-#    ms = parse_mscoco()
+    ms = parse_mscoco()
 #    parse_cifar10()
 #    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
@@ -282,8 +282,8 @@ if __name__ == '__main__':
     frac = 1000
     srange = end, steps, frac
     opts = {'maxiter':1200}
-    model = learn_sparse_model(logger, opts, solver_verb=1,
-                               gamma=20, wc=.75,
-                               dataname = 'mscoco.train2')
+#    model = learn_sparse_model(logger, opts, solver_verb=1,
+#                               gamma=20, wc=.75,
+#                               dataname = 'mscoco.train2')
     
 
