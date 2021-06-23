@@ -41,6 +41,7 @@ def model_structure():
     infile = "mscoco.train2_ga35.00_wc0.25.pw" # (1092, 2)
     infile = "mscoco.train2_ga40.00_wc0.15.pw" # (827,3)
     infile = "mscoco.train2_ga50.00_wc0.15.pw" # (366, 2)
+    infile = "mscoco.train2_ga55.00_wc0.08.pw" # (45, 8)
 #    infile = "mscoco.train2_ga25.00_wc0.50.pw" # (1390,0)
 #    infile = "mscoco.train2_ga20.00.pw" # wrong data, (1053,0)@1e-2
 #    infile = "mscocomodels/cifar10.50000_ga20.00.pw"
