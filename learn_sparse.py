@@ -61,7 +61,7 @@ if __name__ == '__main__':
             }
 
     IRIS = {'name':'iris',
-            'filename': 'datasets/iris.train.data',
+            'filename': 'datasets/iris.csv',
             }
     ###### select and load data set
 
