@@ -481,7 +481,8 @@ def prepare_cat_data(data,
             for i in range(n_data):
                 row = data.iloc[i, :]
                 for j in range(n_cat):
-                    cat_data[i, cat_glims[j] - j + row[j] - 1] = 1
+                    if row[j] != 0:
+                        cat_data[i, cat_glims[j] - j + row[j] - 1] = 1
         else:
             for i in range(n_data):  # TODO: code redundancy
                 for j in range(n_cat):
