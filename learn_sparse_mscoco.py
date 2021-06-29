@@ -80,10 +80,10 @@ def learn_sparse_model(logger, opts,
                                                   cattype='dummy_red',
                                                   **opts)
     
-    print(np.dot(cat_data.T, cat_data) / cat_data.shape[0])
-    print(cat_data[:3, :20])
+#    print(np.dot(cat_data.T, cat_data) / cat_data.shape[0])
+#    print(cat_data[:3, :20])
 #    print(meta)
-    return
+#    return
 #    meanssigmas = standardize_continuous_data(cont_data)
 #    standardize_continuous_data(cont_test, meanssigmas)
 
@@ -285,7 +285,7 @@ if __name__ == '__main__':
     srange = end, steps, frac
     opts = {'maxiter':1200}
     model = learn_sparse_model(logger, opts, solver_verb=1,
-                               gamma=.5, wc=1,
+                               gamma=5, wc=1,
                                dataname = 'mscoco.5000')
     
 
