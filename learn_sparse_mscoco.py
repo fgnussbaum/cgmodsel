@@ -79,9 +79,11 @@ def learn_sparse_model(logger, opts,
                                                   catuniques=catuniques,
                                                   cattype='dummy_red',
                                                   **opts)
-
+    
+    print(np.dot(cat_data.T, cat_data) / cat_data.shape[0])
+    print(cat_data[:3, :20])
 #    print(meta)
-#    return
+    return
 #    meanssigmas = standardize_continuous_data(cont_data)
 #    standardize_continuous_data(cont_test, meanssigmas)
 

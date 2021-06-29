@@ -42,6 +42,7 @@ if __name__ == '__main__':
     ###### data sets
     ## binary ##
     ABILITY = {
+            'name':'ability',
         'filename': "datasets/ability_proc.csv",
         'catuniques': [0, 1] # values that binary variables take
         }  
@@ -68,8 +69,9 @@ if __name__ == '__main__':
     # ********************************* #
     # comment out all but one line here #
     data = IRIS
-#    data = ADULT
-#    data = ALLBUS
+    data = ADULT
+    data = ALLBUS
+    data = ABILITY
     # ********************************* #
     ## additional parameters for loading the data ##
     # standardize quantitative variables before learning model
@@ -83,6 +85,8 @@ if __name__ == '__main__':
     gamma = 1
     model = learn_sparse_model(data, regparam=gamma)
     model.save("savedmodels/%s%f"%(data['name'], gamma))
+    
+    print(model.mat_q)
     
     # model.get_params()
     # model.get_meanparams()
