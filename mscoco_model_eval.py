@@ -37,6 +37,7 @@ def model_structure():
 #    infile = "mscoco.5000_ga2.50_wc0.50.pw" # (0,636)
     infile = "mscoco.5000_ga2.50.pw" # (1481, 5)
 #    infile = "mscoco.5000_ga3.50_wc0.75.pw" # (142, 408)
+    infile = "mscoco.5000_ga5.00_wc1.00.pw"
     
 #    infile = "mscoco.train2_ga20.00_wc0.75.pw" # (1039,0)
 #    infile = "mscoco.train2_ga35.00_wc0.25.pw" # (1092, 2)
@@ -50,7 +51,7 @@ def model_structure():
 #    infile = "mscoco.train2_ga20.00.pw" # wrong data, (1053,0)@1e-2
 #    infile = "mscocomodels/cifar10.50000_ga20.00.pw"
     model = ModelPW(infile=MODELFOLDER + infile)
-    print(model.annotations)
+#    print(model.annotations)
 #    print(model.mat_lbda[:3, :3])
 #    return
 #    print(model.meta)
