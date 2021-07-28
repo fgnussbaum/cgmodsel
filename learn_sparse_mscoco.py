@@ -170,13 +170,14 @@ def load_npy(filename):
     return np.load(filename)
 
 def parse_mscoco(meanssigmas=None,
-                 prefix='data/mscoco/'):
+                 prefix='data/mscoco/',
+                 standardize=False):
     import pickle, csv
 #    print(len(labels))
     
     mode = 'valid2'
     mode = 'train2'
-#    mode = '5000'
+    mode = '5000'
     filetype = 'npy'
     load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
     
@@ -207,8 +208,9 @@ def parse_mscoco(meanssigmas=None,
     print(y_train[5, :], y_train.shape)
     print('cat_data shape', cat_data.shape)
     
+    ss = '_s' if standardize else ''
     assert len(LABELS) == cat_data.shape[1]
-    with open('data/mscoco.%s.csv'%mode, 'w', newline='') as outcsv: # newline='' for WINDOWS
+    with open('data/mscoco%s.%s.csv'%(ss, mode), 'w', newline='') as outcsv: # newline='' for WINDOWS
 
         writer = csv.writer(outcsv)
         writer.writerow(["Y%d"%(i) for i in range(n)] + LABELS)
@@ -263,7 +265,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
 #    dataname = 'mscoco'
     # ********************************* #
-#    ms = parse_mscoco()
+#    ms = parse_mscoco(standardize=True)
 #    parse_cifar10()
 #    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
@@ -285,7 +287,7 @@ if __name__ == '__main__':
     srange = end, steps, frac
     opts = {'maxiter':1200}
     model = learn_sparse_model(logger, opts, solver_verb=1,
-                               gamma=.1, wc=1,
-                               dataname = 'mscoco.5000')
+                               gamma=10, wc=1,
+                               dataname = 'mscoco.train2')
     
 

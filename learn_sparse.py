@@ -24,6 +24,7 @@ def learn_sparse_model(data, regparam):
 
     ## solve the problem, that is, estimate a sparse model ##
     print('Solving the problem...')
+#    solver.prox.opts['maxiter'] = 1000
     solver.solve(verb=1, use_u=0, off=0, maxiter=500) # use_u=0 turns of univariate discrete parameters
 
     ###### model visualization
@@ -71,7 +72,7 @@ if __name__ == '__main__':
     data = IRIS
     data = ADULT
     data = ALLBUS
-    data = ABILITY
+#    data = ABILITY
     # ********************************* #
     ## additional parameters for loading the data ##
     # standardize quantitative variables before learning model
@@ -82,7 +83,7 @@ if __name__ == '__main__':
     # ********************************* #
 
     ## set regularization parameters ##
-    gamma = 1
+    gamma = 10
     model = learn_sparse_model(data, regparam=gamma)
     model.save("savedmodels/%s%f"%(data['name'], gamma))
     

@@ -73,6 +73,7 @@ class LikelihoodProx(BaseGradSolver):
     def _callback_plh(self, optvars, handle_fg):
         """callback to check for potential bugs"""
         fnew = handle_fg(optvars)[0]
+#        print(fnew)
         if not fnew <= self._fold:
             string = 'Potential scipy bug, fvalue increased in last iteration'
             print('Warning(CG_base_ADMM._callback_plh): %s' % (string))
