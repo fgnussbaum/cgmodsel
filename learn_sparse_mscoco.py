@@ -183,7 +183,8 @@ def parse_mscoco(meanssigmas=None,
     
     
     cont_data = load_func(prefix+'R_%s.%s'%(mode, filetype))
-    meanssigmas = standardize_continuous_data(cont_data)
+    if standardize:
+        meanssigmas = standardize_continuous_data(cont_data)
 #                                              meanssigmas=meanssigmas)
 #    means, sigmas = meanssigmas
 #    sigmas *= 100
@@ -191,7 +192,7 @@ def parse_mscoco(meanssigmas=None,
 #    meanssigmas = standardize_continuous_data(cont_data,
 #                                              meanssigmas=meanssigmas)
     
-    print(meanssigmas[1][:10])
+        print(meanssigmas[1][:10])
     m, n = cont_data.shape
     print(m, n)
 #    return meanssigmas
