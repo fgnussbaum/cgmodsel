@@ -263,7 +263,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
 #    dataname = 'mscoco'
     # ********************************* #
-    ms = parse_mscoco(standardize=True, mode='train2')
+#    ms = parse_mscoco(standardize=True, mode='1000')
 #    parse_cifar10()
 #    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
@@ -284,8 +284,8 @@ if __name__ == '__main__':
     frac = 1000
     srange = end, steps, frac
     opts = {'maxiter':1200}
-#    model = learn_sparse_model(logger, opts, solver_verb=1,
-#                               gamma=10, wc=1,
-#                               dataname = 'mscoco.1000_s')
+    model = learn_sparse_model(logger, opts, solver_verb=1,
+                               gamma=10, wc=1,
+                               dataname = 'mscoco.5000_s')
     
 
