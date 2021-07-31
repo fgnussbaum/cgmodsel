@@ -40,8 +40,9 @@ def model_structure():
 #    infile = "mscoco.5000_ga5.00_wc1.00.pw"
 #    infile = "mscoco.5000_ga2.00_wc1.00.pw"
 #    infile = "mscoco.5000_ga0.50_wc1.00.pw"
-    infile = "mscoco.5000_ga0.10_wc1.00.pw" # (61, 3175)
+#    infile = "mscoco.5000_ga0.10_wc1.00.pw" # (61, 3175)
     
+#    infile = "mscoco.train2_ga10.00_wc1.00.pw"
 #    infile = "mscoco.train2_ga20.00_wc0.75.pw" # (1039,0)
 #    infile = "mscoco.train2_ga35.00_wc0.25.pw" # (1092, 2)
 #    infile = "mscoco.train2_ga40.00_wc0.15.pw" # (827,3)
@@ -57,7 +58,7 @@ def model_structure():
 #    print(model.annotations)
 #    print(model.mat_lbda[:3, :3])
 #    return
-#    print(model.meta)
+    print(model.meta['n_cat'], model.meta['n_cg'])
     threshold = 1e-2
     n_edges= model.get_no_edges(threshold=threshold)
     n_vars = model.meta['n_cat'] + model.meta['n_cg']
@@ -104,7 +105,7 @@ def model_structure():
     cifar10_labels = ['plane', 'car', 'bird', 'cat','deer', 'dog', 'frog',
                       'horse', 'ship', 'truck']
 #    categoricals = cifar10_labels
-    k = 10
+    k = 1
     if k > 0:
         discretepart = np.abs(pw_mat2[:n, :n])
         eps = findKthLargest(np.abs(discretepart), k=2 * k)
@@ -145,6 +146,7 @@ def model_structure():
                 print("%s=%d"%(key, dc[key]), end=", ")
         print()
     
+    return
     fn = "data/mscoco.1000.csv"
     sampleid = 0 # 4, 10
     with open(fn, 'r') as incsv:

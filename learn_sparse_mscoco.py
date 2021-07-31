@@ -82,8 +82,8 @@ def learn_sparse_model(logger, opts,
     
 #    print(np.dot(cat_data.T, cat_data) / cat_data.shape[0])
 #    print(cat_data[:3, :20])
-#    print(meta)
-#    return
+    print(meta)
+    return
 #    meanssigmas = standardize_continuous_data(cont_data)
 #    standardize_continuous_data(cont_test, meanssigmas)
 
@@ -177,7 +177,7 @@ def parse_mscoco(meanssigmas=None,
     
     mode = 'valid2'
     mode = 'train2'
-    mode = '5000'
+#    mode = '5000'
     filetype = 'npy'
     load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
     
@@ -216,7 +216,7 @@ def parse_mscoco(meanssigmas=None,
         writer.writerow(["Y%d"%(i) for i in range(n)] + LABELS)
         for i in range(m):
             writer.writerow(list(cont_data[i, :]) + list(cat_data[i, :]))
-#    send_mail("parsed")
+    send_mail("parsed %s"%(mode))
             
 def parse_cifar10(meanssigmas=None,
                  prefix='data/cifar10/'):
@@ -265,7 +265,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
 #    dataname = 'mscoco'
     # ********************************* #
-#    ms = parse_mscoco(standardize=True)
+    ms = parse_mscoco(standardize=True)
 #    parse_cifar10()
 #    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
@@ -286,8 +286,8 @@ if __name__ == '__main__':
     frac = 1000
     srange = end, steps, frac
     opts = {'maxiter':1200}
-    model = learn_sparse_model(logger, opts, solver_verb=1,
-                               gamma=10, wc=1,
-                               dataname = 'mscoco.train2')
+#    model = learn_sparse_model(logger, opts, solver_verb=1,
+#                               gamma=10, wc=1,
+#                               dataname = 'mscoco.1000')
     
 
