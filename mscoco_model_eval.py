@@ -40,7 +40,7 @@ def model_structure():
 #    infile = "mscoco.5000_ga5.00_wc1.00.pw"
 #    infile = "mscoco.5000_ga2.00_wc1.00.pw"
 #    infile = "mscoco.5000_ga0.50_wc1.00.pw"
-#    infile = "mscoco.5000_ga0.10_wc1.00.pw" # (61, 3175)
+    infile = "mscoco.5000_ga0.10_wc1.00.pw" # (61, 3175)
     
 #    infile = "mscoco.train2_ga10.00_wc1.00.pw"
 #    infile = "mscoco.train2_ga20.00_wc0.75.pw" # (1039,0)
@@ -105,7 +105,7 @@ def model_structure():
     cifar10_labels = ['plane', 'car', 'bird', 'cat','deer', 'dog', 'frog',
                       'horse', 'ship', 'truck']
 #    categoricals = cifar10_labels
-    k = 1
+    k = 30
     if k > 0:
         discretepart = np.abs(pw_mat2[:n, :n])
         eps = findKthLargest(np.abs(discretepart), k=2 * k)
