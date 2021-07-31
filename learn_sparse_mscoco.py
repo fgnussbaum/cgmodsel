@@ -171,13 +171,10 @@ def load_npy(filename):
 
 def parse_mscoco(meanssigmas=None,
                  prefix='data/mscoco/',
-                 standardize=False):
+                 standardize=False, mode='5000'):
     import pickle, csv
 #    print(len(labels))
-    
-    mode = 'valid2'
-    mode = 'train2'
-#    mode = '5000'
+
     filetype = 'npy'
     load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
     
@@ -266,7 +263,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
 #    dataname = 'mscoco'
     # ********************************* #
-    ms = parse_mscoco(standardize=False)
+    ms = parse_mscoco(standardize=True, mode='5000')
 #    parse_cifar10()
 #    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
