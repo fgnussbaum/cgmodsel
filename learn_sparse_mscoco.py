@@ -208,7 +208,7 @@ def parse_mscoco(meanssigmas=None,
     
     ss = '_s' if standardize else ''
     assert len(LABELS) == cat_data.shape[1]
-    with open('data/mscoco%s.%s.csv'%(ss, mode), 'w', newline='') as outcsv: # newline='' for WINDOWS
+    with open('data/mscoco.%s%s.csv'%(mode, ss), 'w', newline='') as outcsv: # newline='' for WINDOWS
 
         writer = csv.writer(outcsv)
         writer.writerow(["Y%d"%(i) for i in range(n)] + LABELS)
@@ -263,7 +263,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
 #    dataname = 'mscoco'
     # ********************************* #
-    ms = parse_mscoco(standardize=True, mode='5000')
+    ms = parse_mscoco(standardize=True, mode='train2')
 #    parse_cifar10()
 #    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
@@ -286,6 +286,6 @@ if __name__ == '__main__':
     opts = {'maxiter':1200}
 #    model = learn_sparse_model(logger, opts, solver_verb=1,
 #                               gamma=10, wc=1,
-#                               dataname = 'mscoco.1000')
+#                               dataname = 'mscoco.1000_s')
     
 
