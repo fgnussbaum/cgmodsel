@@ -41,6 +41,7 @@ def model_structure():
 #    infile = "mscoco.5000_ga2.00_wc1.00.pw"
 #    infile = "mscoco.5000_ga0.50_wc1.00.pw"
     infile = "mscoco.5000_ga0.10_wc1.00.pw" # (61, 3175)
+    infile = "mscoco.5000_s_ga10.00_wc1.00.pw" # (0, 0)
     
 #    infile = "mscoco.train2_ga10.00_wc1.00.pw"
 #    infile = "mscoco.train2_ga20.00_wc0.75.pw" # (1039,0)
