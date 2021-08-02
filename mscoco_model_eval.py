@@ -45,10 +45,11 @@ def model_structure(checksample=True):
 #    infile = "mscoco.5000_s_ga0.10_wc1.00.pw" # (1254, 7253)
     
     checksample = False
-    infile = "mscoco.train2_s_ga40.00_wc1.00.pw"
+    infile = "mscoco.train2_s_ga40.00_wc1.00.pw" # zero
+    infile = "mscoco.train2_s_ga10.00_wc1.00.pw" # (88,0) person and neg only
     
 #    infile = "mscoco.train2_ga10.00_wc1.00.pw"
-#    infile = "mscoco.train2_ga20.00_wc0.75.pw" # (1039,0)
+    infile = "mscoco.train2_ga20.00_wc0.75.pw" # (1039,0)
 #    infile = "mscoco.train2_ga35.00_wc0.25.pw" # (1092, 2)
 #    infile = "mscoco.train2_ga40.00_wc0.15.pw" # (827,3)
 #    infile = "mscoco.train2_ga50.00_wc0.15.pw" # (366, 2)
@@ -111,7 +112,7 @@ def model_structure(checksample=True):
                       'horse', 'ship', 'truck']
 #    categoricals = cifar10_labels
     k = 20
-    posonly = 1
+    posonly = 0
     if k > 0:
 #        discretepart = np.abs(pw_mat2[:n, :n])
         discretepart = pw_mat2[:n, :n]
