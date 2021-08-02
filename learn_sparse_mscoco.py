@@ -294,6 +294,6 @@ if __name__ == '__main__':
     opts = {'maxiter':1200}
     model = learn_sparse_model(logger, opts, solver_verb=1,
                                gamma=40, wc=1,
-                               dataname = 'mscoco.train_s')
+                               dataname = 'mscoco.train2_s')
     
 
