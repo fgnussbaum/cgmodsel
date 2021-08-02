@@ -293,7 +293,7 @@ if __name__ == '__main__':
     srange = end, steps, frac
     opts = {'maxiter':1200}
     model = learn_sparse_model(logger, opts, solver_verb=1,
-                               gamma=40, wc=1,
+                               gamma=10, wc=1,
                                dataname = 'mscoco.train2_s')
     
 

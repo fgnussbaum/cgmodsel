@@ -24,7 +24,7 @@ def findKthLargest(nums, k):
       return a[len(a)-k]
 MODELFOLDER = "data/mscocomodels/"
 
-def model_structure():    
+def model_structure(checksample=True):    
     infile = "mscoco.1000_ga20.00.pw" # all zero
     infile = "mscoco.1000_ga10.00.pw" # all zero
     infile = "mscoco.1000_ga5.00.pw" # (370,0)
@@ -44,7 +44,16 @@ def model_structure():
     infile = "mscoco.5000_ga0.10_wc1.00.pw" # (61, 3175)
 #    infile = "mscoco.5000_s_ga0.10_wc1.00.pw" # (1254, 7253)
     
-
+    checksample = False
+    infile = "mscoco.train2_s_ga40.00_wc1.00.pw"
+    
+#    infile = "mscoco.train2_ga10.00_wc1.00.pw"
+#    infile = "mscoco.train2_ga20.00_wc0.75.pw" # (1039,0)
+#    infile = "mscoco.train2_ga35.00_wc0.25.pw" # (1092, 2)
+#    infile = "mscoco.train2_ga40.00_wc0.15.pw" # (827,3)
+#    infile = "mscoco.train2_ga50.00_wc0.15.pw" # (366, 2)
+#    infile = "mscoco.train2_ga55.00_wc0.08.pw" # (45, 8)
+#    infile = "mscoco.train2_ga55.00_wc0.03.pw" # (44,121)
     
     
 #    infile = "mscoco.train2_ga25.00_wc0.50.pw" # (1390,0)
@@ -153,7 +162,8 @@ def model_structure():
                 print("%s=%d"%(key, dc[key]), end=", ")
         print()
     
-#    return
+    if not checksample: 
+        return
     standardized = "_s" if "_s_" in infile else ""
     fn = "data/mscoco.5000%s.csv"%standardized
     sampleid = 5 # 4, 10
