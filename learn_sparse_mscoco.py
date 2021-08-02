@@ -189,7 +189,8 @@ def parse_mscoco(meanssigmas=None,
 #    meanssigmas = standardize_continuous_data(cont_data,
 #                                              meanssigmas=meanssigmas)
     
-        print(meanssigmas[1][:10])
+        print("std", meanssigmas[1][:10])
+        print("mean", meanssigmas[0][:10])
     m, n = cont_data.shape
     print(m, n)
 #    return meanssigmas
@@ -206,6 +207,13 @@ def parse_mscoco(meanssigmas=None,
     print(y_train[5, :], y_train.shape)
     print('cat_data shape', cat_data.shape)
     
+    cor_mat = np.corrcoef(cat_data.T)
+    pair = 63, 85 # pottet plant, vase .35
+#    pair = 73, 75 # mouse, keyboard .67
+#    pair = 61, 66 # chair, dining table .31
+#    pair = 2, 7 # car, truck .37
+    print("Cross-cor(%d, %d):"%pair, cor_mat[pair[0],pair[1]])
+    
     ss = '_s' if standardize else ''
     assert len(LABELS) == cat_data.shape[1]
     with open('data/mscoco.%s%s.csv'%(mode, ss), 'w', newline='') as outcsv: # newline='' for WINDOWS
@@ -214,7 +222,7 @@ def parse_mscoco(meanssigmas=None,
         writer.writerow(["Y%d"%(i) for i in range(n)] + LABELS)
         for i in range(m):
             writer.writerow(list(cont_data[i, :]) + list(cat_data[i, :]))
-    send_mail("parsed %s"%(mode))
+#    send_mail("parsed %s"%(mode))
             
 def parse_cifar10(meanssigmas=None,
                  prefix='data/cifar10/'):
@@ -263,7 +271,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
 #    dataname = 'mscoco'
     # ********************************* #
-#    ms = parse_mscoco(standardize=True, mode='1000')
+#    ms = parse_mscoco(standardize=True, mode='5000')
 #    parse_cifar10()
 #    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
@@ -285,7 +293,7 @@ if __name__ == '__main__':
     srange = end, steps, frac
     opts = {'maxiter':1200}
     model = learn_sparse_model(logger, opts, solver_verb=1,
-                               gamma=.1, wc=1,
-                               dataname = 'mscoco.5000_s')
+                               gamma=40, wc=1,
+                               dataname = 'mscoco.train_s')
     
 
