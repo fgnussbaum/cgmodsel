@@ -204,15 +204,29 @@ def parse_mscoco(meanssigmas=None,
                 cat_data[i, label] = 1
 #        print(y_train[i, :])
 #        return
-    print(y_train[5, :], y_train.shape)
-    print('cat_data shape', cat_data.shape)
+#    print(y_train[5, :], y_train.shape)
+#    print('cat_data shape', cat_data.shape)
     
     cor_mat = np.corrcoef(cat_data.T)
+    baserates = np.sum(cat_data, axis=0).astype(np.float) / cat_data.shape[0]
+#    print(baserates.shape)
+    np.save("cormat%s.npy"%mode, cor_mat)
+#    print(cor_mat.shape)
     pair = 63, 85 # pottet plant, vase .35
-#    pair = 73, 75 # mouse, keyboard .67
-#    pair = 61, 66 # chair, dining table .31
-#    pair = 2, 7 # car, truck .37
-    print("Cross-cor(%d, %d):"%pair, cor_mat[pair[0],pair[1]])
+    pair = 73, 75 # mouse, keyboard .67
+    pair = 61, 66 # chair, dining table .31
+    pair = 2, 7 # car, truck .37
+#    pair = 0, 16 # person, cat
+    print("Cross-cor(%d, %d): %.3f (base-rates: %.2f, %.2f)"%(
+            pair[0], pair[1], cor_mat[pair[0],pair[1]], baserates[pair[0]],
+            baserates[pair[1]]))
+    sorted_cormat = cor_mat.copy()
+    sorted_cormat -= np.diag(np.diag(sorted_cormat))
+    sorted_cormat = sorted_cormat.flatten()
+    sorted_cormat.sort()
+    sorted_cormat = sorted_cormat[np.logical_not(np.isnan(sorted_cormat))] # remove nan
+    print(sorted_cormat)
+    print(np.nanmax(sorted_cormat))
     
     ss = '_s' if standardize else ''
     assert len(LABELS) == cat_data.shape[1]
@@ -293,7 +307,7 @@ if __name__ == '__main__':
     srange = end, steps, frac
     opts = {'maxiter':1200}
     model = learn_sparse_model(logger, opts, solver_verb=1,
-                               gamma=20, wc=.75,
-                               dataname = 'mscoco.train2')
+                               gamma=10, wc=.1,
+                               dataname = 'mscoco.train2_s')
     
 

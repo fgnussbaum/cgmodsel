@@ -49,7 +49,7 @@ def model_structure(checksample=True):
     infile = "mscoco.train2_s_ga10.00_wc1.00.pw" # (88,0) person and neg only
     
 #    infile = "mscoco.train2_ga10.00_wc1.00.pw"
-    infile = "mscoco.train2_ga20.00_wc0.75.pw" # (1039,0)
+#    infile = "mscoco.train2_ga20.00_wc0.75.pw" # (1039,0)
 #    infile = "mscoco.train2_ga35.00_wc0.25.pw" # (1092, 2)
 #    infile = "mscoco.train2_ga40.00_wc0.15.pw" # (827,3)
 #    infile = "mscoco.train2_ga50.00_wc0.15.pw" # (366, 2)
@@ -61,6 +61,7 @@ def model_structure(checksample=True):
 #    infile = "mscoco.train2_ga20.00.pw" # wrong data, (1053,0)@1e-2
 #    infile = "mscocomodels/cifar10.50000_ga20.00.pw"
     model = ModelPW(infile=MODELFOLDER + infile)
+    print(model.vec_u)
 #    print(model.annotations)
 #    print(model.mat_lbda[:3, :3])
 #    return
