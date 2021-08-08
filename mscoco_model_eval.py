@@ -25,12 +25,6 @@ def findKthLargest(nums, k):
 MODELFOLDER = "data/mscocomodels/"
 
 def model_structure(checksample=True):    
-    infile = "mscoco.1000_ga20.00.pw" # all zero
-    infile = "mscoco.1000_ga10.00.pw" # all zero
-    infile = "mscoco.1000_ga5.00.pw" # (370,0)
-#    infile = "mscoco.1000_ga5.00_wc0.20.pw" # (0,519)@1e-2
-#    infile = "mscoco.1000_ga5.00_wc0.50.pw" # (0,364)
-    
 #    infile = "mscoco.5000_ga10.00_wc0.10.pw" # (0,91)
 #    infile = "mscoco.5000_ga10.00_wc0.20.pw" # (0,537)
 #    infile = "mscoco.5000_ga5.00_wc0.25.pw" # (0, 706, 235)
@@ -45,11 +39,13 @@ def model_structure(checksample=True):
 #    infile = "mscoco.5000_s_ga0.10_wc1.00.pw" # (1254, 7253)
     
     checksample = False
+    posonly = 1
     infile = "mscoco.train2_s_ga40.00_wc1.00.pw" # zero
     infile = "mscoco.train2_s_ga10.00_wc1.00.pw" # (88,0) person and neg only
     infile = "mscoco.train2_s_ga10.00_wc0.10.pw" # (89, 446)
     infile = "mscoco.train2_s_ga5.00_wc0.10.pw" # (90, 2208)
     infile = "mscoco.train2_s_ga3.00_wc0.10.pw"
+    infile = "mscoco.train2_s_ga1.00_wc0.10.pw" # (601, 13887)
     
 #    infile = "mscoco.train2_ga10.00_wc1.00.pw"
 #    infile = "mscoco.train2_ga20.00_wc0.75.pw" # (1039,0)
@@ -115,8 +111,7 @@ def model_structure(checksample=True):
     cifar10_labels = ['plane', 'car', 'bird', 'cat','deer', 'dog', 'frog',
                       'horse', 'ship', 'truck']
 #    categoricals = cifar10_labels
-    k = 20
-    posonly = 0
+    k = 10
     if k > 0:
 #        discretepart = np.abs(pw_mat2[:n, :n])
         discretepart = pw_mat2[:n, :n]
