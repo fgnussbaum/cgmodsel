@@ -48,6 +48,7 @@ def model_structure(checksample=True):
     infile = "mscoco.train2_s_ga40.00_wc1.00.pw" # zero
     infile = "mscoco.train2_s_ga10.00_wc1.00.pw" # (88,0) person and neg only
     infile = "mscoco.train2_s_ga10.00_wc0.10.pw" # (89, 446)
+    infile = "mscoco.train2_s_ga5.00_wc0.10.pw" # (90, 2208)
     
 #    infile = "mscoco.train2_ga10.00_wc1.00.pw"
 #    infile = "mscoco.train2_ga20.00_wc0.75.pw" # (1039,0)
