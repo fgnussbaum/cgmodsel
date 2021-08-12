@@ -21,31 +21,24 @@ def findKthLargest(nums, k):
 #      print(a[:10], a[-10:])
       if k == 1:
          return a[-1]
+#      print (a[len(a)-k :])
       return a[len(a)-k]
 MODELFOLDER = "data/mscocomodels/"
 
 def model_structure(checksample=True):    
-#    infile = "mscoco.5000_ga10.00_wc0.10.pw" # (0,91)
-#    infile = "mscoco.5000_ga10.00_wc0.20.pw" # (0,537)
-#    infile = "mscoco.5000_ga5.00_wc0.25.pw" # (0, 706, 235)
-#    infile = "mscoco.5000_ga5.00_wc0.50.pw" # (0,467)
-#    infile = "mscoco.5000_ga2.50_wc0.50.pw" # (0,636)
-#    infile = "mscoco.5000_ga2.50.pw" # (1481, 5)
-#    infile = "mscoco.5000_ga3.50_wc0.75.pw" # (142, 408)
-#    infile = "mscoco.5000_ga5.00_wc1.00.pw"
-#    infile = "mscoco.5000_ga2.00_wc1.00.pw"
-#    infile = "mscoco.5000_ga0.50_wc1.00.pw"
-    infile = "mscoco.5000_ga0.10_wc1.00.pw" # (61, 3175)
-    infile = "mscoco.5000_s_ga0.10_wc1.00.pw" # (1254, 7253)
+    infile = "mscoco.5000_ga0.10_wc1.00.pw" # (61, 3175) 55 pos
+#    infile = "mscoco.5000_ga0.20_wc1000.00.pw" # (839, 0) only 5 pos
+#    infile = "mscoco.5000_s_ga0.10_wc1.00.pw" # (1254, 7253) only 1 pos
     
     checksample = False
     posonly = 1
+    k = 10
 
 #    infile = "mscoco.train2_s_ga40.00_wc1.00.pw" # zero
-#    infile = "mscoco.train2_s_ga10.00_wc1.00.pw" # (88,0) person and neg only
-#    infile = "mscoco.train2_s_ga10.00_wc0.10.pw" # (89, 446)
+    infile = "mscoco.train2_s_ga10.00_wc1.00.pw" # (88,0) person and neg only
+    infile = "mscoco.train2_s_ga10.00_wc0.10.pw" # (89, 446)
 #    infile = "mscoco.train2_s_ga5.00_wc0.10.pw" # (90, 2208)
-#    infile = "mscoco.train2_s_ga3.00_wc0.10.pw"
+    infile = "mscoco.train2_s_ga3.00_wc0.10.pw" # (94, 4898) zero pos
 #    infile = "mscoco.train2_s_ga1.00_wc0.10.pw" # (601, 13887)
 
 #    infile = "mscoco.train2_ga50.00_wc0.10.pw" # new 400 iter (0, 571)
@@ -62,7 +55,7 @@ def model_structure(checksample=True):
 #    infile = "mscoco.train2_ga20.00.pw" # wrong data, (1053,0)@1e-2
 #    infile = "mscocomodels/cifar10.50000_ga20.00.pw"
     model = ModelPW(infile=MODELFOLDER + infile)
-    print(model.vec_u)
+#    print(model.vec_u)
 #    print(model.annotations)
 #    print(model.mat_lbda[:3, :3])
 #    return
@@ -97,11 +90,13 @@ def model_structure(checksample=True):
         dnorm = np.linalg.norm(mat[:n, :n])
         dedges = np.sum(graph[:n_cat, :n_cat]) / 2
         mnorm = np.linalg.norm(mat[n:, :n])
+        msum = np.sum(mat[n:, :n])
         medges = np.sum(graph[:n_cat, n_cat:])
         print('Edges (eps=%.4f): dis-dis=%d, dis-cont=%d, cont-cont=%d'%(
                 threshold, dedges, medges, cedges))
         print('Norms (eps=%.4f): dis-dis=%.2f, dis-cont=%.2f, cont-cont=%.2f'%(
                 threshold, dnorm, mnorm, cnorm))
+        print('Sums: dis-cont=%.2f'%msum)
 
     pw_mat = model.get_group_mat(diagonal=False, norm=False) # matrix with weights for each edge
     n = n_cat = model.meta['n_cat']
@@ -113,7 +108,6 @@ def model_structure(checksample=True):
     cifar10_labels = ['plane', 'car', 'bird', 'cat','deer', 'dog', 'frog',
                       'horse', 'ship', 'truck']
 #    categoricals = cifar10_labels
-    k = 10
     if k > 0:
 #        discretepart = np.abs(pw_mat2[:n, :n])
         discretepart = pw_mat2[:n, :n]
@@ -121,24 +115,30 @@ def model_structure(checksample=True):
             eps = findKthLargest(discretepart, k=2 * k)
 #            print(eps)
             xx, yy = (discretepart>eps-1e-6).nonzero()
-            func = lambda x: d[x][0]
+            func = lambda x: np.abs(d[x][0])
         else:
             eps = findKthLargest(np.abs(discretepart), k=2 * k)
             xx, yy = (np.abs(discretepart)>eps-1e-6).nonzero()  
             func = lambda x: abs(d[x][0])
 #        print(xx, yy)
         d = {}
-        for i in range(2 * k):
+        for i in range(len(xx)):
             label1 = categoricals[xx[i]]
             label2 = categoricals[yy[i]]
 #            value = pw_mat2[xx[i], yy[i]]
+            
             value = model.mat_q[2 * xx[i] + 1, 2 * yy[i] + 1]
+#            print(xx[i], yy[i], value)
             if label1 != label2 and not (label2, label1) in d:
                 d[(label1, label2)] = value, xx[i], yy[i]
+        kd = 0
         for key in sorted(d.keys(), key=func, reverse=True):
             val = d[key]
             print("%.4f: %s(%d) ~ %s(%d)"%(
                     val[0], key[0], val[1], key[1], val[2]))
+            kd += 1
+            if kd == k:
+                return
 
 #        model.mat_q[np.abs(model.mat_q) < eps] = 0
 #        pw_mat2[:n,:n] = discretepart
