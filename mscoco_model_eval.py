@@ -29,19 +29,23 @@ def model_structure(checksample=True):
     infile = "mscoco.5000_ga0.10_wc1.00.pw" # (61, 3175) 55 pos
 #    infile = "mscoco.5000_ga0.20_wc1000.00.pw" # (839, 0) only 5 pos
 #    infile = "mscoco.5000_s_ga0.10_wc1.00.pw" # (1254, 7253) only 1 pos
-    
+    infile = "mscoco.5000_s_ga0.20_wc1.00.pw" # (499, 3518) 0 pos
     checksample = False
     posonly = 1
     k = 10
 
 #    infile = "mscoco.train2_s_ga40.00_wc1.00.pw" # zero
-    infile = "mscoco.train2_s_ga10.00_wc1.00.pw" # (88,0) person and neg only
-    infile = "mscoco.train2_s_ga10.00_wc0.10.pw" # (89, 446)
+#    infile = "mscoco.train2_s_ga10.00_wc1.00.pw" # (88,0) person and neg only
+#    infile = "mscoco.train2_s_ga10.00_wc0.10.pw" # (89, 446)
 #    infile = "mscoco.train2_s_ga5.00_wc0.10.pw" # (90, 2208)
-    infile = "mscoco.train2_s_ga3.00_wc0.10.pw" # (94, 4898) zero pos
+#    infile = "mscoco.train2_s_ga3.00_wc0.10.pw" # (94, 4898) zero pos
 #    infile = "mscoco.train2_s_ga1.00_wc0.10.pw" # (601, 13887)
 
+
 #    infile = "mscoco.train2_ga50.00_wc0.10.pw" # new 400 iter (0, 571)
+#    infile = "mscoco.train2_ga40.00_wc0.10.pw" # new 216 iter (0, 638)
+    
+    
 #    infile = "mscoco.train2_ga10.00_wc1.00.pw"
 #    infile = "mscoco.train2_ga20.00_wc0.75.pw" # (1039,0)
 #    infile = "mscoco.train2_ga35.00_wc0.25.pw" # (1092, 2)
@@ -50,10 +54,10 @@ def model_structure(checksample=True):
 #    infile = "mscoco.train2_ga55.00_wc0.08.pw" # (45, 8)
 #    infile = "mscoco.train2_ga55.00_wc0.03.pw" # (44,121)
     
-    
+
 #    infile = "mscoco.train2_ga25.00_wc0.50.pw" # (1390,0)
-#    infile = "mscoco.train2_ga20.00.pw" # wrong data, (1053,0)@1e-2
-#    infile = "mscocomodels/cifar10.50000_ga20.00.pw"
+
+
     model = ModelPW(infile=MODELFOLDER + infile)
 #    print(model.vec_u)
 #    print(model.annotations)
