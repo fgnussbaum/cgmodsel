@@ -56,9 +56,6 @@ def model_structure(checksample=True):
 #    infile = "mscoco.train2_ga50.00_wc0.15.pw" # (366, 2)
 #    infile = "mscoco.train2_ga55.00_wc0.08.pw" # (45, 8)
 #    infile = "mscoco.train2_ga55.00_wc0.03.pw" # (44,121)
-    
-
-#    infile = "mscoco.train2_ga25.00_wc0.50.pw" # (1390,0)
 
 
     model = ModelPW(infile=MODELFOLDER + infile)
