@@ -319,7 +319,7 @@ if __name__ == '__main__':
     else:
         print(HOSTNAME)
         raise
-    model = learn_sparse_model(logger, opts, solver_verb=1,
+    model = learn_sparse_model(logger, opts, 
                                gamma=gamma, wc=wc,
                                dataname = dataname)
 
