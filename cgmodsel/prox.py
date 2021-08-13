@@ -157,6 +157,7 @@ class LikelihoodProx(BaseGradSolver):
                                 },
                                 callback=callback)
 
+        print(res.message)
         if not res.message.startswith(b'CONV'):  # solver did not converge
             print('PLH_prox scipy-solver message:', res.message)
 

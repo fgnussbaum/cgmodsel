@@ -8,6 +8,7 @@ requires package cgmodsel (check out the latest version from the spwmodels branc
 # pylint: disable=C0103
 import sys
 import socket
+HOSTNAME = socket.gethostname()
 import time
 import numpy as np
 
@@ -59,7 +60,6 @@ def set_weights(meta, wd, wm, wc):
 
 def learn_sparse_model(logger, opts, 
                         verb=False, 
-                        solver_verb=True,
                         gamma = 20, 
                         dataname = 'mscoco.1000',
                         wc = 1):
@@ -118,8 +118,7 @@ def learn_sparse_model(logger, opts,
 #            print(cont_data[:10, 502:506])
             solver.set_weights(weights)
 
-        out = solver.solve(verb=solver_verb, 
-                           warminit=warminit,
+        out = solver.solve(warminit=warminit,
                            use_u=0, off=0, **opts)
         t2 = time.time()
         # mat_theta, mat_s, mat_z, alpha
@@ -138,9 +137,8 @@ def learn_sparse_model(logger, opts,
         else:
             modelfilename = "%s_ga%.2f.pw"%(dataname, gamma)
         model.save(MODELFOLDER + modelfilename)
-        hostname = socket.gethostname()
         scp = """scp frank@%s.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s%s data/mscocomodels/%s\n"""%(
-                hostname, MODELFOLDER, modelfilename, modelfilename)
+                HOSTNAME, MODELFOLDER, modelfilename, modelfilename)
         send_mail("learned model from data [%s]\n%s"%(
                 dataname, scp))
         
@@ -307,16 +305,19 @@ if __name__ == '__main__':
     end = 0
     frac = 1000
     srange = end, steps, frac
-    opts = {'maxiter':1200}
-    hostname = socket.gethostname()
-    if hostname == 'amy':
+    opts = {'maxiter':1200, 'solver_verb':True}
+
+    if HOSTNAME == 'amy':
         gamma = 25; wc =.1;  dataname = 'mscoco.train2'
-    elif hostname == 'rubrecht':
+    elif HOSTNAME == 'rubrecht':
         gamma = 1; wc =1; dataname = 'mscoco.train2_s'
-    elif hostname == 'raj.inf-i2.uni-jena.de':
+    elif HOSTNAME == 'raj.inf-i2.uni-jena.de':
         gamma = .2; wc =1; dataname = 'mscoco.5000'
+    elif HOSTNAME == 'DESKTOP-H168PMB':
+        gamma = 1; wc =1; dataname = 'mscoco.train2_s'
+        opts['verb'] = 1
     else:
-        print(hostname)
+        print(HOSTNAME)
         raise
     model = learn_sparse_model(logger, opts, solver_verb=1,
                                gamma=gamma, wc=wc,
