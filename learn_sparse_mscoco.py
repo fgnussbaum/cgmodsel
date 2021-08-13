@@ -307,7 +307,7 @@ if __name__ == '__main__':
     frac = 1000
     srange = end, steps, frac
     opts = {'maxiter':1200}
-    hostname = os.gethostname()
+    hostname = os.getenv('HOSTNAME')
     if hostname == 'amy':
         gamma = 25; wc =.1;  dataname = 'mscoco.train2'
     elif hostname == 'rubrecht':
