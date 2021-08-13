@@ -6,7 +6,8 @@
 requires package cgmodsel (check out the latest version from the spwmodels branch)
 """
 # pylint: disable=C0103
-import sys, os
+import sys
+import socket
 import time
 import numpy as np
 
@@ -137,7 +138,7 @@ def learn_sparse_model(logger, opts,
         else:
             modelfilename = "%s_ga%.2f.pw"%(dataname, gamma)
         model.save(MODELFOLDER + modelfilename)
-        hostname = os.getenv('HOSTNAME')
+        hostname = socket.gethostname()
         scp = """scp frank@%s.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s%s data/mscocomodels/%s\n"""%(
                 hostname, MODELFOLDER, modelfilename, modelfilename)
         send_mail("learned model from data [%s]\n%s"%(
@@ -307,7 +308,7 @@ if __name__ == '__main__':
     frac = 1000
     srange = end, steps, frac
     opts = {'maxiter':1200}
-    hostname = os.getenv('HOSTNAME')
+    hostname = socket.gethostname()
     if hostname == 'amy':
         gamma = 25; wc =.1;  dataname = 'mscoco.train2'
     elif hostname == 'rubrecht':
