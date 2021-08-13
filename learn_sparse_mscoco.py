@@ -313,7 +313,7 @@ if __name__ == '__main__':
         gamma = 25; wc =.1;  dataname = 'mscoco.train2'
     elif hostname == 'rubrecht':
         gamma = 1; wc =1; dataname = 'mscoco.train2_s'
-    elif hostname == 'raj':
+    elif hostname == 'raj.inf-i2.uni-jena.de':
         gamma = .2; wc =1; dataname = 'mscoco.5000'
     else:
         print(hostname)
