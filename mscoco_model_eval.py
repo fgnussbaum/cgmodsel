@@ -49,6 +49,8 @@ def model_structure(checksample=True):
 #    infile = "mscoco.train2_s_ga3.00_wc0.10.pw" # (94, 4898) zero pos
 #    infile = "mscoco.train2_s_ga1.00_wc0.10.pw" # (601, 13887) 2 meaningful pos
 #    infile = "mscoco.train2_s_ga1.00_wc1.00.pw" # (683, 586) 4 meaningful
+    
+    infile = "mscoco.train2_s_ga2.00_wc0.10_u1_crf1.pw" (4, 3140)
 
 #    infile = "mscoco.train2_ga50.00_wc0.10.pw" # new 400 iter (0, 571)
 #    infile = "mscoco.train2_ga40.00_wc0.10.pw" # new 216 iter (0, 638)
