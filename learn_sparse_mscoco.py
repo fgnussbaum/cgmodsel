@@ -135,9 +135,11 @@ def learn_sparse_model(logger, opts,
         print(model.annotations)
 #        model.save("%s/N%s%.2f.pw"%(MODELFOLDER, dataname, gamma))
         if not wc is None:
-            modelfilename = "%s_ga%.2f_wc%.2f_u%d.pw"%(dataname, gamma, wc, univariate)
+            modelfilename = "%s_ga%.2f_wc%.2f_u%d_crf%d.pw"%(
+                    dataname, gamma, wc, univariate, opts['discrete_crf'])
         else:
-            modelfilename = "%s_ga%.2f_u%d.pw"%(dataname, gamma, univariate)
+            modelfilename = "%s_ga%.2f_u%d_crf%d.pw"%(
+                    dataname, gamma, univariate, opts['discrete_crf'])
         model.save(MODELFOLDER + modelfilename)
         scp = """scp frank@%s.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s%s data/mscocomodels/%s\n"""%(
                 HOSTNAME.split('.')[0], MODELFOLDER, modelfilename, modelfilename)
