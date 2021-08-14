@@ -48,7 +48,7 @@ def model_structure(checksample=True):
 
 #    infile = "mscoco.train2_ga50.00_wc0.10.pw" # new 400 iter (0, 571)
 #    infile = "mscoco.train2_ga40.00_wc0.10.pw" # new 216 iter (0, 638)
-    infile = "/mscoco.train2_ga25.00_wc0.10.pw" # (0, 738)
+#    infile = "/mscoco.train2_ga25.00_wc0.10.pw" # (0, 738)
     
     
 #    infile = "mscoco.train2_ga10.00_wc1.00.pw"
@@ -89,26 +89,24 @@ def model_structure(checksample=True):
     graph = model.get_graph(threshold=threshold)
     
     
-    def print_norms(mat):
-#        print(np.sum(np.abs(mat[:n, :n])>0.0000000001))
-        cnorm = np.linalg.norm(mat[n:, n:])
-        cedges = np.sum(graph[n_cat:, n_cat:]) / 2
-        dnorm = np.linalg.norm(mat[:n, :n])
-        dedges = np.sum(graph[:n_cat, :n_cat]) / 2
-        mnorm = np.linalg.norm(mat[n:, :n])
-        msum = np.sum(mat[n:, :n])
-        medges = np.sum(graph[:n_cat, n_cat:])
-        print('Edges (eps=%.4f): dis-dis=%d, dis-cont=%d, cont-cont=%d'%(
-                threshold, dedges, medges, cedges))
-        print('Norms (eps=%.4f): dis-dis=%.2f, dis-cont=%.2f, cont-cont=%.2f'%(
-                threshold, dnorm, mnorm, cnorm))
-        print('Sums: dis-cont=%.2f'%msum)
-
     pw_mat = model.get_group_mat(diagonal=False, norm=False) # matrix with weights for each edge
     n = n_cat = model.meta['n_cat']
-    pw_mat2 = pw_mat.copy()
-    pw_mat2 -= np.diag(np.diag(pw_mat2))
-    print_norms(pw_mat2)
+    mat = pw_mat.copy()
+    mat -= np.diag(np.diag(mat))
+    cnorm = np.linalg.norm(mat[n:, n:])
+    cedges = np.sum(graph[n_cat:, n_cat:]) / 2
+    dnorm = np.linalg.norm(mat[:n, :n])
+    dedges = np.sum(graph[:n_cat, :n_cat]) / 2
+    mnorm = np.linalg.norm(mat[n:, :n])
+    msum = np.sum(mat[n:, :n])
+    medges = np.sum(graph[:n_cat, n_cat:])
+    print('Edges (eps=%.4f): dis-dis=%d, dis-cont=%d, cont-cont=%d'%(
+            threshold, dedges, medges, cedges))
+    print('Norms (eps=%.4f): dis-dis=%.2f, dis-cont=%.2f, cont-cont=%.2f'%(
+            threshold, dnorm, mnorm, cnorm))
+    print('Sums: dis-cont=%.2f'%msum)
+    print('norm u=%.2f, norm_alpha=%.2f'%(
+            np.linalg.norm(model.vec_u), np.linalg.norm(model.alpha)))
     
     ## thresholding
     cifar10_labels = ['plane', 'car', 'bird', 'cat','deer', 'dog', 'frog',
@@ -116,7 +114,7 @@ def model_structure(checksample=True):
 #    categoricals = cifar10_labels
     if k > 0:
 #        discretepart = np.abs(pw_mat2[:n, :n])
-        discretepart = pw_mat2[:n, :n]
+        discretepart = mat[:n, :n]
         if posonly:
             eps = findKthLargest(discretepart, k=2 * k)
 #            print(eps)
@@ -154,7 +152,7 @@ def model_structure(checksample=True):
 #        model.save(outfile=infile[:-3]+"_"+str(k)+"edges.pw")
     
     if 0:
-        mixedpart = np.abs(pw_mat2[:n, n:])
+        mixedpart = np.abs(mat[:n, n:])
 #        print(mixedpart.shape)
         xx, yy = (mixedpart>threshold).nonzero()
 #        print(xx, yy)
