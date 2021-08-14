@@ -157,9 +157,13 @@ class LikelihoodProx(BaseGradSolver):
                                 },
                                 callback=callback)
 
-        if not res.message.startswith('CONV'):  # solver did not converge
-            print('PLH_prox scipy-solver message:', res.message)
-
+        try: # seems that res is sometimes a binary string
+            if not res.message.startswith('CONV'):  # solver did not converge
+                print('PLH_prox scipy-solver message:', res.message)
+        except:
+            if not res.message.startswith(b'CONV'):  # solver did not converge
+                print('PLH_prox scipy-solver message:', res.message)
+                
         _, _, _, fac_lambda, _ = self.unpack(res.x)
         if np.linalg.norm(fac_lambda) < 1e-5 and n_cg > 0:
             # TODO(franknu): certificate for optimality?
