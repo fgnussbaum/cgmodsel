@@ -160,7 +160,7 @@ def learn_sparse_model(logger, opts,
 #        models.append(model)
 #    print(plh_tests)
     
-    best_model.repr_graphical(diagonal=0) # plottype='pn'
+#    best_model.repr_graphical(diagonal=0) # plottype='pn'
     
     return best_model
 
