@@ -311,7 +311,7 @@ if __name__ == '__main__':
     opts = {'maxiter':1200, 'solver_verb':True, 'off':1, 'discrete_crf':1}
 
     if HOSTNAME == 'amy':
-        gamma = 5; wc =.1;  dataname = 'mscoco.train2_s'; univariate=1
+        gamma = 1; wc =.1;  dataname = 'mscoco.train2_s'; univariate=1
     elif HOSTNAME == 'rubrecht':
         gamma = 2; wc =1; dataname = 'mscoco.train2_s'; univariate=1
 #        gamma = .2; wc =1; dataname = 'mscoco.5000_s'; univariate=1
