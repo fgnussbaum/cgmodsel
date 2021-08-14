@@ -120,8 +120,7 @@ def learn_sparse_model(logger, opts,
             solver.set_weights(weights)
 
         out = solver.solve(warminit=warminit,
-                           use_u=univariate, use_alpha=univariate, 
-                           off=0, **opts)
+                           use_u=univariate, use_alpha=univariate, **opts)
         t2 = time.time()
         # mat_theta, mat_s, mat_z, alpha
         warminit = out['theta'], out['solution'][0], out['dual'], out['solution'][1]
