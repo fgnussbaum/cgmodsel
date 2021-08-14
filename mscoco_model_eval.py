@@ -38,8 +38,9 @@ def model_structure(checksample=True):
 #    infile = "mscoco.5000_s_ga0.20_wc0.10.pw" # (309, 25903) 0 pos
 #    infile = "mscoco.5000_s_ga0.20_wc1.00_u1.pw"
     
-    infile = "mscoco.5000_s_ga0.20_wc1.00_u1_crf1.pw" # (28, 561)
-    infile = "mscoco.5000_s_ga0.10_wc1.00_u1_crf1.pw" # (93, 1350)
+#    infile = "mscoco.5000_s_ga0.20_wc1.00_u1_crf1.pw" # (28, 561)
+#    infile = "mscoco.5000_s_ga0.10_wc1.00_u1_crf1.pw" # (93, 1350)
+    infile = "mscoco.5000_s_ga0.10_wc0.10_u1_crf1.pw" # (49, 16390)
 
 
 #    infile = "mscoco.train2_s_ga40.00_wc1.00.pw" # zero
@@ -50,7 +51,8 @@ def model_structure(checksample=True):
 #    infile = "mscoco.train2_s_ga1.00_wc0.10.pw" # (601, 13887) 2 meaningful pos
 #    infile = "mscoco.train2_s_ga1.00_wc1.00.pw" # (683, 586) 4 meaningful
     
-    infile = "mscoco.train2_s_ga2.00_wc0.10_u1_crf1.pw" (4, 3140)
+#    infile = "mscoco.train2_s_ga2.00_wc0.10_u1_crf1.pw" #(4, 3140) amy
+    infile = "mscoco.train2_s_ga2.00_wc1.00_u1_crf1.pw" # (10, 8) rub
 
 #    infile = "mscoco.train2_ga50.00_wc0.10.pw" # new 400 iter (0, 571)
 #    infile = "mscoco.train2_ga40.00_wc0.10.pw" # new 216 iter (0, 638)
