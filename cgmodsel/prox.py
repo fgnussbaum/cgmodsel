@@ -236,7 +236,7 @@ class LikelihoodProx(BaseGradSolver):
 
 #        print('lD', lh_cat/n_data)
 
-# gradients
+        # gradients
         cond_probs = cond_probs - self.cat_data
 
         grad_u = np.sum(cond_probs, 0)  # Ltot by 1
@@ -245,31 +245,33 @@ class LikelihoodProx(BaseGradSolver):
         # this is Phihat from the doc, later add transpose and zero out diagonal
 
         ## ** Gaussian node conditionals **
-        mat_m = np.dot(vec_ones, alpha.T) + np.dot(self.cat_data, mat_r.T) \
-            - np.dot(self.cont_data, mat_b) # n by dg, concatenation of mu_s
-        mat_delta = mat_m.copy()
-        for s in range(n_cg):
-            mat_delta[:, s] /= beta[s]
-        mat_delta -= self.cont_data  # residual
-
-        tmp = np.dot(mat_delta, np.diag(np.sqrt(beta.flatten())))
-        lh_cont = - 0.5 * n_data * np.sum(np.log(beta)) \
-            + 0.5 * np.linalg.norm(tmp, 'fro') ** 2
-        #        print('lG', lh_cont/n_data)
-
-        # gradients
-        # grad_tila: n_cg by n_cg, later add transpose and zero out diagonal
-        grad_tila = -np.dot(self.cont_data.T, mat_delta)
-        grad_tila -= np.diag(np.diag(grad_tila))
-        grad_tila = 0.5 * (grad_tila + grad_tila.T)
-
-        for s in range(n_cg):
-            grad_beta[s] = -.5 * n_data / beta[s] + \
-                .5 * np.linalg.norm(mat_delta[:, s], 2) ** 2 \
-            - 1 / beta[s] * np.dot(mat_delta[:, s].T, mat_m[:, s])
-
-        grad_alpha = np.sum(mat_delta, 0).T  # dg by 1
-        grad_r += np.dot(mat_delta.T, self.cat_data)
+        if not self.opts['discrete_crf']:
+            mat_m = (np.dot(vec_ones, alpha.T) +
+                     np.dot(self.cat_data, mat_r.T) -
+                     np.dot(self.cont_data, mat_b)) # n by dg, concat of mu_s
+            mat_delta = mat_m.copy()
+            for s in range(n_cg):
+                mat_delta[:, s] /= beta[s]
+            mat_delta -= self.cont_data  # residual
+    
+            tmp = np.dot(mat_delta, np.diag(np.sqrt(beta.flatten())))
+            lh_cont = - 0.5 * n_data * np.sum(np.log(beta)) \
+                + 0.5 * np.linalg.norm(tmp, 'fro') ** 2
+            #        print('lG', lh_cont/n_data)
+    
+            # gradients
+            # grad_tila: n_cg by n_cg, later add transpose and zero out diagonal
+            grad_tila = -np.dot(self.cont_data.T, mat_delta)
+            grad_tila -= np.diag(np.diag(grad_tila))
+            grad_tila = 0.5 * (grad_tila + grad_tila.T)
+    
+            for s in range(n_cg):
+                grad_beta[s] = -.5 * n_data / beta[s] + \
+                    .5 * np.linalg.norm(mat_delta[:, s], 2) ** 2 \
+                - 1 / beta[s] * np.dot(mat_delta[:, s].T, mat_m[:, s])
+    
+            grad_alpha = np.sum(mat_delta, 0).T  # dg by 1
+            grad_r += np.dot(mat_delta.T, self.cat_data)
 
         # scale gradients as likelihood
         grad_q /= n_data
@@ -365,10 +367,8 @@ class LikelihoodProx(BaseGradSolver):
 
         if self.meta['n_cg'] > 0:
             eig, mat_u = eigh(lbda)
-            #            print('las', las)
             eig[eig < 1e-16] = 0  # make more robust
             fac_lambda = np.dot(mat_u, np.diag(np.sqrt(eig)))
-
 
 #           print('chol-error', np.linalg.norm(np.dot(FLa, FLa.T) - Lambda))
         else:
@@ -474,24 +474,25 @@ class LikelihoodProx(BaseGradSolver):
                           - tmp_logsumexp)
             fval += 1 / n_data * lh_catr
 
-        mat_m = np.dot(self.cat_data, mat_r.T) - \
-            np.dot(self.cont_data, mat_b) # n by dg, concatenation of mu_s
-        if n_cg > 0:
-            mat_m += np.outer(np.ones(n_data), alpha)
-
-        if cval:
+        if not self.opts['discrete_crf']:
+            mat_m = np.dot(self.cat_data, mat_r.T) - \
+                np.dot(self.cont_data, mat_b) # n by dg, concatenation of mu_s
+            if n_cg > 0:
+                mat_m += np.outer(np.ones(n_data), alpha)
+    
+            if cval:
+                for s in range(n_cg):
+                    cts_errors[s] = np.linalg.norm(self.cont_data[:, s] \
+                              - mat_m[:, s]/beta[s], 2) ** 2
+    
+            mat_delta = mat_m.copy()
             for s in range(n_cg):
-                cts_errors[s] = np.linalg.norm(self.cont_data[:, s] \
-                          - mat_m[:, s]/beta[s], 2) ** 2
-
-        mat_delta = mat_m.copy()
-        for s in range(n_cg):
-            mat_delta[:, s] /= beta[s]
-        mat_delta -= self.cont_data  # residual
-        tmp = np.dot(mat_delta, np.diag(np.sqrt(beta.flatten())))
-        lh_cont = - 0.5 * n_data * np.sum(np.log(beta)) \
-            + 0.5 * np.linalg.norm(tmp, 'fro') ** 2
-        fval += 1 / n_data * lh_cont
+                mat_delta[:, s] /= beta[s]
+            mat_delta -= self.cont_data  # residual
+            tmp = np.dot(mat_delta, np.diag(np.sqrt(beta.flatten())))
+            lh_cont = - 0.5 * n_data * np.sum(np.log(beta)) \
+                + 0.5 * np.linalg.norm(tmp, 'fro') ** 2
+            fval += 1 / n_data * lh_cont
 
         if cval:
             return dis_errors, cts_errors, fval

@@ -341,6 +341,8 @@ class BaseGradSolver(abc.ABC):
         self.opts.setdefault('use_alpha', 1)  # use univariate cts parameters?
         self.opts.setdefault('use_u', 1)  # use univariate discrete parameters?
         self.opts.setdefault('off', 0)  # if 1 regularize only off-diagonal
+        self.opts.setdefault('discrete_crf', 0)
+        # set to 1 if only want to learn a discrete conditional random field
 
         ## stopping criteria and tolerancies
         #        self.opts.setdefault('abstol', 1e-5)
