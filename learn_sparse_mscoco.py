@@ -75,7 +75,7 @@ def learn_sparse_model(logger, opts,
         catuniques = None
         labels = cifar10_labels
     cat_data, cont_data, meta = load_prepare_data(file_train,
-                                                  verb=True,
+#                                                  verb=True,
                                                   categoricals=labels,
 #                                                  names=names,
                                                   catuniques=catuniques,
@@ -319,12 +319,13 @@ if __name__ == '__main__':
     elif HOSTNAME == 'DESKTOP-H168PMB':
         gamma = 1; wc =1; dataname = 'mscoco.train2_s'; univariate=1
         opts['verb'] = 1
+        gamma = .2; wc =1; dataname = 'mscoco.5000_s'; univariate=1
     else:
         print(HOSTNAME)
         raise
     model = learn_sparse_model(logger, opts, 
                                gamma=gamma, wc=wc,
-                               dataname = dataname
+                               dataname = dataname,
                                univariate=univariate)
 
     
