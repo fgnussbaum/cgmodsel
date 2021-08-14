@@ -553,6 +553,11 @@ class AdmmCGaussianPW(BaseSolverPW, BaseAdmm):
         ## ensure coherent options for prox solver
         self.prox.opts['use_u'] = self.opts['use_u']
         self.prox.opts['use_alpha'] = self.opts['use_alpha']
+        if not 'discrete_crf' in self opts:
+            # learn only discrete conditional random field
+            # this omits continuous node conditionals in PLH prox estimation
+            self.opts['discrete_crf'] = False
+        self.prox.opts['discrete_crf'] = self.opts['discrete_crf']
 
         ## initialize ADMM variables
         dim = self.meta['dim']
