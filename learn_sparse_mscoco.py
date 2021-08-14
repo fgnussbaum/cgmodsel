@@ -62,7 +62,8 @@ def learn_sparse_model(logger, opts,
                         verb=False, 
                         gamma = 20, 
                         dataname = 'mscoco.1000',
-                        wc = 1):
+                        wc = 1,
+                        univariate=1):
     file_train = 'data/%s.csv'%dataname
     
     if dataname.startswith('mscoco'):
@@ -119,7 +120,8 @@ def learn_sparse_model(logger, opts,
             solver.set_weights(weights)
 
         out = solver.solve(warminit=warminit,
-                           use_u=0, off=0, **opts)
+                           use_u=univariate, use_alpha=univariate, 
+                           off=0, **opts)
         t2 = time.time()
         # mat_theta, mat_s, mat_z, alpha
         warminit = out['theta'], out['solution'][0], out['dual'], out['solution'][1]
@@ -133,12 +135,12 @@ def learn_sparse_model(logger, opts,
         print(model.annotations)
 #        model.save("%s/N%s%.2f.pw"%(MODELFOLDER, dataname, gamma))
         if not wc is None:
-            modelfilename = "%s_ga%.2f_wc%.2f.pw"%(dataname, gamma, wc)
+            modelfilename = "%s_ga%.2f_wc%.2f_u%d.pw"%(dataname, gamma, wc, univariate)
         else:
-            modelfilename = "%s_ga%.2f.pw"%(dataname, gamma)
+            modelfilename = "%s_ga%.2f_u%d.pw"%(dataname, gamma, univariate)
         model.save(MODELFOLDER + modelfilename)
         scp = """scp frank@%s.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s%s data/mscocomodels/%s\n"""%(
-                HOSTNAME, MODELFOLDER, modelfilename, modelfilename)
+                HOSTNAME.split('.')[0], MODELFOLDER, modelfilename, modelfilename)
         send_mail("learned model from data [%s]\n%s"%(
                 dataname, scp))
         
@@ -308,20 +310,22 @@ if __name__ == '__main__':
     opts = {'maxiter':1200, 'solver_verb':True}
 
     if HOSTNAME == 'amy':
-        gamma = 25; wc =.1;  dataname = 'mscoco.train2'
+        gamma = 25; wc =.1;  dataname = 'mscoco.train2'; univariate=1
     elif HOSTNAME == 'rubrecht':
-        gamma = 1; wc =1; dataname = 'mscoco.train2_s'
+        gamma = 1; wc =1; dataname = 'mscoco.train2_s'; univariate=1
+        gamma = .2; wc =1; dataname = 'mscoco.5000_s'; univariate=1
     elif HOSTNAME == 'raj.inf-i2.uni-jena.de':
-        gamma = .2; wc =1; dataname = 'mscoco.5000'
+        gamma = .2; wc =1; dataname = 'mscoco.5000'; univariate=1
     elif HOSTNAME == 'DESKTOP-H168PMB':
-        gamma = 1; wc =1; dataname = 'mscoco.train2_s'
+        gamma = 1; wc =1; dataname = 'mscoco.train2_s'; univariate=1
         opts['verb'] = 1
     else:
         print(HOSTNAME)
         raise
     model = learn_sparse_model(logger, opts, 
                                gamma=gamma, wc=wc,
-                               dataname = dataname)
+                               dataname = dataname
+                               univariate=univariate)
 
     
 

@@ -28,11 +28,12 @@ MODELFOLDER = "data/mscocomodels/"
 def model_structure(checksample=True):    
     infile = "mscoco.5000_ga0.10_wc1.00.pw" # (61, 3175) 55 pos
 #    infile = "mscoco.5000_ga0.20_wc1000.00.pw" # (839, 0) only 5 pos
+    infile = "mscoco.5000_ga0.20_wc1.00.pw" # (27, 1720)
     
     
 #    infile = "mscoco.5000_s_ga0.10_wc1.00.pw" # (1254, 7253) only 1 pos
-    infile = "mscoco.5000_s_ga0.20_wc1.00.pw" # (499, 3518) 0 pos
-    infile = "mscoco.5000_s_ga0.20_wc0.10.pw" # (309, 25903) 0 pos
+#    infile = "mscoco.5000_s_ga0.20_wc1.00.pw" # (499, 3518) 0 pos
+#    infile = "mscoco.5000_s_ga0.20_wc0.10.pw" # (309, 25903) 0 pos
     checksample = False
     posonly = 1
     k = 10
@@ -42,11 +43,12 @@ def model_structure(checksample=True):
 #    infile = "mscoco.train2_s_ga10.00_wc0.10.pw" # (89, 446)
 #    infile = "mscoco.train2_s_ga5.00_wc0.10.pw" # (90, 2208)
 #    infile = "mscoco.train2_s_ga3.00_wc0.10.pw" # (94, 4898) zero pos
-    infile = "mscoco.train2_s_ga1.00_wc0.10.pw" # (601, 13887) 2 meaningful pos
-
+#    infile = "mscoco.train2_s_ga1.00_wc0.10.pw" # (601, 13887) 2 meaningful pos
+#    infile = "mscoco.train2_s_ga1.00_wc1.00.pw" # (683, 586) 4 meaningful
 
 #    infile = "mscoco.train2_ga50.00_wc0.10.pw" # new 400 iter (0, 571)
 #    infile = "mscoco.train2_ga40.00_wc0.10.pw" # new 216 iter (0, 638)
+    infile = "/mscoco.train2_ga25.00_wc0.10.pw" # (0, 738)
     
     
 #    infile = "mscoco.train2_ga10.00_wc1.00.pw"
