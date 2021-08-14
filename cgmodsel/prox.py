@@ -271,6 +271,8 @@ class LikelihoodProx(BaseGradSolver):
     
             grad_alpha = np.sum(mat_delta, 0).T  # dg by 1
             grad_r += np.dot(mat_delta.T, self.cat_data)
+        else:
+            lh_cont = 0
 
         # scale gradients as likelihood
         grad_q /= n_data
