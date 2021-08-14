@@ -307,7 +307,7 @@ if __name__ == '__main__':
     end = 0
     frac = 1000
     srange = end, steps, frac
-    opts = {'maxiter':1200, 'solver_verb':True}
+    opts = {'maxiter':1200, 'solver_verb':True, 'off':1, 'discrete_crf':1}
 
     if HOSTNAME == 'amy':
         gamma = 25; wc =.1;  dataname = 'mscoco.train2'; univariate=1

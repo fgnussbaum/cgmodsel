@@ -34,6 +34,7 @@ def model_structure(checksample=True):
 #    infile = "mscoco.5000_s_ga0.10_wc1.00.pw" # (1254, 7253) only 1 pos
 #    infile = "mscoco.5000_s_ga0.20_wc1.00.pw" # (499, 3518) 0 pos
 #    infile = "mscoco.5000_s_ga0.20_wc0.10.pw" # (309, 25903) 0 pos
+    infile = "mscoco.5000_s_ga0.20_wc1.00_u1.pw"
     checksample = False
     posonly = 1
     k = 10
