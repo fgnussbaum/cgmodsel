@@ -298,12 +298,6 @@ if __name__ == '__main__':
 #    logging.setLevel(logging.INFO)
 #    logger.info('Test')
 
-
-#    file_train = 'data/mscoco.train.csv'
-    
-    
-#    dataname = 'mscoco.train2' # Barlow-Twin Features
-#    dataname = 'cifar10.50000'
     steps = 5
     end = 0
     frac = 1000
@@ -311,7 +305,7 @@ if __name__ == '__main__':
     opts = {'maxiter':1200, 'solver_verb':True, 'off':1, 'discrete_crf':1}
 
     if HOSTNAME == 'amy':
-        gamma = .5; wc =.02;  dataname = 'mscoco.train2_s'; univariate=1
+        gamma = .55; wc =.02;  dataname = 'mscoco.train2_s'; univariate=1
     elif HOSTNAME == 'rubrecht':
         gamma = .5; wc =.1; dataname = 'mscoco.train2_s'; univariate=1
 #        gamma = .2; wc =1; dataname = 'mscoco.5000_s'; univariate=1

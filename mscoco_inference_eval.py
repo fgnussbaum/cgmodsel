@@ -58,7 +58,10 @@ for i in range(n_test):
     ground_truth = data[i]
 #    print(ground_truth)
     bin_vec = exp_data['BINC_max_disc_states'][i]
-    bin_vec_aug = augment(bin_vec, ids)
+    if len(ids) > 0:
+        bin_vec_aug = augment(bin_vec, ids)
+    else:
+        bin_vec_aug = bin_vec
     
     mult_vec = exp_data['MLC_max_disc_states'][i]
 #    print(mult_vec)
