@@ -195,7 +195,7 @@ def parse_mscoco(meanssigmas=None,
         print("std", meanssigmas[1][:10])
         print("mean", meanssigmas[0][:10])
     m, n = cont_data.shape
-    print(m, n)
+    print("Dimensions:", m, n)
 #    return meanssigmas
     cat_data = np.zeros((m, len(LABELS)), dtype=np.int64)
     y_train = load_func(prefix+'Y_%s.%s'%(mode, filetype))
@@ -288,7 +288,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
 #    dataname = 'mscoco'
     # ********************************* #
-#    ms = parse_mscoco(standardize=True, mode='5000')
+#    ms = parse_mscoco(standardize=0, mode='valid')
 #    parse_cifar10()
 #    ms = parse_mscoco(meanssigmas=ms)
     logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
@@ -310,7 +310,7 @@ if __name__ == '__main__':
         gamma = .5; wc =.1; dataname = 'mscoco.train2_s'; univariate=1
 #        gamma = .2; wc =1; dataname = 'mscoco.5000_s'; univariate=1
     elif HOSTNAME == 'raj.inf-i2.uni-jena.de':
-        gamma = .1; wc =.1; dataname = 'mscoco.5000_s'; univariate=1
+        gamma = .6; wc =.01; dataname = 'mscoco.train_s'; univariate=1
     elif HOSTNAME == 'DESKTOP-H168PMB':
         gamma = 1; wc =1; dataname = 'mscoco.train2_s'; univariate=1
         opts['verb'] = 1
