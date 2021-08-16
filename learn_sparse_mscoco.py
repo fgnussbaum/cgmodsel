@@ -310,7 +310,7 @@ if __name__ == '__main__':
         gamma = .5; wc =.1; dataname = 'mscoco.train2_s'; univariate=1
 #        gamma = .2; wc =1; dataname = 'mscoco.5000_s'; univariate=1
     elif HOSTNAME == 'raj.inf-i2.uni-jena.de':
-        gamma = .6; wc =.01; dataname = 'mscoco.train2_s'; univariate=1
+        gamma = .8; wc =.01; dataname = 'mscoco.train2_s'; univariate=1
     elif HOSTNAME == 'DESKTOP-H168PMB':
         gamma = 1; wc =1; dataname = 'mscoco.train2_s'; univariate=1
         opts['verb'] = 1
