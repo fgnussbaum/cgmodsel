@@ -59,6 +59,7 @@ def model_structure(checksample=True):
     infile = "mscoco.train2_s_ga0.60_wc0.01_u1_crf1.pw" # (80, 26k) raj
     infile = "mscoco.train2_s_ga0.70_wc0.01_u1_crf1.pw" # (63, 26k)
 #    infile = "mscoco.train2_s_ga0.80_wc0.01_u1_crf1.pw" # (52, 25k)
+    infile = "mscoco.train2_s_ga0.90_wc0.01_u1_crf1.pw"
 
 #    infile = "mscoco.train2_ga50.00_wc0.10.pw" # new 400 iter (0, 571)
 #    infile = "mscoco.train2_ga40.00_wc0.10.pw" # new 216 iter (0, 638)
