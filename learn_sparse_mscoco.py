@@ -184,19 +184,14 @@ def parse_mscoco(meanssigmas=None,
     
     cont_data = load_func(prefix+'R_%s.%s'%(mode, filetype))
     if standardize:
-        meanssigmas = standardize_continuous_data(cont_data)
-#                                              meanssigmas=meanssigmas)
-#    means, sigmas = meanssigmas
-#    sigmas *= 100
-#    meanssigmas = means, sigmas
-#    meanssigmas = standardize_continuous_data(cont_data,
-#                                              meanssigmas=meanssigmas)
-    
+        meanssigmas = standardize_continuous_data(cont_data, 
+                                                  meanssigmas=meanssigmas)
+
         print("std", meanssigmas[1][:10])
         print("mean", meanssigmas[0][:10])
     m, n = cont_data.shape
     print("Dimensions:", m, n)
-#    return meanssigmas
+
     cat_data = np.zeros((m, len(LABELS)), dtype=np.int64)
     y_train = load_func(prefix+'Y_%s.%s'%(mode, filetype))
     for i in range(m):
@@ -240,6 +235,8 @@ def parse_mscoco(meanssigmas=None,
         for i in range(m):
             writer.writerow(list(cont_data[i, :]) + list(cat_data[i, :]))
 #    send_mail("parsed %s"%(mode))
+            
+    return meanssigmas
             
 def parse_cifar10(meanssigmas=None,
                  prefix='data/cifar10/'):
@@ -288,10 +285,10 @@ if __name__ == '__main__':
     # comment out all but one line here #
 #    dataname = 'mscoco'
     # ********************************* #
-#    ms = parse_mscoco(standardize=0, mode='valid')
+    ms = parse_mscoco(standardize=True, mode='train2')
 #    parse_cifar10()
-#    ms = parse_mscoco(meanssigmas=ms)
-    logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
+    ms = parse_mscoco(standardize=True, meanssigmas=ms, mode='valid2')
+#    logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
 
     logger = logging.getLogger('sp_pw') # https://stackoverflow.com/questions/35325042/python-logging-disable-logging-from-imported-modules
 #    logging.getLogger("matplotlib").setLevel(logging.WARNING)
@@ -304,8 +301,10 @@ if __name__ == '__main__':
     srange = end, steps, frac
     opts = {'maxiter':1200, 'solver_verb':True, 'off':1, 'discrete_crf':1}
 
+    learnmodel = True
     if HOSTNAME == 'amy':
         gamma = .55; wc =.02;  dataname = 'mscoco.train2_s'; univariate=1
+        learnmodel = False
     elif HOSTNAME == 'rubrecht':
         gamma = .5; wc =.1; dataname = 'mscoco.train2_s'; univariate=1
 #        gamma = .2; wc =1; dataname = 'mscoco.5000_s'; univariate=1
@@ -314,14 +313,16 @@ if __name__ == '__main__':
     elif HOSTNAME == 'DESKTOP-H168PMB':
         gamma = 1; wc =1; dataname = 'mscoco.train2_s'; univariate=1
         opts['verb'] = 1
+        learnmodel = False
         gamma = .2; wc =1; dataname = 'mscoco.5000_s'; univariate=1
     else:
         print(HOSTNAME)
         raise
-    model = learn_sparse_model(logger, opts, 
-                               gamma=gamma, wc=wc,
-                               dataname = dataname,
-                               univariate=univariate)
+    if learnmodel:
+        model = learn_sparse_model(logger, opts, 
+                                   gamma=gamma, wc=wc,
+                                   dataname = dataname,
+                                   univariate=univariate)
 
     
 
