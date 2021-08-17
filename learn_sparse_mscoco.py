@@ -289,9 +289,9 @@ if __name__ == '__main__':
     # comment out all but one line here #
 #    dataname = 'mscoco'
     # ********************************* #
-    ms = parse_mscoco(standardize=True, mode='train2')
+#    ms = parse_mscoco(standardize=True, mode='train2')
 #    parse_cifar10()
-    ms = parse_mscoco(standardize=True, meanssigmas=ms, mode='valid2')
+#    ms = parse_mscoco(standardize=True, meanssigmas=ms, mode='valid2')
 #    logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
 
     logger = logging.getLogger('sp_pw') # https://stackoverflow.com/questions/35325042/python-logging-disable-logging-from-imported-modules
@@ -313,7 +313,7 @@ if __name__ == '__main__':
         gamma = .5; wc =.1; dataname = 'mscoco.train2_s'; univariate=1
 #        gamma = .2; wc =1; dataname = 'mscoco.5000_s'; univariate=1
     elif HOSTNAME == 'raj.inf-i2.uni-jena.de':
-        gamma = .7; wc =.01; dataname = 'mscoco.train2_s'; univariate=1
+        gamma = .9; wc =.01; dataname = 'mscoco.train2_s'; univariate=1
     elif HOSTNAME == 'DESKTOP-H168PMB':
         gamma = 1; wc =1; dataname = 'mscoco.train2_s'; univariate=1
         opts['verb'] = 1

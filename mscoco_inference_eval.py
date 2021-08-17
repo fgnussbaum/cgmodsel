@@ -54,29 +54,43 @@ ids = obj['metadata']['independent_discrete_variables']
 #    le = indices[-1] + 2
 #print(indices)
 #n_test = 10
+if len(ids) != 0:
+    print("Independent variables", ids)
+    raise
+errorfree = []
 for i in range(n_test):
     ground_truth = data[i]
 #    print(ground_truth)
-    bin_vec = exp_data['BINC_max_disc_states'][i]
-    if len(ids) > 0:
-        bin_vec_aug = augment(bin_vec, ids)
-    else:
-        bin_vec_aug = bin_vec
+#    bin_vec = exp_data['BINC_max_disc_states'][i]
+#    if len(ids) > 0:
+#        bin_vec_aug = augment(bin_vec, ids)
+#    else:
+#        bin_vec_aug = bin_vec
+#    bin_error = get_no_wrong_entries(ground_truth, bin_vec_aug)
+    bin_error = -1
     
-    mult_vec = exp_data['MLC_max_disc_states'][i]
-#    print(mult_vec)
-    if not mult_vec is None:
-        print(len(mult_vec))
-    else:
-        print(None)
-#    mult_vec_aug = augment(mult_vec, ids)
-
-#    print(bin_vec_aug)
-    bin_error = get_no_wrong_entries(ground_truth, bin_vec_aug)
-#    mult_error = get_no_wrong_entries(ground_truth, mult_vec_aug)
+    mpes = exp_data['MLC_max_disc_states'][i]
     mult_error = -1
-    print("Sample%d: err_b=%d, err_m=%d"%(i, bin_error, mult_error))
+    if len(mpes) == 1:
+        mult_vec = mpes[0]
+        print(len(ground_truth), len(mult_vec))
+        mult_error = get_no_wrong_entries(ground_truth, mult_vec)
+        if mult_error == 0 or 1:
+            errorfree.append(i)
+    elif len(mpes) == 0:
+        print("No max state")
+    else:
+        print("Multiple maxstates %d"%len(mpes))
 
+    print("Sample%d: err_b=%d, err_m=%d"%(i, bin_error, mult_error))
+print("Indices errorfree", errorfree)
+
+for i in errorfree[:10]:
+    
 #print(obj.keys())
 #print(len(mlc_states))
 #print(len(data))
+
+
+
+
