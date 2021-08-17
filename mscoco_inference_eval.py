@@ -9,6 +9,46 @@ import json
 import numpy as np
 #data = json.load("mscoco.json")
 
+def generate_subset(indices, prefix='data/mscoco/'):
+#    print(len(labels))
+    
+    mode = 'valid2'
+    mode = 'train2'
+#    mode = '5000'
+    filetype = 'npy'
+    load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
+    
+    x_train = load_func(prefix+'X_%s.%s'%(mode, filetype))
+    
+    print(x_train.shape)
+    
+    img_i = x_train[i, :, :, :]
+    print(np.min(img_i), np.max(img_i))
+    
+
+    img_i = np.swapaxes(img_i, 1,2) # acb
+    img_i = np.swapaxes(img_i, 0,2) # bca
+
+    means = [0.485, 0.456, 0.406]
+    stds = [0.229, 0.224, 0.225]
+#    meanssigmas = means, stds
+    
+#    meanssigmas = standardize_continuous_data(img_i[],
+#                                              meanssigmas=meanssigmas)
+    for j in range(3):
+        img_i[:, :, j] = img_i[:, :, j] * stds[j] + means[j]
+
+    fig = plt.figure(figsize=(10,5))
+
+#    if not title is None:
+#        fig.suptitle(title, fontsize=18, y=0.73)
+    plt.imshow(img_i, interpolation='nearest',
+#                   vmin=Tvmin, vmax=Tvmax, cmap =cmap, 
+                   aspect='auto')
+    plt.title('mat_x')
+    
+    plt.show()
+    
 def get_no_wrong_entries(vec1, vec2aug):
     errors = 0
     for i in range(91):
@@ -85,7 +125,8 @@ for i in range(n_test):
     print("Sample%d: err_b=%d, err_m=%d"%(i, bin_error, mult_error))
 print("Indices errorfree", errorfree)
 
-for i in errorfree[:10]:
+#datapath = "data/mscoco/mscoco.valid2_s.csv"
+generate_subset(errorfree)
     
 #print(obj.keys())
 #print(len(mlc_states))

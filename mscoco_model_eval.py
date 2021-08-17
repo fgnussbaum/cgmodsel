@@ -27,8 +27,8 @@ MODELFOLDER = "data/mscocomodels/"
 
 def model_structure(checksample=True):  
     checksample = False
-    posonly = 1
-    k = 100
+    posonly = 0
+    k = 50
     infile = "mscoco.5000_ga0.10_wc1.00.pw" # (61, 3175) 55 pos
 #    infile = "mscoco.5000_ga0.20_wc1000.00.pw" # (839, 0) only 5 pos
     infile = "mscoco.5000_ga0.20_wc1.00.pw" # (27, 1720)
@@ -52,14 +52,14 @@ def model_structure(checksample=True):
 #    infile = "mscoco.train2_s_ga1.00_wc1.00.pw" # (683, 586) 4 meaningful
     
 #    infile = "mscoco.train2_s_ga2.00_wc0.10_u1_crf1.pw" #(4, 3140) amy
-    infile = "mscoco.train2_s_ga2.00_wc1.00_u1_crf1.pw" # (10, 8) rub
-    infile = "mscoco.train2_s_ga1.00_wc0.10_u1_crf1.pw" # (42, 6581) amy
+#    infile = "mscoco.train2_s_ga2.00_wc1.00_u1_crf1.pw" # (10, 8) rub
+#    infile = "mscoco.train2_s_ga1.00_wc0.10_u1_crf1.pw" # (42, 6581) amy
     infile = "mscoco.train2_s_ga0.50_wc0.10_u1_crf1.pw" # (108, 10823) rubrecht
 #    infile = "mscoco.train2_s_ga0.50_wc0.02_u1_crf1.pw" # (100, 23662) amy
-    infile = "mscoco.train2_s_ga0.60_wc0.01_u1_crf1.pw" # (80, 26k) raj
-    infile = "mscoco.train2_s_ga0.70_wc0.01_u1_crf1.pw" # (63, 26k)
+#    infile = "mscoco.train2_s_ga0.60_wc0.01_u1_crf1.pw" # (80, 26k) raj
+#    infile = "mscoco.train2_s_ga0.70_wc0.01_u1_crf1.pw" # (63, 26k)
 #    infile = "mscoco.train2_s_ga0.80_wc0.01_u1_crf1.pw" # (52, 25k)
-    infile = "mscoco.train2_s_ga0.90_wc0.01_u1_crf1.pw"
+#    infile = "mscoco.train2_s_ga0.90_wc0.01_u1_crf1.pw"
 
 #    infile = "mscoco.train2_ga50.00_wc0.10.pw" # new 400 iter (0, 571)
 #    infile = "mscoco.train2_ga40.00_wc0.10.pw" # new 216 iter (0, 638)
