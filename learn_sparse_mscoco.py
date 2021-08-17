@@ -310,7 +310,7 @@ if __name__ == '__main__':
         gamma = .55; wc =.02;  dataname = 'mscoco.train2_s'; univariate=1
         learnmodel = False
     elif HOSTNAME == 'rubrecht':
-        gamma = 1.1; wc =.01; dataname = 'mscoco.train2_s'; univariate=1
+        gamma = 1.05; wc =.01; dataname = 'mscoco.train2_s'; univariate=1
 #        gamma = .2; wc =1; dataname = 'mscoco.5000_s'; univariate=1
     elif HOSTNAME == 'raj.inf-i2.uni-jena.de':
         gamma = 1.2; wc =.01; dataname = 'mscoco.train2_s'; univariate=1
