@@ -194,7 +194,10 @@ def parse_mscoco(meanssigmas=None,
 
     cat_data = np.zeros((m, len(LABELS)), dtype=np.int64)
     y_train = load_func(prefix+'Y_%s.%s'%(mode, filetype))
+    zerolabels = 0
     for i in range(m):
+        if np.linalg.norm(zerolabels) == 0:
+            zerolabels += 1
         for j in range(100):
             label = y_train[i, j] - 1
 #            print(label)
@@ -202,6 +205,7 @@ def parse_mscoco(meanssigmas=None,
                 cat_data[i, label] = 1
 #        print(y_train[i, :])
 #        return
+    print("Number of samples with zero labels:", zerolabels)
 #    print(y_train[5, :], y_train.shape)
 #    print('cat_data shape', cat_data.shape)
     
