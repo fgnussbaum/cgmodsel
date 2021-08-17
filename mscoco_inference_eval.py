@@ -7,48 +7,45 @@ Created on Thu Aug  5 18:01:36 2021
 
 import json
 import numpy as np
+import pickle
+
+import sys
+sys.path.append("../")
+from send_mail import send_mail
 #data = json.load("mscoco.json")
 
-def generate_subset(indices, prefix='data/mscoco/'):
-#    print(len(labels))
-    
+path = "../et4cg/data/experiments/mscoco/mscoco.json"
+
+def load_pkl(filename):
+    file = open(filename, "rb")
+    return pickle.load(file)
+
+def load_npy(filename):
+    return np.load(filename)
+
+def generate_subset(indices, prefix='data/mscoco/'):    
     mode = 'valid2'
-    mode = 'train2'
-#    mode = '5000'
+#    mode = 'train2'
+
     filetype = 'npy'
     load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
     
-    x_train = load_func(prefix+'X_%s.%s'%(mode, filetype))
+    x = load_func(prefix+'X_%s.%s'%(mode, filetype))
     
-    print(x_train.shape)
+    print(x.shape)
+    x_small = np.zeros([len(indices)+list(x.shape[1:])])
+    for i in indices:
+        x_small[i, :, :, :] = x[i, :, :, :]
     
-    img_i = x_train[i, :, :, :]
-    print(np.min(img_i), np.max(img_i))
+    filename = "%s_%d.npy"%(mode, len(indices))
+    np.save(prefix + filename, x_small)
     
+    scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s%s data/mscocomodels/%s\n"""%(
+            prefix, filename, filename)
+    send_mail("subset of mscoco valid2:\n %s \n\nindices: %s"%(
+            scp, str(indices)))
 
-    img_i = np.swapaxes(img_i, 1,2) # acb
-    img_i = np.swapaxes(img_i, 0,2) # bca
-
-    means = [0.485, 0.456, 0.406]
-    stds = [0.229, 0.224, 0.225]
-#    meanssigmas = means, stds
-    
-#    meanssigmas = standardize_continuous_data(img_i[],
-#                                              meanssigmas=meanssigmas)
-    for j in range(3):
-        img_i[:, :, j] = img_i[:, :, j] * stds[j] + means[j]
-
-    fig = plt.figure(figsize=(10,5))
-
-#    if not title is None:
-#        fig.suptitle(title, fontsize=18, y=0.73)
-    plt.imshow(img_i, interpolation='nearest',
-#                   vmin=Tvmin, vmax=Tvmax, cmap =cmap, 
-                   aspect='auto')
-    plt.title('mat_x')
-    
-    plt.show()
-    
+  
 def get_no_wrong_entries(vec1, vec2aug):
     errors = 0
     for i in range(91):
@@ -69,7 +66,7 @@ def augment(bin_vec, indices):
         
     return augmented
 
-path = "../et4cg/data/experiments/mscoco/mscoco.json"
+
 # read file
 with open(path, 'r') as myfile:
     data=myfile.read()
