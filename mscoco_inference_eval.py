@@ -110,7 +110,7 @@ for i in range(n_test):
 #        print(len(ground_truth), len(mult_vec))
         mult_vec = fun_transform(mult_vec, indices)
         mult_error = get_no_wrong_entries(ground_truth, mult_vec)
-        if mult_error == 0 or 1:
+        if mult_error == 0:
             errorfree.append(i)
         print("err_b=%d, err_m=%d"%(bin_error, mult_error))
     elif len(mpes) == 0:
