@@ -61,7 +61,7 @@ def get_wrong_entries(vec1, vec2aug):
                 addlabels.append(i)
             else:
                 missinglabels.append(i)
-        elif vec1[i] == vec2aug[i]:
+        elif vec1[i] == vec2aug[i] and vec1[i] == 1:
             correctlabels.append(i)
     errors = len(addlabels) + len(missinglabels)
     return errors, addlabels, missinglabels, correctlabels
