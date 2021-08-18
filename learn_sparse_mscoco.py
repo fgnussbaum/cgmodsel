@@ -134,11 +134,13 @@ def learn_sparse_model(logger, opts,
         print(model.annotations)
 #        model.save("%s/N%s%.2f.pw"%(MODELFOLDER, dataname, gamma))
         if not wc is None:
-            modelfilename = "%s_ga%.2f_wc%.2f_u%d_crf%d.pw"%(
-                    dataname, gamma, wc, univariate, opts['discrete_crf'])
+            modelfilename = "%s_ga%.2f_wc%.2f_u%d_crf%d_off%d.pw"%(
+                    dataname, gamma, wc, univariate, opts['discrete_crf'],
+                    opts['off'])
         else:
-            modelfilename = "%s_ga%.2f_u%d_crf%d.pw"%(
-                    dataname, gamma, univariate, opts['discrete_crf'])
+            modelfilename = "%s_ga%.2f_u%d_crf%d_off%d.pw"%(
+                    dataname, gamma, univariate, opts['discrete_crf'],
+                    opts['off'])
         model.save(MODELFOLDER + modelfilename)
         scp = """scp frank@%s.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s%s data/mscocomodels/%s\n"""%(
                 HOSTNAME.split('.')[0], MODELFOLDER, modelfilename, modelfilename)
@@ -298,7 +300,7 @@ if __name__ == '__main__':
     # comment out all but one line here #
 #    dataname = 'mscoco'
     # ********************************* #
-    ms = parse_mscoco(standardize=False, mode='train2')
+#    ms = parse_mscoco(standardize=False, mode='train2')
 #    parse_cifar10()
 #    ms = parse_mscoco(standardize=True, meanssigmas=ms, mode='valid2')
 #    logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
@@ -312,12 +314,12 @@ if __name__ == '__main__':
     end = 0
     frac = 1000
     srange = end, steps, frac
-    opts = {'maxiter':1200, 'solver_verb':True, 'off':1, 'discrete_crf':1}
+    opts = {'maxiter':1200, 'solver_verb':True, 'off':0, 'discrete_crf':1}
 
     learnmodel = True
     if HOSTNAME == 'amy':
-        gamma = .55; wc =.02;  dataname = 'mscoco.train2_s'; univariate=1
-        learnmodel = False
+        gamma = 1.5; wc =.01;  dataname = 'mscoco.train2_s'; univariate=1
+#        learnmodel = False
     elif HOSTNAME == 'rubrecht':
         gamma = 1.05; wc =.01; dataname = 'mscoco.train2_s'; univariate=1
 #        gamma = .2; wc =1; dataname = 'mscoco.5000_s'; univariate=1
