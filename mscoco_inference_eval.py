@@ -103,21 +103,22 @@ for i in range(n_test):
     bin_error = -1
     
     mpes = exp_data['MLC_max_disc_states'][i]
-    print(i, "has %d MPE states"%len(mpes))
+    print("Sample %d has %d MPE states, "%(i, len(mpes)), end="")
     mult_error = -1
     if len(mpes) == 1:
         mult_vec = mpes[0]
-        print(len(ground_truth), len(mult_vec))
+#        print(len(ground_truth), len(mult_vec))
         mult_vec = fun_transform(mult_vec, indices)
         mult_error = get_no_wrong_entries(ground_truth, mult_vec)
         if mult_error == 0 or 1:
             errorfree.append(i)
+        print("err_b=%d, err_m=%d"%(bin_error, mult_error))
     elif len(mpes) == 0:
         print("No max state")
     else:
         print("Multiple maxstates %d"%len(mpes))
 
-    print("Sample%d: err_b=%d, err_m=%d"%(i, bin_error, mult_error))
+    
 print("Indices errorfree", errorfree)
 
 #datapath = "data/mscoco/mscoco.valid2_s.csv"
