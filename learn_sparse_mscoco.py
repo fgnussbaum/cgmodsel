@@ -209,6 +209,7 @@ def parse_mscoco(meanssigmas=None,
     ss = np.sum(cat_data, axis=1)
     indices = []
     for i in range(91):
+        print("[%2d]=%.2f"%(i, ss[2*i+1]/n))
         if ss[2*i +1] == 0:
             indices.append(i)
     print("Independent indices:", indices)

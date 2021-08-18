@@ -67,7 +67,7 @@ def model_structure(checksample=True, remedge=None):
 #    infile = "mscoco.train2_s_ga0.90_wc0.01_u1_crf1.pw"
 #    infile = "mscoco.train2_s_ga1.50_wc0.01_u1_crf1.pw"
 #    infile = "mscoco.train2_s_ga1.25_wc0.01_u1_crf1.pw" # (15)
-#    infile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1.pw" # (17)
+    infile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1.pw" # (17)
 #    infile = "mscoco.train2_s_ga1.10_wc0.01_u1_crf1.pw" # 25
 #    infile = "mscoco.train2_s_ga1.05_wc0.01_u1_crf1.pw" # 25
 
@@ -248,6 +248,7 @@ def model_structure(checksample=True, remedge=None):
         states.append(("%s"%labels, state))
     
     for l in  [11, 25, 28, 29, 44, 65, 67, 68, 70, 82, 90]:
+        # 90does not appear in train2 data
         print(LABELS[l], np.linalg.norm(model.mat_r[:, 2*l+1]))
     return
     tmp = 2* np.dot(ft, model.mat_r)
