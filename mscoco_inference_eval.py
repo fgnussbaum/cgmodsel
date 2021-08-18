@@ -14,9 +14,14 @@ sys.path.append("../")
 from send_mail import send_mail
 #data = json.load("mscoco.json")
 
-modelfile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1.pw"
+import socket
+HOSTNAME = socket.gethostname()
 
-path = "../et4cg/data/experiments/mscoco/%s.json"%modelfile
+modelfile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1.pw"
+QUERYDATA = "valid2_s"
+
+path = "../et4cg/data/experiments/mscoco/%s%s.json"%(
+        modelfile, QUERYDATA)
 
 
 def load_pkl(filename):
@@ -121,6 +126,7 @@ for i in range(n_test):
         mult_vec = mpes[0]
 #        print(len(ground_truth), len(mult_vec))
         mult_vec = fun_transform(mult_vec, indices)
+        print(mult_vec)
         res = get_wrong_entries(ground_truth, mult_vec)
         mult_error = res[0]
         if mult_error <= 1:
@@ -135,7 +141,8 @@ for i in range(n_test):
 print("Samples of interest:", sois)
 
 #datapath = "data/mscoco/mscoco.valid2_s.csv"
-generate_subset(sois)
+if  HOSTNAME != 'DESKTOP-H168PMB':
+    generate_subset(sois)
     
 #print(obj.keys())
 #print(len(mlc_states))

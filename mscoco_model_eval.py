@@ -59,15 +59,15 @@ def model_structure(checksample=True, remedge=None):
 #    infile = "mscoco.train2_s_ga2.00_wc0.10_u1_crf1.pw" #(4, 3140) amy
 #    infile = "mscoco.train2_s_ga2.00_wc1.00_u1_crf1.pw" # (10, 8) rub
     infile = "mscoco.train2_s_ga1.00_wc0.10_u1_crf1.pw" # (42, 6581) amy
-#    infile = "mscoco.train2_s_ga0.50_wc0.10_u1_crf1.pw" # (108, 10823) rubrecht
+    infile = "mscoco.train2_s_ga0.50_wc0.10_u1_crf1.pw" # (108, 10823) rubrecht
 #    infile = "mscoco.train2_s_ga0.50_wc0.02_u1_crf1.pw" # (100, 23662) amy
 #    infile = "mscoco.train2_s_ga0.60_wc0.01_u1_crf1.pw" # (80, 26k) raj
 #    infile = "mscoco.train2_s_ga0.70_wc0.01_u1_crf1.pw" # (63, 26k)
 #    infile = "mscoco.train2_s_ga0.80_wc0.01_u1_crf1.pw" # (52, 25k)
 #    infile = "mscoco.train2_s_ga0.90_wc0.01_u1_crf1.pw"
-    infile = "mscoco.train2_s_ga1.50_wc0.01_u1_crf1.pw"
-    infile = "mscoco.train2_s_ga1.25_wc0.01_u1_crf1.pw" # (15)
-    infile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1.pw" # (17)
+#    infile = "mscoco.train2_s_ga1.50_wc0.01_u1_crf1.pw"
+#    infile = "mscoco.train2_s_ga1.25_wc0.01_u1_crf1.pw" # (15)
+#    infile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1.pw" # (17)
 #    infile = "mscoco.train2_s_ga1.10_wc0.01_u1_crf1.pw" # 25
 #    infile = "mscoco.train2_s_ga1.05_wc0.01_u1_crf1.pw" # 25
 
@@ -234,19 +234,22 @@ def model_structure(checksample=True, remedge=None):
         l1 = labels[i]
         state[2*l1:2*(l1+1)] = [0,1]
         states.append(("%d"%(l1), state))
-        for j in range(i):
-            state2 = state.copy()
-            l2 = labels[j]
-#            state2[2*l1:2*(l1+1)] = [0,1]
-            state2[2*l2:2*(l2+1)] = [0,1]
-            states.append(("%d_%d"%(l1,l2), state2))
+#        for j in range(i):
+#            state2 = state.copy()
+#            l2 = labels[j]
+##            state2[2*l1:2*(l1+1)] = [0,1]
+#            state2[2*l2:2*(l2+1)] = [0,1]
+#            states.append(("%d_%d"%(l1,l2), state2))
     if len(labels) > 2:
         state = state0.copy()
         for l in labels:
             state[2*l:2*(l+1)] = [0,1]
 #        print(state)
         states.append(("%s"%labels, state))
-        
+    
+    for l in  [11, 25, 28, 29, 44, 65, 67, 68, 70, 82, 90]:
+        print(LABELS[l], np.linalg.norm(model.mat_r[:, 2*l+1]))
+    return
     tmp = 2* np.dot(ft, model.mat_r)
     tmp2 = model.mat_q + np.diag(tmp) # pairwise discrete parameter after cond.
     for p in states:

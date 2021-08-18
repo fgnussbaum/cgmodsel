@@ -206,6 +206,13 @@ def parse_mscoco(meanssigmas=None,
 #        print(y_train[i, :])
 #        return
     print("Number of samples with zero labels:", zerolabels)
+    ss = np.sum(cat_data, axis=1)
+    indices = []
+    for i in range(91):
+        if ss[2*i +1] == 0:
+            indices.append(i)
+    print("Independent indices:", indices)
+    return
 #    print(y_train[5, :], y_train.shape)
 #    print('cat_data shape', cat_data.shape)
     
@@ -289,9 +296,9 @@ if __name__ == '__main__':
     # comment out all but one line here #
 #    dataname = 'mscoco'
     # ********************************* #
-    ms = parse_mscoco(standardize=True, mode='train2')
+    ms = parse_mscoco(standardize=False, mode='train2')
 #    parse_cifar10()
-    ms = parse_mscoco(standardize=True, meanssigmas=ms, mode='valid2')
+#    ms = parse_mscoco(standardize=True, meanssigmas=ms, mode='valid2')
 #    logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
 
     logger = logging.getLogger('sp_pw') # https://stackoverflow.com/questions/35325042/python-logging-disable-logging-from-imported-modules
