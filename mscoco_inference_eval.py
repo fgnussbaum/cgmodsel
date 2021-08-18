@@ -33,7 +33,7 @@ def generate_subset(indices, prefix='data/mscoco/'):
     x = load_func(prefix+'X_%s.%s'%(mode, filetype))
     
     print(x.shape)
-    x_small = np.zeros([len(indices)+list(x.shape[1:])])
+    x_small = np.zeros([len(indices)]+list(x.shape[1:]))
     for i in indices:
         x_small[i, :, :, :] = x[i, :, :, :]
     
