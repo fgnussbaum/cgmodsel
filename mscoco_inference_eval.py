@@ -25,7 +25,7 @@ def load_pkl(filename):
 def load_npy(filename):
     return np.load(filename)
 
-def generate_subset(indices, prefix='data/mscoco/'):    
+def generate_subset(sois, prefix='data/mscoco/'):    
     mode = 'valid2'
 #    mode = 'train2'
 
@@ -35,25 +35,33 @@ def generate_subset(indices, prefix='data/mscoco/'):
     x = load_func(prefix+'X_%s.%s'%(mode, filetype))
     
     print(x.shape)
-    x_small = np.zeros([len(indices)]+list(x.shape[1:]))
-    for j, i in enumerate(indices):
+    x_small = np.zeros([len(sois)]+list(x.shape[1:]))
+    for j, soi in enumerate(sois):
+        i = soi[0]
         x_small[j, :, :, :] = x[i, :, :, :]
     
-    filename = "%s_%d.npy"%(mode, len(indices))
-    np.save(prefix + filename, x_small)
+    filename = "%s_%d.dat"%(mode, len(sois))
+    with open(filename, "wb") as f:
+        pickle.dump([x_small, sois], f)
+#    np.save(prefix + filename, x_small)
     
-    scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s%s data/mscocomodels/%s\n"""%(
+    scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s%s data/queryevaldata/%s\n"""%(
             prefix, filename, filename)
     send_mail("subset of mscoco valid2:\n%s \n\nindices: %s"%(
             scp, str(indices)))
 
   
-def get_no_wrong_entries(vec1, vec2aug):
-    errors = 0
+def get_wrong_entries(vec1, vec2aug):
+    addlabels = []
+    missinglabels = []
     for i in range(91):
         if vec2aug[i] != -1  and vec1[i] != vec2aug[i]:
-            errors += 1
-    return errors
+            if vec1[i] == 1:
+                addlabels.append(i)
+            else:
+                missinglabels.append(i)
+    errors = len(addlabels) + len(missinglabels)
+    return errors, addlabels, missinglabels
 
 def augment(bin_vec, indices):
     j=0
@@ -90,9 +98,10 @@ if len(indices) != 0:
     print("Independent variables", indices)
     fun_transform = augment
 
-errorfree = []
+sois = [] # samples of interest
 for i in range(n_test):
     ground_truth = data[i]
+    n_labels = np.sum(ground_truth)
 #    print(ground_truth)
 #    bin_vec = exp_data['BINC_max_disc_states'][i]
 #    if len(ids) > 0:
@@ -109,20 +118,21 @@ for i in range(n_test):
         mult_vec = mpes[0]
 #        print(len(ground_truth), len(mult_vec))
         mult_vec = fun_transform(mult_vec, indices)
-        mult_error = get_no_wrong_entries(ground_truth, mult_vec)
-        if mult_error == 0:
-            errorfree.append(i)
-        print("err_b=%d, err_m=%d"%(bin_error, mult_error))
+        res = get_wrong_entries(ground_truth, mult_vec)
+        mult_error, addlabels, missinglabels = res
+        if mult_error <= 1:
+            sois.append([i] + [res])
+        print("err_b=%d, err_m=%d (n_labels=%d)"%(bin_error, mult_error, n_labels))
     elif len(mpes) == 0:
         print("No max state")
     else:
         print("Multiple maxstates %d"%len(mpes))
 
     
-print("Indices errorfree", errorfree)
+print("Samples of interest:", sois)
 
 #datapath = "data/mscoco/mscoco.valid2_s.csv"
-generate_subset(errorfree)
+generate_subset(sois)
     
 #print(obj.keys())
 #print(len(mlc_states))
