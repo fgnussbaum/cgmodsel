@@ -18,6 +18,7 @@ modelfile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1.pw"
 
 path = "../et4cg/data/experiments/mscoco/%s.json"%modelfile
 
+
 def load_pkl(filename):
     file = open(filename, "rb")
     return pickle.load(file)
@@ -45,7 +46,7 @@ def generate_subset(sois, prefix='data/mscoco/'):
         pickle.dump([x_small, sois], f)
 #    np.save(prefix + filename, x_small)
     
-    scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s data/queryevaldata/%s\n"""%(
+    scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s %s\n"""%(
             filename, filename)
     send_mail("subset of mscoco valid2:\n%s"%(scp))
 
@@ -53,14 +54,17 @@ def generate_subset(sois, prefix='data/mscoco/'):
 def get_wrong_entries(vec1, vec2aug):
     addlabels = []
     missinglabels = []
+    correctlabels = []
     for i in range(91):
         if vec2aug[i] != -1  and vec1[i] != vec2aug[i]:
             if vec1[i] == 1:
                 addlabels.append(i)
             else:
                 missinglabels.append(i)
+        elif vec1[i] == vec2aug[i]:
+            correctlabels.append(i)
     errors = len(addlabels) + len(missinglabels)
-    return errors, addlabels, missinglabels
+    return errors, addlabels, missinglabels, correctlabels
 
 def augment(bin_vec, indices):
     j=0
