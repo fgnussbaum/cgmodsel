@@ -25,7 +25,7 @@ def load_pkl(filename):
 def load_npy(filename):
     return np.load(filename)
 
-def generate_subset(sois):    
+def generate_subset(sois, prefix='data/mscoco/'):    
     mode = 'valid2'
 #    mode = 'train2'
 
