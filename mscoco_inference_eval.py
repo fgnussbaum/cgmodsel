@@ -42,8 +42,8 @@ def generate_subset(indices, prefix='data/mscoco/'):
     
     scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s%s data/mscocomodels/%s\n"""%(
             prefix, filename, filename)
-    send_mail("subset of mscoco valid2:\n%s \n\nindices: %s"%(
-            scp, str(indices)))
+#    send_mail("subset of mscoco valid2:\n%s \n\nindices: %s"%(
+#            scp, str(indices)))
 
   
 def get_no_wrong_entries(vec1, vec2aug):
@@ -79,6 +79,7 @@ exp_data = obj['experimentdata']
 print(exp_data.keys())
 #print(obj['metadata'].keys())
 n_test = len(exp_data['BINC_max_disc_states']) # no of test data points
+print('Loaded json with %d data points'%n_test)
 
 ids = obj['metadata']['independent_discrete_variables']
 #n_cat = 91
