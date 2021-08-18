@@ -42,7 +42,7 @@ def generate_subset(indices, prefix='data/mscoco/'):
     
     scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s%s data/mscocomodels/%s\n"""%(
             prefix, filename, filename)
-    send_mail("subset of mscoco valid2:\n %s \n\nindices: %s"%(
+    send_mail("subset of mscoco valid2:\n%s \n\nindices: %s"%(
             scp, str(indices)))
 
   
@@ -107,6 +107,7 @@ for i in range(n_test):
     bin_error = -1
     
     mpes = exp_data['MLC_max_disc_states'][i]
+    print(i, "has %d MPE states"%len(mpes))
     mult_error = -1
     if len(mpes) == 1:
         mult_vec = mpes[0]
