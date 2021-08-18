@@ -210,8 +210,8 @@ def parse_mscoco(meanssigmas=None,
     indices = []
 #    for i in range(91):
     for i in  [11, 25, 28, 29, 44, 65, 67, 68, 70, 82, 90]:
-        print("[%2d]=%.5f"%(i, ss[2*i+1]/n))
-        if ss[2*i +1] == 0:
+        print("[%2d]=%.5f"%(i, ss[i]/n))
+        if ss[i] == 0:
             indices.append(i)
     print("Independent indices:", indices)
     return
