@@ -25,7 +25,7 @@ def load_pkl(filename):
 def load_npy(filename):
     return np.load(filename)
 
-def generate_subset(sois, prefix='data/mscoco/'):    
+def generate_subset(sois):    
     mode = 'valid2'
 #    mode = 'train2'
 
@@ -45,10 +45,9 @@ def generate_subset(sois, prefix='data/mscoco/'):
         pickle.dump([x_small, sois], f)
 #    np.save(prefix + filename, x_small)
     
-    scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s%s data/queryevaldata/%s\n"""%(
-            prefix, filename, filename)
-    send_mail("subset of mscoco valid2:\n%s \n\nindices: %s"%(
-            scp, str(indices)))
+    scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s data/queryevaldata/%s\n"""%(
+            filename, filename)
+    send_mail("subset of mscoco valid2:\n%s"%(scp))
 
   
 def get_wrong_entries(vec1, vec2aug):
