@@ -289,9 +289,9 @@ if __name__ == '__main__':
     # comment out all but one line here #
 #    dataname = 'mscoco'
     # ********************************* #
-#    ms = parse_mscoco(standardize=True, mode='train2')
+    ms = parse_mscoco(standardize=True, mode='train2')
 #    parse_cifar10()
-#    ms = parse_mscoco(standardize=True, meanssigmas=ms, mode='valid2')
+    ms = parse_mscoco(standardize=True, meanssigmas=ms, mode='valid2')
 #    logging.basicConfig(filename='solved_probs.log', level=logging.INFO)
 
     logger = logging.getLogger('sp_pw') # https://stackoverflow.com/questions/35325042/python-logging-disable-logging-from-imported-modules

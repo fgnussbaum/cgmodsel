@@ -30,9 +30,9 @@ def remove_edge(infile, model, i1, i2):
     model.save(outfile='savedmodels/'+infile[:-3] + "rm%s_%s"%(i1, i2) + ".pw")
 
 def model_structure(checksample=True, remedge=None):  
-    checksample = False
+    checksample = True
     posonly = 0
-    k = 50
+    k = 10
 #    remedge = 43, 80
     infile = "mscoco.5000_ga0.10_wc1.00.pw" # (61, 3175) 55 pos
 #    infile = "mscoco.5000_ga0.20_wc1000.00.pw" # (839, 0) only 5 pos
@@ -68,8 +68,8 @@ def model_structure(checksample=True, remedge=None):
     infile = "mscoco.train2_s_ga1.50_wc0.01_u1_crf1.pw"
     infile = "mscoco.train2_s_ga1.25_wc0.01_u1_crf1.pw" # (15)
     infile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1.pw" # (17)
-    infile = "mscoco.train2_s_ga1.10_wc0.01_u1_crf1.pw" # 25
-    infile = "mscoco.train2_s_ga1.05_wc0.01_u1_crf1.pw" # 25
+#    infile = "mscoco.train2_s_ga1.10_wc0.01_u1_crf1.pw" # 25
+#    infile = "mscoco.train2_s_ga1.05_wc0.01_u1_crf1.pw" # 25
 
 #    infile = "mscoco.train2_ga50.00_wc0.10.pw" # new 400 iter (0, 571)
 #    infile = "mscoco.train2_ga40.00_wc0.10.pw" # new 216 iter (0, 638)
@@ -169,7 +169,7 @@ def model_structure(checksample=True, remedge=None):
                     i, val[0], key[0], val[1], key[1], val[2]))
             kd += 1
             if kd == k:
-                return
+                break
 
 #        model.mat_q[np.abs(model.mat_q) < eps] = 0
 #        pw_mat2[:n,:n] = discretepart
@@ -198,8 +198,8 @@ def model_structure(checksample=True, remedge=None):
     if not checksample: 
         return
     standardized = "_s" if "_s_" in infile else ""
-    fn = "data/mscoco.5000%s.csv"%standardized
-    sampleid = 5 # 4, 10
+    fn = "data/mscoco.valid2%s.csv"%standardized
+    sampleid = 4 # 4, 10
 #    sampleid = 3 # 0, 3 (multi is best) # 5000_s
     with open(fn, 'r') as incsv:
         reader = csv.reader(incsv)
