@@ -36,8 +36,8 @@ def generate_subset(indices, prefix='data/mscoco/'):
     
     print(x.shape)
     x_small = np.zeros([len(indices)]+list(x.shape[1:]))
-    for i in indices:
-        x_small[i, :, :, :] = x[i, :, :, :]
+    for j, i in enumerate(indices):
+        x_small[j, :, :, :] = x[i, :, :, :]
     
     filename = "%s_%d.npy"%(mode, len(indices))
     np.save(prefix + filename, x_small)
