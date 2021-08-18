@@ -40,7 +40,7 @@ def generate_subset(sois, prefix='data/mscoco/'):
         i = soi[0]
         x_small[j, :, :, :] = x[i, :, :, :]
     
-    filename = "%s_%d.dat"%(mode, len(sois))
+    filename = "queryevaldata/%s_%d.dat"%(mode, len(sois))
     with open(filename, "wb") as f:
         pickle.dump([x_small, sois], f)
 #    np.save(prefix + filename, x_small)
