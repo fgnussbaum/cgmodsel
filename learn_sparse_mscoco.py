@@ -206,7 +206,7 @@ def parse_mscoco(meanssigmas=None,
 #        print(y_train[i, :])
 #        return
     print("Number of samples with zero labels:", zerolabels)
-    ss = np.sum(cat_data, axis=1)
+    ss = np.sum(cat_data, axis=0)
     indices = []
 #    for i in range(91):
     for i in  [11, 25, 28, 29, 44, 65, 67, 68, 70, 82, 90]:
