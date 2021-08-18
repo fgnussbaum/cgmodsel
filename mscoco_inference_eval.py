@@ -14,7 +14,9 @@ sys.path.append("../")
 from send_mail import send_mail
 #data = json.load("mscoco.json")
 
-path = "../et4cg/data/experiments/mscoco/mscoco.json"
+modelfile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1.pw"
+
+path = "../et4cg/data/experiments/mscoco/%s.json"%modelfile
 
 def load_pkl(filename):
     file = open(filename, "rb")
