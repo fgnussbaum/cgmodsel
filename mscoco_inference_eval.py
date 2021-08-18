@@ -83,11 +83,11 @@ print(exp_data.keys())
 n_test = len(exp_data['BINC_max_disc_states']) # no of test data points
 print('Loaded json with %d data points'%n_test)
 
-ids = obj['metadata']['independent_discrete_variables']
+indices = obj['metadata']['independent_discrete_variables']
 
 fun_transform = lambda x, indices: x
-if len(ids) != 0:
-    print("Independent variables", ids)
+if len(indices) != 0:
+    print("Independent variables", indices)
     fun_transform = augment
 
 errorfree = []
@@ -108,7 +108,7 @@ for i in range(n_test):
     if len(mpes) == 1:
         mult_vec = mpes[0]
         print(len(ground_truth), len(mult_vec))
-        mult_vec = fun_transform(mult_vec)
+        mult_vec = fun_transform(mult_vec, indices)
         mult_error = get_no_wrong_entries(ground_truth, mult_vec)
         if mult_error == 0 or 1:
             errorfree.append(i)
