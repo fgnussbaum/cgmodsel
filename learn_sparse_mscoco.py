@@ -314,7 +314,7 @@ if __name__ == '__main__':
     end = 0
     frac = 1000
     srange = end, steps, frac
-    opts = {'maxiter':1200, 'solver_verb':True, 'off':1, 'discrete_crf':1}
+    opts = {'maxiter':1200, 'solver_verb':True, 'off':0, 'discrete_crf':1}
 
     learnmodel = True
     if HOSTNAME == 'amy':
