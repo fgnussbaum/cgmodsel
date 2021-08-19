@@ -67,10 +67,11 @@ def model_structure(checksample=True, remedge=None):
 #    infile = "mscoco.train2_s_ga0.90_wc0.01_u1_crf1.pw"
 #    infile = "mscoco.train2_s_ga1.50_wc0.01_u1_crf1.pw"
 #    infile = "mscoco.train2_s_ga1.25_wc0.01_u1_crf1.pw" # (15)
-    infile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1.pw" # (17)
+#    infile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1.pw" # (17)
 #    infile = "mscoco.train2_s_ga1.10_wc0.01_u1_crf1.pw" # 25
 #    infile = "mscoco.train2_s_ga1.05_wc0.01_u1_crf1.pw" # 25
     infile = "mscoco.train2_s_ga0.10_wc0.01_u1_crf1_off1.pw" # 1050
+    
     
 #    infile = "mscoco.train2_s_ga1.25_wc0.01_u1_crf1_off0.pw"
 #    infile = "mscoco.train2_s_ga1.40_wc0.01_u1_crf1_off0.pw"
@@ -78,6 +79,7 @@ def model_structure(checksample=True, remedge=None):
 #    infile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1_off0.pw" # 36
 #    infile = "mscoco.train2_s_ga1.10_wc0.01_u1_crf1_off0.pw" # 40
 #    infile = "mscoco.train2_s_ga1.00_wc0.01_u1_crf1_off0.pw" # 48
+    infile = "mscoco.train2_s_ga0.20_wc0.01_u1_crf1_off0.pw" # 288 (6.8%)
     
 #    infile = "mscoco.train2_ga50.00_wc0.10.pw" # new 400 iter (0, 571)
 #    infile = "mscoco.train2_ga40.00_wc0.10.pw" # new 216 iter (0, 638)
@@ -119,6 +121,7 @@ def model_structure(checksample=True, remedge=None):
 #    print(names)
     print("#Edges: %d, Edge-Fraction: %.2f"%(n_edges,
           n_edges/n_vars/(n_vars+1)*2))
+    
 #    model.repr_graphical(diagonal=False)
     
     graph = model.get_graph(threshold=threshold)
@@ -142,7 +145,7 @@ def model_structure(checksample=True, remedge=None):
     print('Sums: dis-cont=%.2f'%msum)
     print('norm u=%.2f, norm_alpha=%.2f'%(
             np.linalg.norm(model.vec_u), np.linalg.norm(model.alpha)))
-    
+    print('Edge_frac_discrete:', dedges/(n*(n+1)/2))
     ## thresholding
     cifar10_labels = ['plane', 'car', 'bird', 'cat','deer', 'dog', 'frog',
                       'horse', 'ship', 'truck']
