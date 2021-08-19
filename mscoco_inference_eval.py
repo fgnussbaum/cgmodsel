@@ -127,6 +127,9 @@ for i in range(n_test):
     bin_error = -1
     
     mpes = exp_data['MLC_max_disc_states'][i]
+    if mpes is None:
+        print(i, "no max state")
+        continue
     print("Sample %d has %d MPE states, "%(i, len(mpes)), end="")
     mult_error = -1
     if len(mpes) == 1:
