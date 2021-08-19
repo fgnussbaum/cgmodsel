@@ -46,13 +46,13 @@ def generate_subset(sois, prefix='data/mscoco/'):
         i = soi[0]
         x_small[j, :, :, :] = x[i, :, :, :]
     
-    x_2000 = x[:2000, :, :, :]
-    np.save("data/mscoco/X_valid2_2000.npy", x_2000)
-    return
+#    x_2000 = x[:2000, :, :, :]
+#    np.save("data/mscoco/X_valid2_2000.npy", x_2000)
+#    return
     
     filename = "data/queryevaldata/%s_%d.dat"%(mode, len(sois))
     with open(filename, "wb") as f:
-        pickle.dump([x_small, sois], f)
+        pickle.dump(sois, f)
 #    np.save(prefix + filename, x_small)
     
     scp = """scp frank@amy.inf-i2.uni-jena.de:/home/frank/cgmodsel/%s %s\n"""%(
