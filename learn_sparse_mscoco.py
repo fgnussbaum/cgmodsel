@@ -318,7 +318,7 @@ if __name__ == '__main__':
 
     learnmodel = True
     if HOSTNAME == 'amy':
-        gamma = .5; wc =.01;  dataname = 'mscoco.train2_s'; univariate=1
+        gamma = 1/3; wc =.01;  dataname = 'mscoco.train2_s'; univariate=1
 #        learnmodel = False
     elif HOSTNAME == 'rubrecht':
         gamma = .2; wc =.01; dataname = 'mscoco.train2_s'; univariate=1
