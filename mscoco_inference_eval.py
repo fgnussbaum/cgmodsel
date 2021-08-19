@@ -18,6 +18,7 @@ import socket
 HOSTNAME = socket.gethostname()
 
 modelfile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1.pw"
+modelfile = "mscoco.train2_s_ga0.50_wc0.10_u1_crf1.pw"
 QUERYDATA = "valid2_s"
 
 path = "../et4cg/data/experiments/mscoco/%s%s.json"%(
@@ -35,22 +36,22 @@ def generate_subset(sois, prefix='data/mscoco/'):
     mode = 'valid2'
 #    mode = 'train2'
 
-    filetype = 'npy'
-    load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
+#    filetype = 'npy'
+#    load_func = {'npy':load_npy, 'pkl':load_pkl}[filetype]
     
-    x = load_func(prefix+'X_%s.%s'%(mode, filetype))
-    
-    print(x.shape)
-    x_small = np.zeros([len(sois)]+list(x.shape[1:]))
-    for j, soi in enumerate(sois):
-        i = soi[0]
-        x_small[j, :, :, :] = x[i, :, :, :]
+#    x = load_func(prefix+'X_%s.%s'%(mode, filetype))
+#    
+#    print(x.shape)
+#    x_small = np.zeros([len(sois)]+list(x.shape[1:]))
+#    for j, soi in enumerate(sois):
+#        i = soi[0]
+#        x_small[j, :, :, :] = x[i, :, :, :]
     
 #    x_2000 = x[:2000, :, :, :]
 #    np.save("data/mscoco/X_valid2_2000.npy", x_2000)
 #    return
     
-    filename = "data/queryevaldata/%s_%d.dat"%(mode, len(sois))
+    filename = "data/queryevaldata/%s_%s_%d.dat"%(mode, modelfile, len(sois))
     with open(filename, "wb") as f:
         pickle.dump(sois, f)
 #    np.save(prefix + filename, x_small)
@@ -144,8 +145,8 @@ for i in range(n_test):
 print("Samples of interest:", sois)
 
 #datapath = "data/mscoco/mscoco.valid2_s.csv"
-if  HOSTNAME != 'DESKTOP-H168PMB':
-    generate_subset(sois)
+#if  HOSTNAME != 'DESKTOP-H168PMB':
+generate_subset(sois)
     
 #print(obj.keys())
 #print(len(mlc_states))
