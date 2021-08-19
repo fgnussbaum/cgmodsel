@@ -102,7 +102,7 @@ print('Loaded json with %d data points'%n_test)
 indices = obj['metadata']['independent_discrete_variables']
 
 fun_transform = lambda x, indices: x
-if len(indices) != 0:
+if not indices is None and len(indices) != 0:
     print("Independent variables", indices)
     fun_transform = augment
 
