@@ -70,6 +70,9 @@ def model_structure(checksample=True, remedge=None):
     infile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1.pw" # (17)
 #    infile = "mscoco.train2_s_ga1.10_wc0.01_u1_crf1.pw" # 25
 #    infile = "mscoco.train2_s_ga1.05_wc0.01_u1_crf1.pw" # 25
+    
+#    infile = "mscoco.train2_s_ga1.25_wc0.01_u1_crf1_off0.pw"
+#    infile = "mscoco.train2_s_ga1.40_wc0.01_u1_crf1_off0.pw"
 
 #    infile = "mscoco.train2_ga50.00_wc0.10.pw" # new 400 iter (0, 571)
 #    infile = "mscoco.train2_ga40.00_wc0.10.pw" # new 216 iter (0, 638)
@@ -201,7 +204,7 @@ def model_structure(checksample=True, remedge=None):
     fn = "data/mscoco.valid2%s.csv"%standardized
     print(fn)
     sampleid = 16 # 4, 10
-#    sampleid = 0
+    sampleid = 0
 #    sampleid = 3 # 0, 3 (multi is best) # 5000_s
     with open(fn, 'r') as incsv:
         reader = csv.reader(incsv)
@@ -226,9 +229,9 @@ def model_structure(checksample=True, remedge=None):
     state0 = np.array(n_cat * [1, 0])
 
 
-    ID = 0
-#    for k in [ID]:
-    for k in range(0, n_cat):
+    ID = 89
+    for k in [ID]:
+#    for k in range(0, n_cat):
         state = state0.copy()
         state[2*k:2*(k+1)] = np.array([0,1])
         states.append(("e_%d"%k, state))
@@ -267,7 +270,7 @@ def model_structure(checksample=True, remedge=None):
         x_th_x = np.exp(np.dot(0.5 * np.dot(state.T, tmp), state)) # .5 x^T Q x
         x_V_y = np.exp(np.inner(np.dot(ft, model.mat_r), state)) # x^t V y
         val = x_th_x * x_V_y
-        if val >= 1 or name[0] != 'e':
+        if val >= 1 or name[0] != 'e' or str(ID) in name:
             print("val %5s=%.5f (%.4f, %.1f)"%(name, val, x_th_x, x_V_y))
                 
 #    print(np.linalg.norm(model.vec_u))
