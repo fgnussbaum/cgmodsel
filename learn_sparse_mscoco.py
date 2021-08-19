@@ -314,7 +314,7 @@ if __name__ == '__main__':
     end = 0
     frac = 1000
     srange = end, steps, frac
-    opts = {'maxiter':1200, 'solver_verb':True, 'off':0, 'discrete_crf':1}
+    opts = {'maxiter':1200, 'solver_verb':True, 'off':1, 'discrete_crf':1}
 
     learnmodel = True
     if HOSTNAME == 'amy':
@@ -324,7 +324,7 @@ if __name__ == '__main__':
         gamma = 1.; wc =.01; dataname = 'mscoco.train2_s'; univariate=1
 #        gamma = .2; wc =1; dataname = 'mscoco.5000_s'; univariate=1
     elif HOSTNAME == 'raj.inf-i2.uni-jena.de':
-        gamma = 1.05; wc =.01; dataname = 'mscoco.train2_s'; univariate=1
+        gamma = .5; wc =.01; dataname = 'mscoco.train2_s'; univariate=1
     elif HOSTNAME == 'DESKTOP-H168PMB':
         gamma = 1; wc =1; dataname = 'mscoco.train2_s'; univariate=1
         opts['verb'] = 1
