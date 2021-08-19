@@ -133,8 +133,7 @@ for i in range(n_test):
         print(mult_vec)
         res = get_wrong_entries(ground_truth, mult_vec)
         mult_error = res[0]
-        if mult_error <= 1 or 1:
-            sois.append([i] + [res])
+        sois.append([i] + [res])
         print("err_b=%d, err_m=%d (n_labels=%d)"%(bin_error, mult_error, n_labels))
     elif len(mpes) == 0:
         print("No max state")
