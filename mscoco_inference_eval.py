@@ -101,7 +101,8 @@ data = obj['data']
 exp_data = obj['experimentdata']
 print(exp_data.keys())
 #print(obj['metadata'].keys())
-n_test = len(exp_data['BINC_max_disc_states']) # no of test data points
+#n_test = len(exp_data['BINC_max_disc_states']) # no of test data points
+n_test = len(exp_data['MLC_max_disc_states'])
 print('Loaded json with %d data points'%n_test)
 
 indices = obj['metadata']['independent_discrete_variables']
