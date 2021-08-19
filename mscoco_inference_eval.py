@@ -46,6 +46,10 @@ def generate_subset(sois, prefix='data/mscoco/'):
         i = soi[0]
         x_small[j, :, :, :] = x[i, :, :, :]
     
+    x_2000 = x[:2000, :, :, :]
+    np.save("data/mscoco/X_valid2_2000.npy", x_2000)
+    return
+    
     filename = "data/queryevaldata/%s_%d.dat"%(mode, len(sois))
     with open(filename, "wb") as f:
         pickle.dump([x_small, sois], f)
@@ -129,7 +133,7 @@ for i in range(n_test):
         print(mult_vec)
         res = get_wrong_entries(ground_truth, mult_vec)
         mult_error = res[0]
-        if mult_error <= 1:
+        if mult_error <= 1 or 1:
             sois.append([i] + [res])
         print("err_b=%d, err_m=%d (n_labels=%d)"%(bin_error, mult_error, n_labels))
     elif len(mpes) == 0:
