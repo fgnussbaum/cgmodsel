@@ -19,7 +19,7 @@ HOSTNAME = socket.gethostname()
 
 modelfile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1.pw"
 modelfile = "mscoco.train2_s_ga0.50_wc0.10_u1_crf1.pw"
-modelfile = "mscoco.train2_s_ga0.20_wc0.01_u1_crf1_off0.pw"
+#modelfile = "mscoco.train2_s_ga0.20_wc0.01_u1_crf1_off0.pw"
 QUERYDATA = "valid2_s"
 
 path = "../et4cg/data/experiments/mscoco/%s%s.json"%(
