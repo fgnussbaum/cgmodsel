@@ -18,7 +18,7 @@ import socket
 HOSTNAME = socket.gethostname()
 
 modelfile = "mscoco.train2_s_ga1.20_wc0.01_u1_crf1.pw"
-modelfile = "mscoco.train2_s_ga0.50_wc0.10_u1_crf1.pw"
+modelfile = "mscoco.train2_s_ga0.50_wc0.005_u1_crf1.pw"
 #modelfile = "mscoco.train2_s_ga0.20_wc0.01_u1_crf1_off0.pw"
 QUERYDATA = "valid2_s"
 
@@ -33,7 +33,7 @@ def load_pkl(filename):
 def load_npy(filename):
     return np.load(filename)
 
-def generate_subset(sois, prefix='data/mscoco/'):    
+def store_result(sois, prefix='data/mscoco/'):    
     mode = 'valid2'
 #    mode = 'train2'
 
@@ -110,6 +110,7 @@ indices = obj['metadata']['independent_discrete_variables']
 
 fun_transform = lambda x, indices: x
 if not indices is None and len(indices) != 0:
+    # for compatibility with previous removed independent variables
     print("Independent variables", indices)
     fun_transform = augment
 
@@ -124,7 +125,7 @@ for i in range(n_test):
 #    else:
 #        bin_vec_aug = bin_vec
 #    bin_error = get_no_wrong_entries(ground_truth, bin_vec_aug)
-    bin_error = -1
+    bin_error = -1 # -1 corresponds to not calculated
     
     mpes = exp_data['MLC_max_disc_states'][i]
     if mpes is None:
@@ -141,22 +142,15 @@ for i in range(n_test):
         mult_error = res[0]
         sois.append([i] + [res])
         print("err_b=%d, err_m=%d (n_labels=%d)"%(bin_error, mult_error, n_labels))
-    elif len(mpes) == 0:
-        print("No max state")
     else:
-        print("Multiple maxstates %d"%len(mpes))
+        print("Multiple maxstates(?) %d"%len(mpes))
 
     
-print("Samples of interest:", sois)
+#print("Samples of interest:", sois)
 
-#datapath = "data/mscoco/mscoco.valid2_s.csv"
-#if  HOSTNAME != 'DESKTOP-H168PMB':
-generate_subset(sois)
+
+store_result(sois)
     
-#print(obj.keys())
-#print(len(mlc_states))
-#print(len(data))
-
 
 
 
