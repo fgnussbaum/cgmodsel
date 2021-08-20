@@ -59,7 +59,7 @@ def model_structure(checksample=True, remedge=None):
 #    infile = "mscoco.train2_s_ga2.00_wc0.10_u1_crf1.pw" #(4, 3140) amy
 #    infile = "mscoco.train2_s_ga2.00_wc1.00_u1_crf1.pw" # (10, 8) rub
     infile = "mscoco.train2_s_ga1.00_wc0.10_u1_crf1.pw" # (42, 6581) amy
-    infile = "mscoco.train2_s_ga0.50_wc0.10_u1_crf1.pw" # (108, 10823) rubrecht
+    infile = "mscoco.train2_s_ga0.50_wc0.10_u1_crf1.pw" # (108, 10823) 2sek/q
 #    infile = "mscoco.train2_s_ga0.50_wc0.02_u1_crf1.pw" # (100, 23662) amy
 #    infile = "mscoco.train2_s_ga0.60_wc0.01_u1_crf1.pw" # (80, 26k) raj
 #    infile = "mscoco.train2_s_ga0.70_wc0.01_u1_crf1.pw" # (63, 26k)
@@ -80,7 +80,7 @@ def model_structure(checksample=True, remedge=None):
 #    infile = "mscoco.train2_s_ga1.10_wc0.01_u1_crf1_off0.pw" # 40
 #    infile = "mscoco.train2_s_ga1.00_wc0.01_u1_crf1_off0.pw" # 48
     infile = "mscoco.train2_s_ga0.20_wc0.01_u1_crf1_off0.pw" # 288 (6.8%)
-    infile = "mscoco.train2_s_ga0.25_wc0.01_u1_crf1_off0.pw" # 226 (5,3%)
+    infile = "mscoco.train2_s_ga0.25_wc0.01_u1_crf1_off0.pw" # 226 (5,3%), 25sek/query
     
 #    infile = "mscoco.train2_ga50.00_wc0.10.pw" # new 400 iter (0, 571)
 #    infile = "mscoco.train2_ga40.00_wc0.10.pw" # new 216 iter (0, 638)
