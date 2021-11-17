@@ -171,7 +171,7 @@ class MAP(BaseCGSolver):
 
         ##  MAP-estimate of p
         probs_cat = probs_cat + n_art_cat
-        probs_cat /= probs_cat.sum() + n_art_cat * probs_cat.size
+        probs_cat /= probs_cat.sum()
         # note: without smoothing would yield p = p/n
 
         ## reshape to the correct shapes
@@ -275,7 +275,7 @@ class MAP(BaseCGSolver):
 
         ## MAP-estimate of p
         probs_cat = probs_cat + n_art_cat
-        probs_cat /= probs_cat.sum() + n_art_cat * probs_cat.size
+        probs_cat /= probs_cat.sum()
 
         ## reshape to the correct shapes
         probs_cat = probs_cat.reshape(self.meta['sizes'])
