@@ -581,11 +581,11 @@ class BaseSolverPW(BaseSparseSolver):
 
         ltot = self.meta['ltot']
 
-        mat_lambda = mat_s[ltot:, ltot:]  # cts-cts parameters
+        mat_lambda = -mat_s[ltot:, ltot:]  # cts-cts parameters
         # have negative sign in CG pairwise interaction parameter matrix
 
         if self.meta['n_cat'] > 0:
-            mat_lambda *= -1
+#            mat_lambda *= -1
             glims = self.meta['cat_glims']
             sizes = self.meta['sizes']
 

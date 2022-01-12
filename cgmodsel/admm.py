@@ -444,7 +444,7 @@ class AdmmGaussianPW(BaseSolverPW, BaseAdmm):
         stats = {}
         stats['theta'] = mat_theta
         stats['solution'] = mat_s, alpha
-        self.problem_vars = stats['solution']
+        self.problem_vars = -mat_s, alpha
 
         stats['resid'] = resid_theta
 
