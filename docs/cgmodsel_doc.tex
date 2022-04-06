@@ -1,0 +1,1006 @@
+\documentclass{article}
+
+\usepackage[a4paper,left=30mm,right=30mm, top=25mm, bottom=25mm]{geometry}
+
+\usepackage{tcolorbox} % colorbox
+\usepackage[utf8]{inputenc}
+\usepackage{fontenc}
+%\usepackage[english]{babel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{bbm}
+\usepackage{bbold}
+\usepackage{bm} % bm symbol
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{assumption}{Assumption}
+\newtheorem{proposition}{Proposition} 
+
+% tables
+\usepackage{longtable} % for tables larger than one page
+\usepackage{tabularx}
+\usepackage{multicol}
+\usepackage{makecell}
+\usepackage{array}   % for \newcolumntype macro
+\newcolumntype{M}{>{$}l<{$}} % math-mode version of "l" column type
+\newcolumntype{N}{>{$}r<{$}} % math-mode version of "l" column type
+\usepackage{booktabs}
+\newcommand{\ra}[1]{\renewcommand{\arraystretch}{#1}}
+
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{mathtools} % DeclarePairedDelimiter
+\usepackage{graphicx}
+
+\usepackage[super]{nth} % 1st, 2nd etc
+
+\usepackage{tikz}
+\usetikzlibrary{matrix,calc}
+\usepackage{pgf}
+
+\newcommand\inputpgf[2]{{
+\let\pgfimageWithoutPath\pgfimage
+\renewcommand{\pgfimage}[2][]{\pgfimageWithoutPath[##1]{#1/##2}}
+\input{#1/#2}
+}}
+
+\usepackage{enumitem, hyperref}
+
+\newcommand{\loc}[1]{\textcolor{blue}{$\to$ #1}}
+
+\newcommand{\remark}[2][Localization]{\begin{tcolorbox}[colback=blue!5,colframe=blue!40!gray,title=#1]#2\end{tcolorbox}}
+\newcommand{\remarkp}[1]{\remark[Notwendige (ggf.~falsche) Grundannahmen]{#1}}
+
+\newcommand{\signif}[1]{\remark[Bedeutung (Warum sollte es das Publikum interessieren?)]{#1}}
+
+\newcommand{\setup}[1]{\begin{tcolorbox}[colback=gray!5,colframe=gray!40!gray,title=Setup]#1\end{tcolorbox}}
+
+
+\newcommand{\rulew} {\rule{\textwidth}{0.3pt}}
+
+\newcommand{\ov}[1]{\overline{#1}} 
+\DeclareMathOperator{\cov}{Cov}
+
+\newcommand{\us}{\_}
+\def\tot{\text{tot}}
+\newcommand{\indFunc}[1]{\mathbbm{1}[ #1 ]}
+\newcommand{\oneVec}{\mathbbm{1}}
+
+\def\Q{\mathcal{Q}} \def\T{\mathcal{T}}\def\Sc{\mathcal{S}}
+\def\J{\mathcal{J}} \def\Lc{\mathcal{L}}%\def\M{\mathcal{M}}
+\def\N{\mathcal{N}}\def\G{\mathcal{G}}\def\I{\mathcal{I}}\def\B{\mathcal{B}}
+\def\U{\mathcal{U}}\def\X{\mathcal{X}}\def\Y{\mathcal{Y}}\def\Z{\mathcal{Z}}
+
+\newcommand{\IR}{{\mathbb{R}}}\newcommand{\IN}{{\mathbb{N}}}
+\newcommand{\IP}{{\mathbb{P}}}\newcommand{\IE}{{\mathbb{E}}}
+\newcommand{\ga}{{\gamma}}\newcommand{\la}{{\lambda}}
+\newcommand{\kpa}{{\kappa}}\newcommand{\ep}{{\varepsilon}}
+\newcommand{\de}{{\delta}}
+
+\newcommand{\bPc}[1]{\ensuremath{\left\{#1 \right\}}} % big curly bracket
+\newcommand{\bPe}[1]{\ensuremath{\left[#1 \right]}} % big edgy bracket
+\newcommand{\bPr}[1]{\ensuremath{\left(#1 \right)}} % big round bracket
+\newcommand{\bAbs}[1]{\ensuremath{\left|#1 \right|}} % big abs value
+\newcommand{\bNorm}[1]{\left\Vert #1\right\Vert} % big norm
+\newcommand{\ganorm}[1]{\left\Vert #1\right\Vert_\gamma}
+\newcommand{\scalp}[1]{ \left\langle #1\right\rangle} %
+
+\newcommand{\mdim}[2]{^{#1 \times #2}} %
+
+
+\newcommand{\tp}{^\mathsf{T}}
+\newcommand{\vecOne}{\mathbbm{1}}
+\newcommand{\Lra}{\Longrightarrow}
+\newcommand{\ti}{\tilde}
+
+
+%\DeclareMathOperator{\Id}{\I}
+\DeclareMathOperator{\supp}{supp}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\dgr}{deg}
+\DeclareMathOperator{\inc}{inc}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\coh}{coh}
+\DeclareMathOperator{\Sym}{Sym}
+\DeclareMathOperator{\vect}{vec}
+\DeclareMathOperator{\logdet}{log\,det}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\gsign}{gsign}
+\DeclareMathOperator{\gsupp}{gsupp}
+\DeclareMathOperator{\gdeg}{gdeg}
+\DeclareMathOperator{\gshrink}{gShrink}
+\DeclareMathOperator{\sshrink}{sShrink}
+\DeclareMathOperator{\shrink}{Shrink}
+\DeclareMathOperator{\argmin}{arg\,min}
+\DeclareMathOperator{\argmax}{arg\,max}
+\DeclareMathOperator{\prox}{prox}
+\DeclareMathOperator{\Id}{Id}
+
+\DeclareMathOperator{\rowspace}{rowspace}
+\DeclareMathOperator{\colspace}{colspace}
+
+\setlength{\parindent}{0pt} % default 15pt
+\setlength{\parskip}{7pt}
+
+
+
+\makeatletter % group matrix with vert and hor. lines
+\renewcommand*\env@matrix[1][*\c@MaxMatrixCols c]{%
+	\hskip -\arraycolsep
+	\let\@ifnextchar\new@ifnextchar
+	\array{#1}}
+\makeatother 
+
+\begin{document}
+
+
+\rule{\textwidth}{0.3pt}
+\begin{center}
+\textbf{\large cgmodsel: Technical Documentation}
+\end{center}
+\textbf{\hfill Frank Nussbaum, April 2022}
+
+\rulew
+
+
+%---------------------------------------------
+% Intro
+%---------------------------------------------
+\section{Introduction}
+
+This is a technical report describing the algorithms used in the \textsc{cgmodsel} Python package for estimating conditional Gaussian (CG) distributions from data. 
+The repository is available under \\
+\href{https://github.com/franknu/cgmodsel}{https://github.com/franknu/cgmodsel}.
+This report complements the documentation of the interfaces provided by the module, which can be found \href{https://franknu.github.io/cgmodsel-pages/source/modules.html}{here}. Since the interfaces are documented elsewhere, here we focus only on the general characteristic of the package.
+
+%---------------------------------------------
+\paragraph{Organization of the package.}
+There are two main components: (probabilistic) \emph{models} and \emph{solvers} to estimate the paramters from these models from data (using convex optimization).
+
+Models are implemented as Python classes in the sub-package \textsc{cgmodsel.models}. Each model is characterized by a set of parameters.
+%For example, pairwise models must be initialized with pairwise parameters.
+Methods for model instances can include
+\begin{itemize}
+ \item \textsc{marginalize}: return a marginal model (keep only selected dimensions)
+  \item \textsc{conditionalize}: return a conditional model (must provide evidence)
+ \item \textsc{repr\us graphical}: display a graphical representation of the model
+ \item \textsc{get\us mean\us params}: convert canonical model parameters to \emph{mean} parameters\footnote{We use canonical parameterization as the default parameterization because it relates more directly to graphical models, see also Section~\ref{s_pairwise}.}
+\item \textsc{save}: save a model in a file
+\item \textsc{load}: load a model from a given file
+\end{itemize}
+Not all models instances in the package implement all of these methods yet.
+
+Solvers are also implemented as Python classes, see Section~\ref{sec_admm} for an introduction to the algorithms (most implemented solvers are variants of the \emph{Alternating Direction Method of Multipliers (ADMM)} \cite{boyd2011distributed}). Solvers are directly situated in the \textsc{cgmodsel} package. Typical methods are:
+\begin{itemize}
+ \item \textsc{drop\_data}: deposit data in the instance
+ \item \textsc{set\_regularization\_params}: specify hyper-/regularization parameters for corresponding (convex) optimization problem.
+ \item \textsc{solve}: estimate parameters by solving corresponding (convex) optimization problem
+ \item \textsc{get\_params}: return parameters as instance of the corresponding model class
+\end{itemize}
+
+
+
+
+%---------------------------------------------
+% pairwise
+%---------------------------------------------
+\section{Pairwise CG models}
+\label{s_pairwise}
+
+A comprehensive introduction to pairwise CG models, particularly ones with sparse + low-rank decompositions can be found in the dissertation~\cite{nussbaum2021models}.
+
+\paragraph{Setup and notation.}
+We consider the general CG (conditional Gaussian) framework, that is, observed dimensions can be of categorical/discrete or quantitative type. 
+Let $d$ denote the number of categorical variables and $q$ denote the number of continuous, quantitative (conditional Gaussian) variables.
+By $L_r$ we denote the number of levels of the $r$-th discrete variable.
+ By $L_{\tot} = \sum_{r=1}^{d} L_r$ we denote the total number of discrete levels.
+
+Generally, we assume the sample space to be $\X\times \Y$ with the discrete-label space $\X=[L_1]\times[L_2]\times\cdots\times [L_{d}]$ using the definition $[a] =\bPc{1,\ldots, a}$ for a natural number $a$. Moreover, $\Y=\IR^{q}$ is the sample space of the continuous, conditional Gaussian variables.
+
+For $a\in\IN$, we denote the set of symmetric $(a\times a)$ matrices by $\Sym(a)$.
+
+\subsection{Probability model and parameters}
+A general pairwise conditional Gaussian (CG) model in canonical parameterization is given by (up to normalization), for $(x, y)\in\X \times\Y$
+\begin{align*}
+p(x,y)&\propto\exp\bPr{u^\top \overline{x} + \frac{1}{2}\overline{x}^\top Q \overline{x} + (R\overline{x})^\top y +\alpha^\top y  -\frac{1}{2}y^\top\Lambda y} \\
+&=  \exp\bPr{\frac{1}{2}\begin{pmatrix}\overline{x} \\ y\end{pmatrix}^\top \begin{pmatrix} Q & R^\top \\ R & - \Lambda\end{pmatrix} \begin{pmatrix}\overline{x} \\ y\end{pmatrix} + u^\top \overline{x} +\alpha^\top y} 
+\\&=  \exp\bPr{\frac{1}{2}\begin{pmatrix}\overline{x} \\ y\end{pmatrix}^\top \begin{pmatrix} Q + 2\diag(u)& R^\top \\ R & - \Lambda\end{pmatrix} \begin{pmatrix}\overline{x} \\ y\end{pmatrix} +\alpha^\top y}.
+\end{align*}
+Here, for a vector $x\in\X$ we denoted the concatenated \emph{indicator} vectors of the values of the discrete variables by
+\begin{align*}
+\overline{x}&=\bPr{\overline{x}_1,\ldots, \overline{x}_d }\in\IR^{L_{\tot}}\\
+\overline{x}_r &= \bPr{\bPc{\indFunc{x_r=1}}, \ldots, \bPc{\indFunc{x_{r}=L_r}} }\in\IR^{L_r},\qquad r=1,\ldots, d.
+\end{align*}
+Moreover, the interaction parameters are as follows
+\begin{itemize}
+	\item $Q\in \Sym(L_{\tot})$ contains
+	the interaction parameters $q_{r:k,j:l} = q_{rj}(k,l)$ between discrete variables  $x_r$ and $x_j$, respectively with values $k$ and $l$
+	($Q$ has zero 'block diagonal', that is, the elements $q_{rr}(\cdot, \cdot)$ are zero, respectively for all $r\in[d]$),
+	\item $u\in \IR^{L_{\tot}}$ are the univariate discrete parameters with entries $q_{r:k}=q_r(k)$,
+	
+	\item $R\in \IR^{q\times L_{\tot}}$ 
+	contains the interaction parameters $\rho_{s, r:k}=\rho_{sr}(k)$ between conditional Gaussians $y_s$ and discrete variables $x_r$ with value $k$,
+	\item $\Lambda \in \Sym(q)$ is the precision matrix of the conditional Gaussian variables (must be positive definite),
+	\item $\alpha\in\IR^{q}$ are the univariate continuous parameters.
+\end{itemize}
+For the pairwise interaction parameter matrix we write
+\[\Theta = \begin{pmatrix} Q + 2\diag(u) & R^\top \\ R & -\Lambda\end{pmatrix} \in \Sym(L_{\tot}+q).\]
+Here, we added the discrete univariate parameters to the diagonal of the discrete interaction parameter matrix $Q$.
+Using entries of the components of the parameter matrix, the pairwise CG density can also be written as
+\begin{align*}
+p(x, y) &\propto \exp\bPr{\sum_{r, j=1}^{d} q_{rj}(x_r, x_j) + \sum_{r=1}^{d} \sum_{s=1}^{q} \rho_{sr}(x_r) - \frac{1}{2}\sum_{s, t=1}^{q}\lambda_{st}y_s y_t+ \sum_{r=1}^{d} u_r(x_r) + \sum_{s=1}^{q}\alpha_s y_s } \\
+&= \exp\Big(\sum_{r, j=1}^{d} \sum_{k=1}^{L_r}\sum_{l=1}^{L_j} q_{r:k, j:l}\indFunc{x_r=k, x_j=l} + \sum_{r=1}^{d} \sum_{s=1}^{q}\sum_{k=1}^{L_r} \rho_{s,r:k}\indFunc{x_r=k} \\
+&\qquad\qquad	\ldots - \frac{1}{2}\sum_{s, t=1}^{q}\lambda_{st}y_s y_t+ \sum_{r=1}^{d} \sum_{k=1}^{L_r} u_{r:k}\indFunc{x_r=k} + \sum_{s=1}^{q}\alpha_s y_s \Big).
+ \end{align*}
+
+
+\paragraph{Likelihoods.}
+Let $n$ data points $(x^{(i)}, y^{(i)})$ for $i=1,\ldots, n$ be given. 
+The \emph{negative} standard log-likelihood is defined as
+\begin{align*}
+\ell(\Theta, \alpha) &= -\sum_{i=1}^n \log p(x^{(i)}, y^{(i)}).
+\end{align*}
+This standard version requires computation of the normalization constant. Especially in the presence of discrete variables this amounts to computing large sums which easily becomes computationally intractable. A more tractable alternative is the
+\emph{negative} pseudo log-likelihood given by
+\begin{align}
+ \ell_p(\Theta, \alpha) = -\sum_{i=1}^n \bPr{\sum_r \log p(x_r = x_r^{(i)}|x_{-r}^{(i)},y^{(i)}) + \sum_s \log p(y_s = y_s^{(i)}|x^{(i)},y_{-s}^{(i)}) } . \label{plh_pw}
+\end{align}
+More details on its construction can be found in Appendix~\ref{app_plh} and in the dissertation~\cite{nussbaum2021models}.
+
+
+Note that we use negative versions of the respective likelihoods for convenience (to be able to write down convex minimization problems) and we use the log versions since the sum of log terms is computationally more stable than large products.
+
+\paragraph{Identifiability (unique parametrizations).}
+The class of pairwise CG distributions is non-identifiable, that is, there exist different parameter configurations that yield the same distribution.
+
+The class can be made identifiable by requiring that for all $r\in[d]$ and $k\in[L_r]$
+\begin{align}
+q_r(0)=0, q_{rj}(k, 0)=0, q_{rj}(0, k)=0, \:\text{and}\quad \rho_{sr}(0)=0. \label{ident}
+\end{align}
+Effectively this means that for each discrete variable the $0$-th is excluded from interacting. 
+
+Note that there are other ways to obtain identifiable parameter classes. \cite{lee2015learning} use sparse regularization, see the next section, since then implicitly the model with the lowest sparse norm is preferred.
+
+
+\subsection{Special cases}
+\paragraph{Gaussians.}
+The purely Gaussian model has density (using canonical parameters)
+\begin{align*}
+p(y)=p(y;\Lambda, \alpha)&=(2\pi)^{-q/2}\det(\Lambda)^{1/2}\exp\bPr{\alpha^\top y  -\frac{1}{2}y^\top\Lambda y}.
+\end{align*}
+
+Assume that $y^{(1)}, \ldots, y^{(n)}\in\IR^{q}$ are $n$ zero-mean data points, that is, they have density
+\begin{align*}
+p(y)=p(y; \Lambda)&=(2\pi)^{-q/2}\det(\Lambda)^{1/2}\exp\bPr{-\frac{1}{2}y^\top\Lambda y} 
+\\&= (2\pi)^{-q/2}\det(\Lambda)^{1/2}\exp\bPr{-\frac{1}{2}\scalp{\Lambda, y y^\top}}.
+\end{align*}
+Then, for this zero-mean model the standard Gaussian log-likelihood is given by
+\begin{align*}
+	\ell(\Lambda) &= \log\bPr{\prod_{i=1}^n p(y^{(i)}; \Lambda)}
+	= \sum_{i=1}^n \log p(y^{(i)}; \Lambda)
+	\\ &= \sum_{i=1}^n \bPr{-\frac{q}{2}\log(2\pi) + \frac{1}{2}\logdet(\Lambda) - \frac{1}{2}\scalp{\Lambda, y^{(i)}\bPe{y^{(i)}}^\top}}
+	\\ &=  -\frac{n q}{2}\log(2\pi) + \frac{n}{2}\logdet(\Lambda) - \frac{n}{2}\scalp{\Lambda, \Sigma_0},
+\end{align*}
+where $\Sigma_0 = \frac{1}{n}\sum_{i=1}^n y^{(i)}\bPe{y^{(i)}}^\top$ is the empirical covariance matrix.
+
+With some abuse of notation, for optimization the \emph{negative} scaled log-likelihood, ignoring constant parts that do not depend on $\Lambda$, is used:
+\begin{align}
+	\ell(\Lambda) &= -\logdet(\Lambda) + \scalp{\Lambda, \Sigma_0}. \label{lh_gaussian}
+\end{align}
+
+\paragraph{Multivariate binary.}
+The multivariate binary pairwise model for vectors $x\in\{0,1\}^{d}$ has density
+\begin{align*}
+p(x)&\propto\exp\bPr{u^\top x + \frac{1}{2}x^\top Q x} = \exp\bPr{\frac{1}{2}x^\top \bPr{Q + 2\diag(u)} x},
+\end{align*}
+where now $u\in\IR^{d}$ and $Q\in\Sym(d)$, omitting the parameters set to zero by the identifiability condition~\eqref{ident}. 
+\medskip
+
+The node conditionals are logistic models
+\begin{align*}
+p(x_r|x_{-r},y)
+= \frac{\exp\bPr{u_r x_r +\sum_{r\neq j}q_{rj}x_rx_j }}
+{1 +  \exp\bPr{u_r +\sum_{r\neq j}q_{rj}x_j } },\qquad r=1,\ldots, d  . 
+\end{align*}
+This is a special case of the general form \eqref{dists_nc_cat2} of discrete node conditionals.
+Now, based on $n$ observations $x^{(1)}, \ldots, x^{(n)}\in\{0,1\}^{d}$, 
+the \emph{negative} pseudo log-likelihood is given by 
+\begin{align}
+ \ell_p(Q, u) = -\sum_{i=1}^n \bPr{\sum_r \log p(x_r = x_r^{(i)}|x_{-r}^{(i)},y^{(i)}) } . \label{plh_ising}
+\end{align}
+
+%%%%%%%%%%%%%%%%%%%%
+\subsection{Pairwise sparse model}
+In this section, we omit univariate parameters for clarity (they can be trivially added to the model).
+For sparse models, the pairwise interaction parameter matrix 
+\[S = \begin{pmatrix} Q  & R^\top \\ R & -\Lambda\end{pmatrix}\]
+is assumed to be (group-)sparse in the sense that the associated graphical model has few edges. The following parameter groups are associated with the edges between
+\begin{itemize}
+	\item two continuous variables $y_s$ and $y_t$, $s\neq t$: parameters $\beta_{st}$,
+	\item continuous variable $y_s$ and discrete variable $x_r$: parameters $\rho_{sr}=\bPc{\rho_{sr}(k)}_{k\in [L_r]}$,
+	\item two discrete variables $x_r$ and $x_j$, $r\neq j$: parameters $Q_{rj}=\bPc{q_{rj}(k,l)}_{k\in[L_r], l\in[L_j]}$.
+\end{itemize}
+This leads to the group-sparsity term (off-diagonal $\ell_{2,1}$-norm)
+\begin{align*}
+\|S\|_{2,1} = \sum_{s\neq t} |\beta_{st}| + 2\sum_{r\in[d], s\in[q]} \|\rho_{sr}\|_2 + \sum_{r\neq q} \|Q_{rj}\|_F.
+\end{align*} % TODO: off in notation
+In the special case that all discrete variables are binary, the identifiability constraints \eqref{ident} imply that each parameter group contains only one parameter. In this case, the $\ell_{2,1}$-norm reduces to the $\ell_1$-norm.
+\medskip
+
+In the general case, a sparse pairwise CG model (omitting univariate parameters) can be learned via the following convex optimization problem
+\begin{equation}
+\begin{array}{lrlr}
+&\underset{S} {\min}& \ell(S) + \lambda \|S\|_{2,1} \quad \textrm{s.t.} \quad  \Lambda[S]\succ0
+\end{array} \tag{S} \label{prob_S}.
+\end{equation}
+Here, $\ell$ is some likelihood (typically either standard negative log-likelihood or negative pseudo log-likelihood, see Appendix~\ref{app_plh} for the construction) and $\lambda>0$ is a regularization parameter. Furthermore, $\Lambda[S]$ selects the continuous-continuous interaction parameters (precision matrix) from the bottom right corner of the pairwise interaction parameter matrix $S$.
+The constraint $\Lambda[S]\succ0$ thereby ensures normalizability of the pairwise CG density.
+
+%------------------------------------
+\subsection{Pairwise sparse + low-rank models}
+This is an extension of sparse graphical models from the previous section, originally proposed for Gaussians in \cite{ChandrasekaranPW12}. Now, the interaction parameter matrix decomposes into a sparse and a low-rank component. The low-rank component represents spurious indirect interaction in between the observed variables that are caused by a small number of latent conditional Gaussian variables, see also \cite{nussbaum2019ising}.
+See the dissertation~\cite{nussbaum2021models} for details in the context of CG distributions.
+
+A (group-)sparse + low-rank model is learned using the following convex optimization problem
+\begin{equation}
+\begin{array}{lrlr}
+&\underset{S, \, L} {\min}& \ell(S+L) + \lambda \|S\|_{2,1} + \rho \tr (L) \quad \textrm{s.t.} \quad L\succeq0, \text{ and } \Lambda[S+L]\succ0
+\end{array}, \tag{SL} \label{prob_SL}
+\end{equation}
+where the trace or nuclear norm $\tr(L)$ induces low rank on $L$. 
+The regularization parameters $\lambda, \rho >0$ are used as trade-off parameters.
+
+
+%-------------------------------------
+% Model Selection with ADMM
+%-------------------------------------
+\section{ADMM-like algorithms}
+\label{sec_admm}
+In this section we formally describe the ADMM-algorithms implemented in the package.
+
+A general note in advance: To keep the descriptions of the algorithms concise we omit lower-order sufficient statistics (so no univariate parameters). In the implementation they can be incorporated in the respective likelihood optimization steps.
+
+%-------------------------------------
+% 
+%-------------------------------------
+\subsection{Introduction to ADMM}
+This is based on the survey \cite{boyd2011distributed}. Here, we only consider a special case suitable for our problems.
+Consider the optimization problem
+\begin{equation}
+\begin{array}{lrlr}
+&\underset{X, Z} {\min}&f(X) + g(Z)  \\
+&\textrm{s.t.} & X=Z,
+\end{array}
+\end{equation}
+
+The augmented Lagrangian for this problem reads as
+\begin{align}
+ \mathcal{L}(X, Z, \Phi) = f(X) + g(Z) - \scalp{\Phi, X - Z} + \frac{1}{2\mu}\bNorm{X - Z}_F^2.
+\end{align}
+Note the difference compared to \cite{boyd2011distributed} who write $\rho = \mu^{-1}$ and conceptually there dual variables $y = -\Phi$.
+We use capital letters for the variables here, since our ADMM algorithms are for objectives dependent on matrices.
+Now, the ADMM updates are
+\begin{align*}
+	\begin{cases}X^{k+1} &= \argmin_X \, f(X) - \scalp{\Phi^k, X-Z^k} + \frac{1}{2\mu}\bNorm{X - Z^k}_F^2, \\
+		Z^{k+1} &= \argmin_Z \, g(Z) - \scalp{\Phi^k, X^{k+1} - Z} + \frac{1}{2\mu}\bNorm{X^{k+1} - Z}_F^2, \\
+		\Phi^{k+1} &= \Phi^k - \mu^{-1}(X^{k+1} - Z^{k+1})\end{cases}
+\end{align*}
+which is equivalent to
+\begin{align}
+	\begin{cases}X^{k+1} &= \argmin_X \, f(X)  + \frac{1}{2\mu}\bNorm{X - Z^k - \mu\Phi^k}_F^2, \\
+		Z^{k+1} &= \argmin_Z \, g(Z) + \frac{1}{2\mu}\bNorm{X^{k+1} - Z - \mu\Phi^k}_F^2 \\
+		\Phi^{k+1} &= \Phi^k - \mu^{-1}(X^{k+1} - Z^{k+1})\end{cases} 
+\end{align}
+The first two updates are proximal operators of the functions $f$ and $g$. In the next section, we discuss the most important proximal operators that are relevant for (latent variable) graphical models.
+
+
+%-------------------------------------
+% Prox ops
+%-------------------------------------
+\subsection{Proximal operators}
+The proximal operator of a scalar convex function $f$ on some vector space is defined by
+\[\prox(f, \kappa, v) = \underset{x}{\argmin} \: f(x) + \frac{1}{2\kappa}\|x-v\|_2^2,\]
+where $\kappa>0$ defines the strength how much deviation of the solution from a vector $v$ is penalized.
+
+
+Here we provide a list of proximal operators that are required by ADMM-algorithms throughout this section.
+
+\paragraph{Gaussian likelihood.}
+The zero-mean Gaussian negative log-likelihood is given by
+\[\ell(\Theta) = -\logdet \Theta + \scalp{\Theta, \Sigma_0} + \I( \Theta\succ0)\]
+with empirical covariance matrix $\Sigma_0$, see~\eqref{lh_gaussian}.
+The corresponding proximal operator
+\[\prox(\ell, \kappa, Z) = \underset{\Theta}{\argmin} \: \ell(\Theta) + \frac{1}{2\kappa}\|\Theta-Z\|_F^2\]
+has an analytical solution which can be derived from the first-order optimality condition
+\[-\Theta^{-1} + \Sigma_0 + \frac{1}{\kappa}(\Theta -Z) \stackrel{!}{=} 0\]
+or equivalently
+\[\Theta \stackrel{!}{=}\kappa \Theta^{-1} - (\kappa \Sigma_0 - Z)  .\]
+Let $U \diag(\sigma) U^\top$ be a singular value decomposition of $\kappa \Sigma_0 - Z$.
+Assume that the solution of the stationary equation has the form  $\Theta = U\diag(\gamma) U^\top$.
+Then, since
+\begin{align*}
+\Theta= U\diag(\gamma) U^\top \stackrel{!}{=}\kappa \Theta^{-1} - (\kappa \Sigma_0 - Z)
+ = \kappa U\diag(\gamma^{-1}) U^\top - U \diag(\sigma) U^\top 
+\end{align*}
+it must hold $\gamma = \kappa \gamma^{-1} - \sigma $.
+This is essentially a quadratic equation in $\gamma$. We solve it componentwise ($\gamma_i^2 + \sigma_i \gamma_i - \kappa=0$), which yields
+\[\gamma_i = -\frac{\sigma_i}{2} + \sqrt{\frac{\sigma_i^2}{4}+\kappa},\qquad \text{for }i=1,\ldots, d.\]
+Note that only this positive solution gives a positive definite parameter matrix $\Theta$. We have shown that
+\begin{align}
+\prox(\ell, \kappa, Z) = U\diag(\gamma) U^\top, \tag{Prox-GLH}\label{prox_glh}
+\end{align}
+see also \cite{ma2013alternating}.
+
+\paragraph{Pseudo likelihood.}
+The proximal operator for the negative pseudo log-likelihood $\ell_p$ with zero univariate parameters as defined in~\eqref{plh_pw} does in general not have a closed form analytical solution.
+The problem
+\[\prox(\ell_p, \kappa, Z) = \underset{\Theta}{\argmin} \: \ell_p(\Theta) + \frac{1}{2\kappa}\|\Theta-Z\|_F^2\]
+needs to be solved using iterative solver.
+Since the objective is differentiable, gradient descent algorithms such as \textsc{L-BFGS-B} can be used (alternatively use \textsc{GENO}).
+
+
+\paragraph{Sparse norms.}
+For the matrix $\ell_1$-norm it holds
+\begin{align}
+\prox(\|\cdot\|_1, \kappa, Z) = \underset{S}{\argmin} \: \|S\|_1 + \frac{1}{2\kappa}\|S-Z\|_F^2 = \shrink(Z, \kappa), \tag{Prox-$\ell_1$}\label{prox_l1}
+\end{align}
+where for all entries $(i,j)$ the element-wise soft-threshold is defined by
+\begin{align*}
+\bPe{\shrink(Z, \kappa)}_{ij} = \sign (Z_{ij})\cdot \max \bPc{|Z_{ij}| -\kappa, 0}
+\end{align*}
+Similarly, for the $\ell_{2,1}$-norm with groups $g\in\G$
+\begin{align}
+\prox(\|\cdot\|_{2,1}, \kappa, Z) = \underset{S}{\argmin} \: \|S\|_{2,1} + \frac{1}{2\kappa}\|S-Z\|_F^2 = \gshrink(Z, \kappa), \tag{Prox-$\ell_{2,1}$}\label{prox_l21}
+\end{align}
+where
+\begin{align*}
+\bPe{\gshrink(Z, \kappa)}_{g} = \begin{cases} Z_g (1- \frac{\kappa}{\|Z_g\|_2}), & \|Z_g\|_2 > \kappa \\
+0, & \text{else} \end{cases}.
+\end{align*}
+
+\paragraph{Low-rank norm(s).}
+For the matrix nuclear norm (or Schatten $S_1$-norm) it holds
+\begin{align}
+\prox(\|\cdot\|_\ast, \kappa, Z) = \underset{L}{\argmin} \: \|L\|_\ast + \frac{1}{2\kappa}\|L-Z\|_F^2 = \sshrink(Z, \kappa), \tag{Prox-$S_1$} \label{prox_nuc}
+\end{align}
+where
+\begin{align*}
+\sshrink(Z, \kappa) = U \shrink(\diag(\sigma), \kappa) U^\top
+\end{align*}
+provided a singular value decomposition $Z = U \diag(\sigma) U^\top$ of $Z$.
+
+%-------------------------------------
+% 
+%-------------------------------------
+\subsection{Gaussian unregularized problem}
+\loc{can use the class \textsc{cgmodsel.AdmmGaussianPW}, solve with regularization parameter zero (see below).}
+
+The unregularized Gaussian likelihood problem is 
+\begin{equation}
+\begin{array}{lrlr}
+&\underset{\Theta} {\min}& \ell(\Theta) 
+\end{array}
+\end{equation}
+where
+\[\ell(\Theta) = -\logdet \Theta + \scalp{\Theta, \Sigma_0} + \I( \Theta\succ0)\]
+with empirical covariance matrix $\Sigma_0$.
+If the empirical covariance matrix is non-degenerate, the problem has the analytical solution $\Theta = \Sigma_0^{-1}$ based on the first order optimality condition.
+Otherwise an update idea is
+\begin{align*}
+	\begin{cases}\Theta^{k+1} &= \underset{\Theta}{\argmin} \: \ell(\Theta) + \frac{1}{2\mu}\bNorm{\Theta - \Theta^k}_F^2= \prox(\ell, \mu, \Theta^k) = U \diag(\gamma) U^\top, \end{cases}
+\end{align*}
+where $U\diag(\sigma) U^\top$ is a singular value decomposition  of $\mu\Sigma_0 - \Theta^k$, see \eqref{prox_glh}.
+
+%-------------------------------------
+% Model Selection with ADMM
+%-------------------------------------
+\subsection{Graphical Lasso with ADMM}
+
+\subsubsection{Gaussian Graphical Lasso using standard likelihood}
+\loc{Implemented in the class \textsc{cgmodsel.AdmmGaussianPW}.}
+
+An ADMM formulation is
+\begin{equation}
+\begin{array}{lrlr}
+&\underset{\Theta,\,S} {\min}& \ell(\Theta) + \varphi(S) \quad \textrm{s.t.} \quad\Theta = S
+\end{array}
+\end{equation}
+where
+\[\ell(\Theta) = -\logdet \Theta + \scalp{\Theta, \Sigma_0} + \I( \Theta\succ0)\]
+is the zero-mean Gaussian negative log-likelihood as in \eqref{lh_gaussian} with empirical covariance matrix $\Sigma_0$, next $\I$ is the $0$-$\infty$ indicator function of the positive definite cone, and
+\[\varphi(S) =  \alpha \|S\|_{1}.\]
+Let $\Phi$ %\in\IR^{q\times q}$
+be the dual variables for the equality constraint.
+The augmented Lagrangian for the ADMM problem then reads as
+\begin{align}
+ \mathcal{L}(\Theta, S, \Phi) = \ell(\Theta) + \varphi(S) - \scalp{\Phi, \Theta - S} + \frac{1}{2\mu}\bNorm{\Theta - S}_F^2,
+\end{align}
+where $\mu > 0$ is the ADMM parameter that controls the strength of the additional quadratic penalty for violation of the equality constraint.
+The dual function is 
+\begin{align}
+ g(\Phi) = \min_{\Theta,\,S} \: \ell(\Theta) + \varphi(S) - \scalp{\Phi, \Theta - S} + \frac{1}{2\mu}\bNorm{\Theta - S}_F^2.
+\end{align}
+ADMM proceeds by conducting the minimization with respect to $\Theta$ and $S$ in sequential order, followed by a gradient step for the dual problem (that is, maximizing the dual function $g$), see \cite{boyd2011distributed}.
+Hence, the ADMM updates are
+\begin{align*}
+	\begin{cases}\Theta^{k+1} &= \argmin_\Theta \, \ell(\Theta) - \scalp{\Phi^k, \Theta - S^k} + \frac{1}{2\mu}\bNorm{\Theta - S^k}_F^2, \\
+		S^{k+1} &= \argmin_S \,\varphi(S) - \scalp{\Phi^k, \Theta^{k+1} - S} + \frac{1}{2\mu}\bNorm{\Theta^{k+1} - S}_F^2, \\
+		\Phi^{k+1} &= \Phi^k - \mu^{-1}(\Theta^{k+1} - S^{k+1})\end{cases}
+\end{align*}
+which is equivalent to
+\begin{align}
+	\begin{cases}\Theta^{k+1} &= \argmin_\Theta \, \ell(\Theta)  + \frac{1}{2\mu}\bNorm{\Theta - S^k - \mu\Phi^k}_F^2, \\
+		S^{k+1} &= \argmin_S \,\varphi(S) + \frac{1}{2\mu}\bNorm{\Theta^{k+1} - S - \mu\Phi^k}_F^2 \\
+		\Phi^{k+1} &= \Phi^k - \mu^{-1}(\Theta^{k+1} - S^{k+1})\end{cases} \label{PADMM}
+\end{align}
+
+The first step has the analytical solution \eqref{prox_glh} with $Z=S+\mu\Phi^k$ and $\kappa = \mu$.
+The second step is the soft-thresholding operation \eqref{prox_l1} with $Z=\Theta^{k+1} - \mu\Phi^k$ and $\kappa = \alpha \mu$.
+\medskip
+
+\emph{Concerning univariate parameters.} 
+Observe that minimizing the negative log-likelihood
+\[\ell(\Theta, \alpha) = -\logdet \Theta + \scalp{\Theta, \Sigma_0} - \alpha^\top \mu_0 +\I( \Theta\succ0)\]
+including univariate parameters is an unbounded problem whenever the empirical mean $\mu_0= \frac{1}{n}\sum_{i=1}^n y^{(i)}$ is non-zero. Therefore, the data should be centered beforehand by subtracting $\mu_0$ from each data point. Afterwards a model with $\alpha=0$ should be learned. 
+
+%If $\alpha$ is allowed to be non-zero, the first update  becomes
+%\[\Theta^{k+1}, \alpha^{k+1} = \underset{\Theta,\, \alpha}{\argmin} \: \ell(\Theta, \alpha) + \frac{1}{2\mu}\|\Theta-S^k-\mu\Phi^k\|_F^2,\]
+%with the same solution $\Theta^{k+1}$ and $\alpha^{k+1}=\mu_0$. This  follows from the first order optimality conditions of the Gaussian likelihood
+%\[\ell(\Theta, \alpha) = -\logdet \Theta + \scalp{\Theta, \Sigma_0} - \alpha^\top \mu_0 +\I( \Theta\succ0),\]
+%where $\mu_0= \frac{1}{n}\sum_{i=1}^n y^{(i)}$ is the vector of empirical means. Since the solution for $\alpha$ is the same in every iteration, the solution $\alpha= \mu_0$ can also be fixed before iterating.
+
+
+\subsubsection{CG Graphical Lasso using pseudo likelihood}
+\loc{Implemented in the class \textsc{cgmodsel.AdmmCGaussianPW}.}
+ 
+For CG models, it is more convenient to use pseudo likelihood.
+The ADMM problem (with zero univariate parameters) is
+\begin{equation}
+\begin{array}{lrlr}
+&\underset{\Theta,\,S} {\min}& \ell_p(\Theta) + \varphi(S) \quad \textrm{s.t.} \quad\Theta = S
+\end{array}
+\end{equation}
+where, compare~\eqref{plh_pw},
+\[\ell_p(\Theta) = -\sum_{i=1}^n \bPr{\sum_r \log p(x_r^{(i)}|x_{-r}^{(i)}, y^{(i)};\Theta) + \sum_s \log p(y_s^{(i)}|x^{(i)}, y_{-s}^{(i)};\Theta) } + \I( \Lambda[\Theta]\succ0) \]
+is the negative pseudo-loglikelihood for $n$ data points.
+\medskip
+
+The ADMM algorithm is the same as above, but the first update now becomes the proximal mapping of the negative pseudo log-likelihood given by
+ \[\Theta^{k+1} = \underset{\Theta}{\argmin} \: \ell_p(\Theta)  + \frac{1}{2\mu}\bNorm{\Theta - S^k - \mu\Phi^k}_F^2.\]
+This needs to be solved with an iterative solver. Unfortunately, this limits the performance of ADMM algorithms for pseudo likelihood problems.
+\medskip
+
+\emph{Concerning univariate parameters.}
+In a model where the univariate parameters $u$ and $\alpha$ are allowed to be non-zero, the first update just becomes
+\[\Theta^{k+1} = \underset{\Theta, \,\alpha}{\argmin} \: \ell_p(\Theta, \alpha) + \frac{1}{2\mu}\|\Theta-S^k-\mu\Phi^k\|_F^2,\]
+where the univariate discrete parameters $u$ are on the part of the diagonal of $\Theta$ that is associated with discrete variables.
+Note that in contrast to the Gaussian likelihood, minimization w.r.t.~$\alpha$ is not an unbounded problem for the pseudo log-likelihood, see also Appendix~\ref{app_plh}.
+%
+
+%-------------------------------------
+% Model Selection with ADMM
+%-------------------------------------
+%\subsection{Low rank with ADMM (discrete only)}
+%\loc{Currently not implemented.}
+%
+%An ADMM formulation is
+%\begin{equation}
+%\begin{array}{lrlr}
+%&\underset{\Theta,\,L} {\min}& \ell_p(\Theta) + \varphi(L) \quad \textrm{s.t.} \quad\Theta = L
+%\end{array}
+%\end{equation}
+%where $l_p$ is the negative Pseudo log likelihood. 
+%Next, $\I$ is the $0$-$\infty$ indicator function of the positive definite cone, and
+%\[\varphi(S) =  \alpha \tr (L) + \I(L\succeq0).\]
+%Let $\Phi$ %\in\IR^{q\times q}$
+%be the dual variables for the equality constraint.
+%The augmented Lagrangian for the ADMM problem then reads as
+%\begin{align}
+%\mathcal{L}(\Theta, L, \Phi) = \ell_p(\Theta) + \varphi(L) - \scalp{\Phi, \Theta - L} + \frac{1}{2\mu}\bNorm{\Theta - L}_F^2,
+%\end{align}
+%where $\mu > 0$ is the ADMM parameter that controls the strength of the additional quadratic penalty for violation of the equality constraint.
+%ADMM proceeds by conducting the minimization with respect to $\Theta$ and $S$ in sequential order, followed by a gradient step for the dual problem (that is, maximizing the dual function $g$), see \cite{boyd2011distributed}.
+%Hence, the ADMM updates are
+%\begin{align*}
+%\begin{cases}\Theta^{k+1} &= \argmin_\Theta \, \ell_p(\Theta) - \scalp{\Phi^k, \Theta - L^k} + \frac{1}{2\mu}\bNorm{\Theta - L^k}_F^2, \\
+%L^{k+1} &= \argmin_L \,\varphi(L) - \scalp{\Phi^k, \Theta^{k+1} - L} + \frac{1}{2\mu}\bNorm{\Theta^{k+1} - L}_F^2, \\
+%\Phi^{k+1} &= \Phi^k - \mu^{-1}(\Theta^{k+1} - L^{k+1})\end{cases}
+%\end{align*}
+%which is equivalent to
+%\begin{align}
+%\begin{cases}\Theta^{k+1} &= \argmin_\Theta \, \ell_p(\Theta)  + \frac{1}{2\mu}\bNorm{\Theta - L^k - \mu\Phi^k}_F^2, \\
+%L^{k+1} &= \argmin_L \,\varphi(L) + \frac{1}{2\mu}\bNorm{\Theta^{k+1} - L - \mu\Phi^k}_F^2 \\
+%\Phi^{k+1} &= \Phi^k - \mu^{-1}(\Theta^{k+1} - L^{k+1})\end{cases} \label{PADMM}
+%\end{align}
+%
+%The second step is the spectral soft-thresholding operation \eqref{prox_nuc} with $Z=\Theta^{k+1} - \mu\Phi^k$ and $\kappa = \alpha \mu$.
+%\medskip
+%
+%IMPORTANT note: Low-rank only ADMM appears to be not very reliable. This does also effect the solutions of S+L models if the regularization parameter for sparse regularization is high. Usage is NOT recommended.
+
+%-------------------------------------
+% CG pseudo-likelihood models
+%-------------------------------------
+\subsection{CG S+L with proximal-gradient based ADMM}
+\loc{Implemented in the class \textsc{cgmodsel.AdmmCGaussianSL} (uses pseudo-likelihood).
+A version using likelihood for purely Gaussian models is implemented in the class \textsc{cgmodsel.AdmmGaussianSL}.}
+ 
+Let us first consider a reformulation of Problem~\ref{prob_SL}
+\begin{equation}
+\begin{array}{lrlr}
+ &\underset{\Theta\succ0,\,W} {\argmin}& \ell(\Theta) + \varphi(W) \quad \textrm{s.t.} \quad\Theta = [I, I]W
+\end{array}
+\end{equation}
+where we grouped $W = (S, L)$ into one variable and let
+ \[\varphi(W) =  \alpha \|S\|_{2,1} + \beta \tr (L) + \I(L\succeq0).\]
+%We drop the constraint 
+
+Let $\mu > 0$ and let $\Phi$ be the dual variables for the constraint. The ADMM updates are
+\begin{align*}
+	\begin{cases}\Theta^{k+1} &= \argmin_{\Theta\succ0} \: \ell(\Theta) - \scalp{\Phi^k, \Theta - [I, I]W^k} + \frac{1}{2\mu}\bNorm{\Theta - [I, I]W^k}_F^2, \\
+	W^{k+1} &= \argmin_W \:\varphi(W) - \scalp{\Phi^k, \Theta^{k+1} - [I, I]W} + \frac{1}{2\mu}\bNorm{\Theta^{k+1} - [I, I]W}_F^2, \\
+	\Phi^{k+1} &= \Phi^k - \mu^{-1}(\Theta^{k+1} - [I, I] W^{k+1})\end{cases}
+\end{align*}
+which is equivalent to
+\begin{align}
+	\begin{cases}\Theta^{k+1} &= \argmin_{\Theta\succ0} \: \ell(\Theta)  + \frac{1}{2\mu}\bNorm{\Theta - [I, I]W^k - \mu\Phi^k}_F^2, \\
+		W^{k+1} &= \argmin_W \:\varphi(W) + \frac{1}{2\mu}\bNorm{\Theta^{k+1} - [I, I]W - \mu\Phi^k}_F^2 \\
+		\Phi^{k+1} &= \Phi^k - \mu^{-1}(\Theta^{k+1} - [I, I] W^{k+1})\end{cases} 
+\end{align}
+
+\paragraph{The first update.}
+The first update is the proximal mapping of the likelihood.
+\[\min_{\Theta\,:\, \Lambda[\Theta]\succ0} \: \ell(\Theta) + \frac{1}{2\mu} \bNorm{\Theta - Z}_F^2\]
+where $Z =[I, I]W^k + \mu\Phi^k$. For purely Gaussian models with standard likelihood, the solution is once again given by \eqref{prox_glh} with $\kappa = \mu$.
+As mentioned earlier, in the presence of binary variables neither likelihood nor pseudo likelihood proximal mappings have analytical solutions. Hence, an iterative optimization algorithm needs to be applied.
+
+
+\paragraph{The second update.}
+In the second problem of \eqref{PADMM}, the components of $W$ are coupled in the quadratic Frobenius-norm term. With this coupling the proximal operator for $W$ is hard to solve.
+Instead it has been suggested in \cite{ma2013alternating} to solve a step of a proximal-gradient method, that is, for $\tau>0$ one solves
+\begin{align*}
+	\min_W \,\varphi(W) + \frac{1}{2\mu\tau}\bNorm{W - \bPr{W^k + \tau[I\; I]^\top\bPr{\Theta^{k+1} - [I\; I]W^k - \mu\Phi^k}}}_F^2.
+\end{align*}
+The good news is that now the components $S$ and $L$ are separable. Consequently the proximal-gradient step reduces to solving two proximal operators, namely the one of the $\ell_1$-norm
+\begin{align*}
+	S^{k+1} &= \underset{S}{\argmin} \: \, \alpha \|S\|_{2,1} + \frac{1}{2\mu\tau}\bNorm{S - \bPr{S^k + \tau G^k}}_F^2
+	\\& = \gshrink(S^k + \tau G^k, \alpha\mu\tau),
+\end{align*}
+compare \eqref{prox_l21}, and the one of the nuclear norm
+\begin{align*}
+	L^{k+1} &= \underset{L}{\argmin} \: \beta \tr(L) + \I(L\succeq0)+ \frac{1}{2\mu\tau}\bNorm{L - \bPr{L^k + \tau G^k}}_F^2 L^{k+1}
+	\\& = \sshrink(L^k + \tau G^k, \beta\mu\tau),
+\end{align*}
+compare \eqref{prox_nuc}. Here, we used $G^k = \Theta^{k+1} - S^k - L^k - \mu\Phi^k$ (TODO: is the negative partial gradient, some details on the proxgrad method).
+	
+
+
+
+
+%---------------------------------------------
+% 
+%---------------------------------------------
+%\section{Model validation}
+%\label{ch_mv}
+%
+%\section{Using cross validation scores of node conditionals}
+%
+%
+%We test the models for continuous test data $Y\in\IR^{n\times q}$ and discrete test data $D\in\IR^{n\times L_{\tot}}$.
+%Based on the pseudo likelihood, discrete and continuous prediction errors can be computed.
+%
+%\paragraph{Error on discrete variable.}
+%We define the cross validation error of the $r$-th discrete variable as 
+%\begin{align*}
+%e_r = \sum_{i=1}^n \bPr{1 -p(x_r=x_r^{(i)} | x_{-r}^{(i)}, y^{(i)}, \Theta)}
+ %= n -  \sum_{i=1}^n p(x_r=x_r^{(i)} | x_{-r}^{(i)}, y^{(i)}, \Theta),
+%\end{align*}
+%that is, the sum of the respective probabilities for miss-classification.
+ %Alternatively one could also use the error for \emph{hard} classification given by
+%\begin{align*}
+%\hat{e}_r = \sum_{i=1}^n \indFunc{ \max_{k\in[L_r]} \, p(x_r=k | x_{-r}^{(i)}, y^{(i)}, \Theta) \neq x_r^{(i)}}.
+%\end{align*}
+%
+%%\paragraph{Error on ordinally scaled variables.}
+%%It appears useful to introduce a metric between the labels $l_1<l_1<\ldots < l_{L_r}$ of an ordinally scaled variable.
+%%The easiest metric is the 'distance' in the ordered sequence of labels.
+%%That is, $d(l_j, l_k) = |j-k|$.
+%%We define the cross validation error of the ordinally scaled variable w.r.t.~this metrix as 
+%%\begin{align*}
+%%e_r = \frac{1}{L_r}\sum_{i=1}^n \sum_{j=0}^{L_r} \bAbs{j - pos(x_r^{(i)}) } \cdot p(x_r=j| x_{-r}^{(i)}, y^{(i)}, \Theta).
+%%\end{align*}
+%%where $pos(x_r^{(i)}) = D_{i, :}.find(1)$ is the position of the label $x_r^{(i)}$ in the order, and the scaling with $L_r$ accounts for different numbers of labels.
+%
+%\paragraph{Error on continuous variables.}
+%The least squares error when predicting the mean of the node conditional is given by
+%\begin{align*}
+%e_s = \sum_{i=1}^n \bPr{y_s^{(i)} - \hat y_s^{(i)}}^2
+%\end{align*}
+%where the mean is obtained as a (scaled) regression term of the other variables, for example, 
+ %\[\hat y_s^{(i)} = \frac{\mu_s^{(i)}}{\beta_{ss}} = \frac{\alpha_s+\sum_r \rho_{sr}(x_r^{(i)})-\sum_{s\neq t}\beta_{st}y_t^{(i)} }{\beta_{ss}}\]
+%for pairwise models, compare~\eqref{nc_gauss3}. 
+%
+%
+%\paragraph{Combination into a single score.}
+%Generally, it is not clear how to aggregate discrete and continuous errors.
+%A suggestion is
+%\[\frac{1}{n}\sum_r e_r + \sum_s \sqrt{\frac{1}{n}e_s}.\]
+%
+%This uses the respective average prediction error for each discrete variables and the RMSEs.
+%%\paragraph{Computation.}
+%%Denote by $a_{i, r:k} = p(x_r=k | x_{-r}^{(i)}, y^{(i)}, \Theta)$.
+%%The matrix $A\in\IR^{n\times L_{\tot}}$ consisting of these entries and the vectors $\mu_s=\bPc{\mu_s^{(i)}}$
+%%can be computed as before in the computation of the function value in the model selection (pairwise and CLZ, respectively).
+%
+%
+%
+%
+%\section{Alternatives}
+%
+%Alternatively, the likelihood or pseudo-likelihood values of the test data can be used directly in order to obtain a generalization error.
+%
+%\paragraph{Relation between cross validation errors of node conditional and log-Pseudolikelihood value on test-data.}
+%Discrete errors:
+%By the Taylor expansion of the logarithm it holds $\log x \approx x-1$ for x close to $1$. Consequently, 
+%\begin{align*}
+%l_r = \sum_{i=1}^n -\log p(x_r=x_r^{(i)} | x_{-r}^{(i)}, y^{(i)}, \Theta) &\approx -\sum_{i=1}^n\bPr{ p(x_r=x_r^{(i)} | x_{-r}^{(i)}, y^{(i)}, \Theta)-1} \\
+%&=n -  \sum_{i=1}^n p(x_r=x_r^{(i)} | x_{-r}^{(i)}, y^{(i)}, \Theta) = e_r.
+%\end{align*}
+%Hence, the discrete part of the Pseudo-loglikelihood $l_D=\sum_r l_r\approx \sum_r e_r$.
+%\medskip
+%
+%Continuous errors (TODO):
+%\begin{align*}
+%-\log p(y_s=y_s^{(i)} | y_{-s}^{(i)}, x^{(i)}, \Theta) = - \frac{1}{2}\log\frac{\beta_{s}^{(i)}}{2\pi}
+%+ \frac{\beta_{s}^{(i)}}{2}\bPr{\frac{\mu_s^{(i)}}{\beta_s^{(i)}} - y_s^{(i)}}^2
+%\end{align*}
+
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\appendix
+
+%---------------------------------------------
+% seudo-likelihood for CG models
+%---------------------------------------------
+\section{Technical Pseudo-likelihood construction for pairwise CG models}
+\label{app_plh}
+
+
+
+\paragraph{Notation.}
+
+
+For any natural number $a$ we let $[a] =\bPc{1,\ldots, a}$.
+In empirical settings, $n$ is the number of samples.
+\medskip
+
+\emph{Indexing}.
+We use $r,j$ as typical indices for discrete variables and $s,t$ as indices for continuous variables. For a dimension of size $L_{\tot}$ we use the index notation $r:k$ where $r\in[d]$ and $k\in[L_r]$. For matrices we use $\cdot$ to denote a slice, for example, for a matrix $Q \in \IR^{ L_{\tot}\times  L_{\tot}}$ the $r:k$-th column is denoted by $Q_{\cdot, r:k}$.
+
+\label{s_cg_pw_plhmodsel}
+\subsection{Parameters and data}
+
+In Section~\ref{s_pairwise}, the parameter groups $Q, u, R, \Lambda, \alpha$ of a pairwise CG model have been specified.
+A useful trick in the implementation to implement the positive definiteness constraints on the precision matrix $\Lambda$ is to write it as $\Lambda = F F^\top\succeq0$, 
+where
+\begin{itemize}
+	\item $F\in\IR^{q\times q}$ is a root of $\Lambda$.
+\end{itemize}
+Strictly speaking, this does only enforce positive \emph{semi}-definiteness.
+Moreover, it is useful in practice to split the precision matrix into $\Lambda = B + \diag(\beta)$ with
+\begin{itemize}
+	\item $B\in\Sym(q)$ holds the quantitative-quantitative interaction parameters $\beta_{st}$ (with zero diagonal).
+	\item $\beta\in\IR^{q}_{>0}$ are the univariate squared continuous parameters $\beta_s=\beta_{ss}$ (that is, the diagonal of the conditional Gaussian precision matrix)
+\end{itemize}
+This allows easier construction of the (pseudo-likelihood) objective terms.
+This is particularly useful since the gradients w.r.t.~diagonal and off-diagonal parameters of the precision matrix are calculated differently.
+\medskip
+
+
+
+The implementation optimizes only the upper right triangle of parameters of $Q$.
+These are copied down to the lower half before each objective evaluation.
+
+%Finally, we denote by $\Phi = Q + 2\diag(u)$ the interaction matrix of all discrete parameters that includes univariate effects on its diagonal. 
+
+
+\paragraph{Data.}
+We denote the continuous data by $Y\in\IR^{n\times q}$ and we denote the discrete indicator data by $D\in\IR^{n\times L_{\tot}}$.
+Here, rows respectively correspond to samples. This is motivated by the typical representation of data in form of tables.
+
+
+
+
+
+\subsection{Discrete node conditional}
+For the node conditional of the $r$-th discrete variable only the parameters that are associated with $x_r$ taking on the value $k$ are relevant.
+%$\Theta=\begin{pmatrix} Q & R^\top\\ R & -\Lambda\end{pmatrix}$ are relevant.
+%By the $r$-th slice we mean the rows with indices $r:k$ (respectively columns since $\Theta$ is symmetric).
+Indeed, the discrete node conditional of a pairwise model has the form of a logistic probability
+\begin{align}
+p(x_r = k|x_{-r},y)
+= \frac{\exp\bPr{q_{r}(k) +\sum_{r\neq j}q_{rj}(k, x_j) + \sum_s \rho_{sr}(k) \,y_s  }}
+{\sum_{l \in [L_r]} \exp\bPr{q_{r}(l) +\sum_{r\neq j}q_{rj}(l, x_j) + \sum_s \rho_{sr}(l) \,y_s  }  }. \label{dists_nc_cat2} 
+\end{align}
+Let  $W=\oneVec_n u^\top + D Q  + Y R \in \IR^{n \times L_{tot} }$ and $W_r$ denotes the slice of $W$ that contains the columns from $r$:$1$ to $r$:$L_r$
+and likewise by $D_r$ the corresponding slice of the discrete data matrix $D$, that is, 
+\[W = \begin{pmatrix}[c|c|c|c]
+W_1 & W_2 & \cdots & W_{d} 
+\end{pmatrix}\quad \text{and}\quad D = \begin{pmatrix}[c|c|c|c]
+D_1 & D_2 & \cdots & D_{d} 
+\end{pmatrix}.\]
+Observe that the elements of $W_r$ exactly reproduce the sums under the exponential function in \eqref{dists_nc_cat2}, that is,
+\begin{align*}
+W_{i, r:k} &= u_{r:k} + D_{i, \cdot} Q_{\cdot, r: k} +  y^{(i)} R_{\cdot,r}  
+\\ &= q_{r}(k) + \sum_{r\neq j} q_{rj}(k, x_j^{(i)}) + \sum_s \rho_{s,r}(k)\, y_s^{(i)},
+\end{align*}
+recalling that $Q$ has zero block diagonal.
+Now, the log-likelihood for the $r$-th discrete variable is given by
+\begin{align*}
+l_r &= - \sum_{i=1}^n \log p(x_r = x_r^{(i)}|x_{-r}^{(i)},y^{(i)}) 
+\\ &= -\bPe{\log\bPr{ \bPr{\frac{\exp(W_r)}{\exp(W_r) \oneVec_{L_r}} \odot D_r} \oneVec_{L_r}} }^\top\oneVec_n \\
+\\ &= -\bPe{\log\bPr{ \frac{\bPr{\exp(W_r) \odot D_r} \oneVec_{L_r}}{\exp(W_r) \oneVec_{L_r}}} }^\top\oneVec_n \\
+&= -\bPe{(W_r\odot D_r)\oneVec_{L_r}  - \log\bPr{\exp(W_r) \oneVec_{L_r}}}^\top \oneVec_n
+\end{align*}
+where in combination with the summation over the rows using $\oneVec_{L_r}$,  the element-wise multiplication with $D_r$, denoted by $\odot$, selects the correct term for the enumerator of \eqref{dists_nc_cat2} for each data point (recall that in each row of $D_r$ all except one entry are zero).
+The last line can be implemented using a numerical stable version of \emph{logsumexp}.
+
+
+\paragraph{Gradients.}
+Write $v^{(i)}=(1; d^{(i)}; y^{(i)})$ for $i\in[n]$ and let
+\begin{align*}
+\theta_{rk} &= \bPr{ u_{r:k}; Q_{\cdot, r:k};  R_{\cdot, r:k} } \in \IR^{1+L_{\tot}+q}.
+\end{align*}
+Then, the log node conditional, compare \eqref{dists_nc_cat2}, can be written as
+\begin{align*}
+\log p(x_r = k| v_r^{(i)}) &= \theta_{rk}^\top v^{(i)} - \log\bPc{\sum_{l=1}^{L_r} \exp(\theta_{rl}^\top v^{(i)})}.
+\end{align*}
+We consider the gradient of the negative loglikelihood 
+\[l_r= -\sum_{i=1}^n \log  p(x_r=x_r^{(i)}| x_{-r}^{(i)}, y^{(i)})\] of the $r$-th node conditional w.r.t.~the parameter vector $\theta_{rj}$.
+It is given by
+% https://www.quora.com/What-is-the-gradient-of-the-log-likelihood-function-in-multinomial-logistic-regression
+\begin{align*}
+\nabla_{\theta_{rj}} l_r &=  \nabla_{\theta_{rj}}\bPr{-\sum_{i=1}^n \sum_{k=1}^{L_r}\indFunc{x_r^{(i)}=k} \log p(x_r = k| v^{(i)})}\\
+&=\nabla_{\theta_{rj}} \bPr{ \sum_{i=1}^n \sum_{k=1}^{L_r}\indFunc{x_r^{(i)}=k} \bPr{ \log\bPc{\sum_{l=1}^{L_r} \exp(\theta_{rl}^\top v^{(i)})} - \theta_{rk}^\top v^{(i)}}}\\
+&=\sum_{i=1}^n \bPr{p(x_r = j| v^{(i)})- \indFunc{x_r^{(i)}=j} } v^{(i)} \\ % see p.93
+&= \sum_{i=1}^n\bPr{(A_r)_{ij} - (D_r)_{ij}} v^{(i)} = \sum_{i=1}^n\bPr{A_{i, r:j} - D_{i,r:j}} v^{(i)} \\
+&= V \bPr{A_{\cdot, r:j} - D_{\cdot, r:j}} \in\IR^{1+L_{\tot}+q},
+\end{align*}
+where the third equality follows from
+\begin{align*}
+\nabla_{\theta_{rj}} \log\bPc{\sum_{l=1}^{L_r} \exp(\theta_{rl}^\top v^{(i)})}  &= \frac{\sum_{l=1}^{L_r} \bPe{ \exp(\theta_{rl}^\top v^{(i)})\indFunc{l=j} v^{(i)}}}{\sum_{l=1}^{L_r} \exp(\theta_{rl}^\top v^{(i)})}\\
+&=\sum_{l=1}^{L_r} \indFunc{l=j}\frac{\exp(\theta_{rl}^\top v^{(i)}) }{\sum_{l=1}^{L_r} \exp(\theta_{rl}^\top )}v^{(i)}\\
+&=p(x_r = j| v^{(i)}) v^{(i)}
+\end{align*}
+and $\nabla_{\theta_{rj}}  \theta_{rk}^\top v^{(i)} = \indFunc{k=j} v^{(i)}$.
+For the second-to-last line we used the definition
+\[A_r = \frac{\exp(W_r)}{\exp(W_r)\oneVec_{L_r}\oneVec_{L_r}^T},\qquad  A=\begin{pmatrix}[c|c|c|c]
+A_1 & A_2 & \cdots & A_{d} 
+\end{pmatrix}\]
+and for the last equality we stacked the $v^{(i)}$ column-wise into the matrix
+\[ V = \begin{pmatrix}[c|c|c|c]v^{(1)} & v^{(2)} & \cdots & v^{(n)}\end{pmatrix}\in\IR^{(1+L_{\tot}+q) \times n}.\]
+
+The gradient w.r.t.~the different $\theta_{rj}$ can be stacked together such that the  $j$-th column of
+\begin{align*}
+V \bPr{A_r - D_r} \in \IR^{(1+L_{\tot}+q) \times L_r},
+\end{align*}
+is the gradient $\nabla_{\theta_{rj}}l_r$.
+The first row of this gradient corresponds to the parameters $u_{r:\cdot}$, the next block of rows corresponds to the parameters $Q_{\cdot, r:\cdot}$ and the last block of rows corresponds to the parameters $R_{\cdot, r:\cdot}$.
+Moreover, the gradient is the $r$-th vertical slice of $V \bPr{A - D} \in\IR^{(1+L_{\tot}+q) \times L_{\tot}}$.
+The parameters in $u$ and $R$ appear in only one $l_r$, respectively. Therefore
+we have the following derivatives of $l_D = \sum_r l_r$ w.r.t.~them
+\begin{align*}
+\nabla_{u^\top} \;l_D &= \oneVec_n^\top \bPr{A - D} \in\IR^{L_{\tot}},\quad\text{and} \\
+\nabla_R \; l_D &= Y^\top \bPr{A - D} \in \IR^{q \times L_{\tot}}.
+\end{align*}
+
+
+
+The situation for the parameters in $Q$ is somewhat more complicated, since each discrete interaction parameter appears in \emph{two} discrete node conditionals.
+However, we do not explicitly calculate the derivatives of $l_r$ w.r.t.~other vectors $\theta_{\hat{r}k}$ with $r\neq\hat{r}$.
+This is because all non-zero derivatives that appear in $\nabla_{\theta_{\hat{r}k}} l_r$ are w.r.t.~parameters that are already contained in some $\theta_{rl}$.
+By the symmetry $q_{rr'}(k,l)=q_{r'r}(l,k)$ these derivatives coincide.
+We can account for their effect by adding the transpose,
+that is, letting $\hat{\Phi} = \bPc{\nabla_{Q_{\cdot, r:\cdot}} l_r}_{r\in[d]} = D^\top \bPr{A - D} \in\IR^{L_{\tot} \times L_{\tot}}$ we have 
+\begin{align*}
+\nabla_Q \; l_D &= \hat{\Phi} + \hat{\Phi}^\top - \diag_\B\bPr{\hat{\Phi} + \hat{\Phi}^\top} \in\IR^{L_{\tot}\times L_{\tot}},
+\end{align*}
+where we also set the \emph{block diagonal} to zero
+(since the parameters on the diagonal of $Q$ have no meaning as we store the univariate parameters separately).
+
+If $Q$ has been formed via $Q_u + Q_u^\top$ with an upper-triangular matrix $Q_u$, then the gradient stays 
+\begin{align*}
+\nabla_{Q_u} \; l_D &= \text{triu}\bPr{\hat{\Phi} + \hat{\Phi}^\top - \diag_\B\bPr{\hat{\Phi} + \hat{\Phi}^\top} },
+\end{align*}
+where $\text{triu}$ set all entries that do not belong to the upper triangle to zero.
+%%%%%%%%%%%%%%%
+\subsection{Gaussian node conditional}
+
+Let
+\begin{align*}
+\mu_s = \mu_s(x, y_{-s})&= \alpha_s+\sum_r \rho_{sr}(x_r)-\sum_{s\neq t}\beta_{st}y_t \\
+&= \alpha_s+\sum_r \rho_{sr}(x_r)-\frac{1}{2}\sum_{s\neq t}\bPr{\beta_{st} + \beta_{ts}}y_t. 
+\end{align*}
+
+A Gaussian node conditional is described by
+\begin{align}
+\begin{split}
+-\log p(y_s|x, y_{-s}) &= \frac{1}{2}\log(2\pi)-\frac{1}{2}\log \beta_{ss} + \frac{\beta_{ss}}{2}\left(y_s - \frac{\mu_s}{\beta_{ss}}\right)^2.
+\end{split}\label{nc_gauss3}
+\end{align}
+In the following, we leave out the constant part for minimization.
+\medskip
+
+Now we use data and define (with overloading notation)
+\begin{align*}
+\mu_s = \alpha_s\oneVec_n + D R_{s, \cdot}^\top - Y B_{\cdot, s} = \alpha_s\oneVec_n + D R_{s, \cdot}^\top - \frac{1}{2}Y \bPr{B_{s, \cdot}^\top +B_{\cdot, s}}\in\IR^{n}.
+\end{align*}
+
+The square loss $l_s=-\sum_{i=1}^n \log p(y_s^{(i)}|x^{(i)}, y_{-s}^{(i)})$ for the $s$-th continuous variable is (up to constants) given by
+\begin{align*}
+l_s &=-\frac{n}{2} \log \beta_{ss} + \frac{\beta_{ss}}{2} \bNorm{\frac{\mu_s}{\beta_{ss}} - y_s }_2^2 \\ % LST
+&=-\frac{n}{2} \log \beta_{ss} + \frac{1}{2} \bNorm{\bPr{\frac{\mu_s}{\beta_{ss}} - y_s }\sqrt{\beta_{ss}} }_2^2
+\end{align*}
+Let $M= \oneVec_n \alpha^\top + D R^\top - Y B\in\IR^{n\times q}$ be the vertical concatenation of the $\mu_s$.
+The sum over the square loss of \emph{all} continuous variables $l_G = \sum_s l_s$ can then be written more succinctly as
+\begin{align*}
+l_G &=-\frac{n}{2} \sum_s \log \beta_{ss} + \frac{1}{2} \bNorm{\bPr{M\diag\bPr{\frac{1}{\beta}} - Y} \diag\bPr{\sqrt{\beta}} }_F^2 %\\
+%=&-\frac{n}{2} \sum \log \beta + \frac{1}{2} \bNorm{Y\diag\bPr{\sqrt{\beta}}  -\bPe{\oneVec_n \alpha^\top + D R^\top + Y B}\diag\bPr{\frac{1}{\sqrt{\beta}}} }_F^2
+\end{align*}
+
+
+\paragraph {Gradients.}
+Let the residual $\Delta:=M\diag\bPr{\frac{1}{\beta}} - Y \in \IR^{n\times q}$.
+Analogously to the discrete node conditionals, the interaction parameters $\beta_{st},s\neq t$ between Gaussians appear in
+the $s$-th and $t$-th node conditionals, respectively.
+We have $\Delta_{\cdot, s} =\frac{\mu_s}{\beta_{ss}} - y_s $ and recall that $\mu_s = \alpha_s\oneVec_n + D R_{s, \cdot}^\top - Y B_{\cdot, s}$ and
+$l_s =-\frac{n}{2} \log \beta_{ss} + \frac{\beta_{ss}}{2} \bNorm{\frac{\mu_s}{\beta_{ss}} - y_s }_2^2$.
+By chain rule it holds
+\begin{align*}
+\partial_{\beta_{ts}} l_s = \partial_{\beta_{st}} l_s &= \frac{\beta_{ss}}{2} 2\Delta_{\cdot, s}  \frac{-y_t^\top}{2\beta_{ss}} =-\frac{1}{2}(Y^\top\Delta)_{st} 
+\end{align*}
+since $\partial_{\beta_{st}} \mu_s = \partial_{\beta_{ts}} \mu_s = -\frac{1}{2} y_t$.
+Similarly, we get $\partial_{\beta_{ts}} l_t = \partial_{\beta_{st}} l_t = -\frac{1}{2}(Y^\top\Delta)_{ts}$.
+This yields the following overall derivative
+\begin{align*}
+\nabla_{B} l_G &= - \frac{1}{2} \bPr{Y^\top \Delta + \Delta^\top Y} + \frac{1}{2}\diag\bPr{Y^\top \Delta + \Delta^\top Y} \in\IR^{q\times q}.
+\end{align*}
+
+The other derivates are simpler and can be obtained similarly:
+\begin{align*}
+\nabla_{\alpha^\top} l_G &= \oneVec_n^\top \Delta \\
+\nabla_{R^\top} l_G &= D^\top \Delta \\
+\nabla_{\beta_{ss}} l_G =\nabla_{\beta_{ss}} l_s &= -\frac{n}{2\beta_{ss}} + \frac{1}{2}\bNorm{\Delta_{:, s}}_2^2 - \frac{1}{\beta_{ss}} \Delta_{:, s}^\top \mu_s,
+\end{align*}
+where the multiplication rule was used for the last gradient.
+\medskip
+
+Now, suppose that $\Lambda = B + \diag(\beta)$ is actually parametrized via $\Lambda = FF^\top$ (a representation that is useful to enforce the PD constraint). Then, by chain rule
+\begin{align*}
+\nabla_{F} l_G &= 2 \nabla_\Lambda l_G \cdot F =   2 \bPr{\nabla_B l_G + \diag(\nabla_\beta l_G)}\cdot F.
+\end{align*}
+It is important not to initialize $F$ at zero since otherwise this gradient is always zero. Indeed, the objective in $F$ is actually non-convex with a local maximum at zero. Starting anywhere else however should lead the solver away from this local maximum.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Summary of node conditionals and gradient}
+
+Here we summarize the gradients for $l= \frac{1}{n} (l_G+l_D)$.
+
+\begin{align*}
+\nabla_B\; l &= -\frac{1}{2n}\bPr{Y^\top \Delta + \Delta^\top Y - \diag\bPr{Y^\top \Delta + \Delta^\top Y} } \\
+\nabla_{\alpha^\top} \;l &= \frac{1}{n}\oneVec_n^\top \Delta \\
+\nabla_{\beta_{ss}} \;l &= -\frac{1}{2\beta_{ss}} + \frac{1}{2n}\bNorm{\Delta_{\cdot, s}}_2^2
+- \frac{1}{\beta_{ss}n} \Delta_{\cdot, s}^\top\mu_s \quad\text{with}\quad \mu_s=\alpha_s\oneVec_n + D R_{s, \cdot}^\top + Y B_{\cdot, s} \\
+\nabla_{u^\top} \;l &= \frac{1}{n}\oneVec_n^\top \bPr{A - D} \in\IR^{L_{\tot}} \\
+\nabla_R \; l &= \frac{1}{n}Y^\top \bPr{A - D} + \frac{1}{n}\Delta^\top D \in \IR^{q \times L_{\tot}} \\
+\nabla_Q \; l &= \frac{1}{n} \bPr{\hat{\Phi} + \hat{\Phi}^\top - \diag_\B\bPr{\hat{\Phi} + \hat{\Phi}^\top}},\quad \text{with}\quad\hat{\Phi}  = D^\top \bPr{A - D}.
+\end{align*}
+%  \nabla_{R^\top} l &= D^\top \Delta \\
+
+
+s
+
+\end{document}

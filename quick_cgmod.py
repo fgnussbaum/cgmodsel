@@ -40,8 +40,6 @@ def load(dataset: dict):
 def learn_sparse_model(data, regparam):
     cat_data, cont_data, meta = load(data)  # load the data
 
-    print(meta)
-#    return
     ###### fit models
 
     ## initialize solver and drop data ##
@@ -105,15 +103,15 @@ if __name__ == '__main__':
         'filename': "datasets/ability_proc.csv",
         'regparams': (.2, .5),
         'sparams': {
-            'catuniques': [0, 1]
-        }  # values that binary variables take
+            'catuniques': [0, 1] # values that binary variables take
+        }
     }
     CFMT = {
         'filename': "datasets/CFMTkurzBIN.csv",
         'regparams': (.15, 1.5),
         'sparams': {
-            'catuniques': [0, 1]
-        }  # values that binary variables take
+            'catuniques': [0, 1]  # values that binary variables take
+        }
     }
 
     ## quantitative ##
@@ -153,10 +151,10 @@ if __name__ == '__main__':
     # https://github.com/franknu/cgmodsel/wiki 
     # you may try different values, any pair of positive reals will do
     # e.g., regparams = (.1, 1)
-    model = learn_sl_model(data, regparams=data['regparams'])
+#    model = learn_sl_model(data, regparams=data['regparams'])
     
-    ## or learn a purely sparse graphical model wo. low-rank component
-#    model = learn_sparse_model(data, regparam=3.0)
+#     or learn a purely sparse graphical model wo. low-rank component
+    model = learn_sparse_model(data, regparam=3.0)
     
     # model.get_params()
     # model.get_meanparams()
