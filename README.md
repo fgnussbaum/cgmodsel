@@ -26,12 +26,12 @@ Note that some solvers use a group-soft shrinkage operation. It works with a nai
 
 If you use this software, please consider citing:
 
-Nussbaum, F., & Giesen, J. (2020). Pairwise sparse+ low-rank models for variables of mixed type. *Journal of Multivariate Analysis*, 104601.
+Nussbaum, F., & Giesen, J. (2020). Pairwise sparse + low-rank models for variables of mixed type. *Journal of Multivariate Analysis*, 104601.
 
 ### Contact ###
 
-If you have questions, comments, bug reports, feature requests, etc. please contact me: [frank.nussbaum@uni-jena.de](frank.nussbaum@uni-jena.de) or come and see me in my office #3335 EAP2 Jena, Germany.
+If you have questions, comments, bug reports, feature requests, etc. please contact me: [frank.nussbaum@uni-jena.de](frank.nussbaum@uni-jena.de).
 
 ### Copyright ###
 
-© 2017 - 2021 Frank Nussbaum (frank.nussbaum@uni-jena.de). All Rights Reserved.
+Â© 2017 - 2021 Frank Nussbaum (frank.nussbaum@uni-jena.de). All Rights Reserved.
